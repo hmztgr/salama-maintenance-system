@@ -208,7 +208,7 @@ export function VisitForm({ visit, onSuccess, onCancel }: VisitFormProps) {
         }
       } else {
         // Add new visit
-        const result = addVisit(visitData);
+        const result = await addVisit(visitData);
         if (result.success) {
           setSuccessMessage('تم إضافة الزيارة بنجاح');
           setTimeout(() => {

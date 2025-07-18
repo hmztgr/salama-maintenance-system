@@ -298,7 +298,7 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
       createdBy: 'system-auto-plan'
     };
 
-    const result = addVisit(visitData);
+    const result = await addVisit(visitData);
     if (result.success) {
       // Refresh visits data to update the display immediately
       refreshVisits();

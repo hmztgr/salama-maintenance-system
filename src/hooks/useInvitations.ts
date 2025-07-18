@@ -463,6 +463,7 @@ export function useInvitations(): {
       accepted,
       expired,
       revoked,
+      acceptanceRate: total > 0 ? Math.round((accepted / total) * 100) : 0,
       byRole,
       byType
     };

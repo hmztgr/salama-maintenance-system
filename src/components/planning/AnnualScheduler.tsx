@@ -436,7 +436,7 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
   };
 
   // Handle bulk delete
-  const handleBulkDeleteVisits = () => {
+  const handleBulkDeleteVisits = async () => {
     if (!hasPermission('supervisor') || selectedVisits.size === 0) return;
 
     const visitsToDelete = visits.filter(v => selectedVisits.has(v.id));
@@ -449,11 +449,14 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
 
     if (confirm(confirmMessage)) {
       let successCount = 0;
-      visitsToDelete.forEach(visit => {
-        if (deleteVisit(visit.id)) {
+      
+      // Use for...of loop to properly handle async deleteVisit calls
+      for (const visit of visitsToDelete) {
+        const result = await deleteVisit(visit.id);
+        if (result) {
           successCount++;
         }
-      });
+      }
 
       alert(`تم حذف ${successCount} زيارة من أصل ${selectedVisits.size}`);
       setSelectedVisits(new Set());

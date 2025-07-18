@@ -187,7 +187,7 @@ export function PlanningGrid({ className = '' }: PlanningGridProps) {
   };
 
   // Delete visit handler
-  const handleDeleteVisit = (visit: Visit) => {
+  const handleDeleteVisit = async (visit: Visit) => {
     if (!hasPermission('supervisor')) {
       alert('ليس لديك صلاحية لحذف الزيارات');
       return;
@@ -205,7 +205,7 @@ export function PlanningGrid({ className = '' }: PlanningGridProps) {
     }
 
     if (confirm(confirmMessage)) {
-      const success = deleteVisit(visit.id);
+      const success = await deleteVisit(visit.id);
       if (success) {
         refreshVisits();
         // Remove from selected visits if it was selected

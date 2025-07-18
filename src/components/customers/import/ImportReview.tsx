@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, AlertTriangle, XCircle, FileText, Download, Upload } from 'lucide-react';
+import { standardizeDate } from '@/lib/date-handler';
 
 interface ImportReviewProps {
   file: File;
@@ -55,6 +56,63 @@ const SAUDI_CITIES = [
   'هروب', 'فيفا', 'العيدابي', 'الحرث', 'بيش', 'الطائف', 'الليث',
   'تربة', 'رنية', 'الخرمة', 'الموية', 'ميسان', 'أضم', 'الكامل'
 ];
+
+// Column mapping for different languages and variations
+const COLUMN_MAPPINGS = {
+  companies: {
+    companyName: ['companyName', 'company_name', 'اسم الشركة*', 'اسم الشركة', 'Company Name', 'الشركة'],
+    email: ['email', 'Email', 'البريد الإلكتروني', 'البريد', 'company_email'],
+    phone: ['phone', 'Phone', 'رقم الهاتف*', 'رقم الهاتف', 'الهاتف', 'phone_number'],
+    address: ['address', 'Address', 'العنوان*', 'العنوان', 'company_address'],
+    city: ['city', 'City', 'المدينة*', 'المدينة', 'company_city'],
+    contactPerson: ['contactPerson', 'contact_person', 'الشخص المسؤول', 'Contact Person', 'المسؤول'],
+    notes: ['notes', 'Notes', 'ملاحظات', 'Notes', 'التعليقات']
+  },
+  contracts: {
+    companyId: ['companyId', 'company_id', 'معرف الشركة*', 'معرف الشركة', 'Company ID'],
+    contractStartDate: ['contractStartDate', 'contract_start_date', 'تاريخ بداية العقد*', 'تاريخ البداية', 'Start Date'],
+    contractEndDate: ['contractEndDate', 'contract_end_date', 'تاريخ انتهاء العقد*', 'تاريخ الانتهاء', 'End Date'],
+    regularVisitsPerYear: ['regularVisitsPerYear', 'regular_visits', 'عدد الزيارات العادية سنوياً*', 'الزيارات العادية', 'Regular Visits'],
+    emergencyVisitsPerYear: ['emergencyVisitsPerYear', 'emergency_visits', 'عدد الزيارات الطارئة سنوياً*', 'الزيارات الطارئة', 'Emergency Visits'],
+    contractValue: ['contractValue', 'contract_value', 'قيمة العقد', 'Contract Value', 'القيمة'],
+    fireExtinguisherMaintenance: ['fireExtinguisherMaintenance', 'fire_extinguisher', 'صيانة الطفايات*', 'صيانة الطفايات', 'Fire Extinguisher'],
+    alarmSystemMaintenance: ['alarmSystemMaintenance', 'alarm_system', 'صيانة نظام الإنذار*', 'نظام الإنذار', 'Alarm System'],
+    fireSuppressionMaintenance: ['fireSuppressionMaintenance', 'fire_suppression', 'صيانة نظام الإطفاء*', 'نظام الإطفاء', 'Fire Suppression'],
+    gasFireSuppression: ['gasFireSuppression', 'gas_suppression', 'نظام الإطفاء بالغاز*', 'إطفاء الغاز', 'Gas Suppression'],
+    foamFireSuppression: ['foamFireSuppression', 'foam_suppression', 'نظام الإطفاء بالفوم*', 'إطفاء الفوم', 'Foam Suppression'],
+    notes: ['notes', 'Notes', 'ملاحظات', 'التعليقات']
+  },
+  branches: {
+    companyId: ['companyId', 'company_id', 'معرف الشركة*', 'معرف الشركة', 'Company ID'],
+    contractIds: ['contractIds', 'contract_ids', 'معرفات العقود*', 'معرفات العقود', 'Contract IDs'],
+    city: ['city', 'City', 'المدينة*', 'المدينة'],
+    location: ['location', 'Location', 'الموقع*', 'الموقع'],
+    branchName: ['branchName', 'branch_name', 'اسم الفرع*', 'اسم الفرع', 'Branch Name'],
+    address: ['address', 'Address', 'العنوان التفصيلي', 'العنوان', 'branch_address'],
+    contactPerson: ['contactPerson', 'contact_person', 'الشخص المسؤول', 'Contact Person', 'المسؤول'],
+    contactPhone: ['contactPhone', 'contact_phone', 'هاتف التواصل', 'رقم التواصل', 'Contact Phone'],
+    teamMember: ['teamMember', 'team_member', 'فريق العمل المختص', 'فريق العمل', 'Team Member'],
+    notes: ['notes', 'Notes', 'ملاحظات', 'التعليقات']
+  }
+};
+
+// Helper function to find the correct field name from header
+const mapHeaderToField = (header: string, entityType: 'companies' | 'contracts' | 'branches'): string | null => {
+  const mappings = COLUMN_MAPPINGS[entityType];
+  const cleanHeader = header.trim();
+
+  for (const [fieldName, variations] of Object.entries(mappings)) {
+    if (variations.some(variation => 
+      variation.toLowerCase() === cleanHeader.toLowerCase() ||
+      variation === cleanHeader ||
+      cleanHeader.includes(variation) ||
+      variation.includes(cleanHeader)
+    )) {
+      return fieldName;
+    }
+  }
+  return null;
+};
 
 export function ImportReview({ file, entityType, onClose, onImportComplete }: ImportReviewProps) {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -197,16 +255,19 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
       let suggestion = '';
 
       if (fieldName.includes('Date')) {
-        // For date fields, try multiple formats
-        const dateFormats = [
-          /^\d{2}-[A-Za-z]{3}-\d{4}$/,  // dd-mmm-yyyy
-          /^\d{1,2}\/\d{1,2}\/\d{4}$/,  // mm/dd/yyyy or dd/mm/yyyy
-          /^\d{1,2}-\d{1,2}-\d{4}$/,    // mm-dd-yyyy or dd-mm-yyyy
-          /^\d{4}-\d{1,2}-\d{1,2}$/     // yyyy-mm-dd
-        ];
-
-        isValid = dateFormats.some(format => format.test(value));
-        suggestion = 'استخدم تنسيق dd-mmm-yyyy (مثال: 15-Jan-2024) أو mm/dd/yyyy أو dd/mm/yyyy';
+        // Use the enhanced date parser from date-handler.ts
+        try {
+          // Import standardizeDate function for validation
+          const dateValidation = standardizeDate(value);
+          isValid = dateValidation.isValid;
+          
+          if (!isValid) {
+            suggestion = 'استخدم تنسيق dd-mmm-yyyy (مثال: 15-Jan-2024) أو dd/mm/yyyy أو mm/dd/yyyy أو yyyy-mm-dd';
+          }
+        } catch (error) {
+          isValid = false;
+          suggestion = 'تنسيق التاريخ غير مدعوم. استخدم: dd-mmm-yyyy (مثال: 06-Aug-2023)';
+        }
       } else {
         // For non-date fields, use the original pattern
         isValid = (config.pattern as RegExp).test(value);
@@ -357,27 +418,42 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
       const headers = rows[0].map(h => h.trim());
       const dataRows = rows.slice(1);
 
-      // Validate headers first
+      // Map headers to standard field names
+      const headerMapping: Record<string, string> = {};
+      const mappedFields: Set<string> = new Set();
+
+      headers.forEach(header => {
+        const mappedField = mapHeaderToField(header, entityType);
+        if (mappedField) {
+          headerMapping[header] = mappedField;
+          mappedFields.add(mappedField);
+        }
+      });
+
+      // Validate headers with enhanced mapping support
       const missingHeaders: string[] = [];
       const extraHeaders: string[] = [];
 
-      // Check for missing required headers
-      currentConfig.required.forEach(requiredField => {
-        if (!headers.includes(requiredField)) {
-          missingHeaders.push(requiredField);
+      // Check for missing required headers using mapped fields
+      currentConfig.required.forEach((requiredField: string) => {
+        if (!mappedFields.has(requiredField)) {
+          // Find the Arabic name for better error messages
+          const arabicNames = COLUMN_MAPPINGS[entityType][requiredField as keyof typeof COLUMN_MAPPINGS[typeof entityType]];
+          const arabicName = arabicNames?.find(name => name.includes('*')) || arabicNames?.[0] || requiredField;
+          missingHeaders.push(arabicName);
         }
       });
 
       // Check for unknown headers
       headers.forEach(header => {
-        if (header && !(header in currentConfig.validations) && !currentConfig.required.includes(header)) {
+        if (header && !mapHeaderToField(header, entityType)) {
           extraHeaders.push(header);
         }
       });
 
-      // If there are critical header issues, stop processing
+      // If there are critical header issues, provide helpful error message
       if (missingHeaders.length > 0) {
-        throw new Error(`أعمدة مطلوبة مفقودة: ${missingHeaders.join(', ')}. تأكد من وجود جميع الأعمدة المطلوبة في ملف CSV.`);
+        throw new Error(`أعمدة مطلوبة مفقودة: ${missingHeaders.join(', ')}. تأكد من استخدام القالب الصحيح أو تحقق من أسماء الأعمدة.`);
       }
 
       console.log('📋 Import Header Validation:', {
@@ -392,16 +468,19 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
         const rowNumber = index + 2; // +2 because we start from row 2 (after headers)
         const rowData: Record<string, string> = {};
 
-        // Map row data to headers
+        // Map row data to standard field names using the header mapping
         headers.forEach((header, headerIndex) => {
-          rowData[header.trim()] = row[headerIndex]?.trim() || '';
+          const standardFieldName = headerMapping[header];
+          if (standardFieldName) {
+            rowData[standardFieldName] = row[headerIndex]?.trim() || '';
+          }
         });
 
         // Validate each field with enhanced validation
         const allErrors: ValidationError[] = [];
 
         // Check for missing required fields first
-        currentConfig.required.forEach(requiredField => {
+        currentConfig.required.forEach((requiredField: string) => {
           if (!(requiredField in rowData) || !rowData[requiredField] || rowData[requiredField].trim() === '') {
             allErrors.push({
               row: rowNumber,
@@ -414,26 +493,13 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
           }
         });
 
-        // Validate fields that exist in the data
+        // Validate all mapped fields that exist in the data
         Object.entries(rowData).forEach(([fieldName, value]) => {
-          // Skip validation for fields that are not in our configuration
-          if (!(fieldName in currentConfig.validations)) {
-            // Add warning for unknown fields
-            if (value && value.trim() !== '') {
-              allErrors.push({
-                row: rowNumber,
-                field: fieldName,
-                value,
-                error: `عمود غير معروف: "${fieldName}"`,
-                suggestion: 'قد يكون هذا العمود غير مطلوب أو اسمه غير صحيح',
-                severity: 'warning'
-              });
-            }
-            return;
+          // All fields in rowData should now be standard field names
+          if (fieldName in currentConfig.validations) {
+            const fieldErrors = validateField(fieldName, value, rowNumber);
+            allErrors.push(...fieldErrors);
           }
-
-          const fieldErrors = validateField(fieldName, value, rowNumber);
-          allErrors.push(...fieldErrors);
         });
 
         const errors = allErrors.filter(e => e.severity === 'error');

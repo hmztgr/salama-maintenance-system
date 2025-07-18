@@ -4,6 +4,12 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  # Disable Next.js plugin detection
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"
+
+# Explicitly disable framework detection
+[framework]
+  name = "static"
 
 # Git-based deployment settings
 [build.processing]

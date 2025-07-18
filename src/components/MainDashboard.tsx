@@ -13,6 +13,7 @@ import { FirebaseAuthTest } from './admin/FirebaseAuthTest';
 import { FirebaseMigration } from './admin/FirebaseMigration';
 import { FirebaseDataTest } from './admin/FirebaseDataTest';
 import { UserProfile } from './profile/UserProfile';
+import { ReportsDashboard } from './reports/ReportsDashboard';
 
 export interface MainDashboardProps {
   className?: string;
@@ -142,16 +143,7 @@ export function MainDashboard({ className = '' }: MainDashboardProps) {
 
         {activeTab === 'profile' && <UserProfile />}
 
-        {activeTab === 'reports' && (
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">التقارير</h2>
-            <div className="bg-white p-6 rounded-lg shadow">
-              <p className="text-gray-600">
-                قريباً: تقارير شاملة عن الصيانة والزيارات وأداء الفريق
-              </p>
-            </div>
-          </div>
-        )}
+        {activeTab === 'reports' && <ReportsDashboard />}
 
         {activeTab === 'admin' && (
           <div className="space-y-6">

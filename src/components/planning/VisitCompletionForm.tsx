@@ -84,8 +84,26 @@ export function VisitCompletionForm({ visit, onSuccess, onCancel }: VisitComplet
         nextVisitDate: formData.nextVisitDate ? convertFromInputDate(formData.nextVisitDate) : undefined,
       };
 
-      // For this demo, we'll store file names (in production, upload to server)
-      const allAttachmentNames = [...existingAttachments, ...attachments.map(f => f.name)];
+      // Convert existing attachments (strings) and new attachments (Files) to proper format
+      const existingAttachmentObjects = existingAttachments.map(name => ({
+        name,
+        url: name, // In demo mode, use name as URL
+        path: name,
+        size: 0,
+        type: 'unknown',
+        uploadedAt: getCurrentDate()
+      }));
+      
+      const newAttachmentObjects = attachments.map(file => ({
+        name: file.name,
+        url: file.name, // In production, this would be the uploaded file URL
+        path: file.name,
+        size: file.size,
+        type: file.type,
+        uploadedAt: getCurrentDate()
+      }));
+      
+      const allAttachments = [...existingAttachmentObjects, ...newAttachmentObjects];
 
       console.log('🚀 Starting visit completion:', { visitId: visit.id, results });
 
@@ -95,7 +113,7 @@ export function VisitCompletionForm({ visit, onSuccess, onCancel }: VisitComplet
         completedDate: getCurrentDate(),
         results,
         notes: formData.completionNotes,
-        attachments: allAttachmentNames,
+        attachments: allAttachments,
       });
       console.log('📋 Complete visit result:', success);
 

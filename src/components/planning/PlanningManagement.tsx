@@ -7,7 +7,7 @@ import { VisitImportTemplate } from './VisitImportTemplate';
 import { VisitExportTemplate } from './VisitExportTemplate';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContextFirebase';
-import { useVisits } from '@/hooks/useVisits';
+import { useVisitsFirebase } from '@/hooks/useVisitsFirebase';
 
 export function PlanningManagement() {
   const [activeTab, setActiveTab] = useState<'annual' | 'weekly' | 'visits'>('annual');
@@ -15,7 +15,7 @@ export function PlanningManagement() {
   const [showVisitExport, setShowVisitExport] = useState(false);
 
   const { hasPermission } = useAuth();
-  const { visits } = useVisits();
+  const { visits } = useVisitsFirebase();
 
   const tabs = [
     {

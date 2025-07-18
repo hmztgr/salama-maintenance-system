@@ -7,10 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ChevronLeft, ChevronRight, Calendar, Filter, Download, Users, Zap, Trash2, X } from 'lucide-react';
-import { useCompanies } from '@/hooks/useCompanies';
-import { useContracts } from '@/hooks/useContracts';
-import { useBranches } from '@/hooks/useBranches';
-import { useVisits } from '@/hooks/useVisits';
+import { useCompaniesFirebase } from '@/hooks/useCompaniesFirebase';
+import { useContractsFirebase } from '@/hooks/useContractsFirebase';
+import { useBranchesFirebase } from '@/hooks/useBranchesFirebase';
+import { useVisitsFirebase } from '@/hooks/useVisitsFirebase';
 import { useAuth } from '@/contexts/AuthContextFirebase';
 import { useSearch } from '@/hooks/useSearch';
 import { SearchAndFilter } from '@/components/common/SearchAndFilter';
@@ -89,10 +89,10 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
   const [visitClickCount, setVisitClickCount] = useState<Map<string, number>>(new Map());
 
   // Data hooks
-  const { companies } = useCompanies();
-  const { contracts } = useContracts();
-  const { branches } = useBranches();
-  const { visits, addVisit, refreshVisits, deleteVisit } = useVisits();
+  const { companies } = useCompaniesFirebase();
+  const { contracts } = useContractsFirebase();
+  const { branches } = useBranchesFirebase();
+  const { visits, addVisit, refreshVisits, deleteVisit } = useVisitsFirebase();
 
   // Search functionality for branches with contract type filtering
   const branchSearchConfig = {

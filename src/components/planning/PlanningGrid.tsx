@@ -8,10 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ChevronLeft, ChevronRight, Plus, Calendar, Filter, Trash2, Edit, X } from 'lucide-react';
 import { Visit, WeeklyPlanningGrid } from '@/types/customer';
-import { useVisits } from '@/hooks/useVisits';
-import { useCompanies } from '@/hooks/useCompanies';
-import { useContracts } from '@/hooks/useContracts';
-import { useBranches } from '@/hooks/useBranches';
+import { useVisitsFirebase } from '@/hooks/useVisitsFirebase';
+import { useCompaniesFirebase } from '@/hooks/useCompaniesFirebase';
+import { useContractsFirebase } from '@/hooks/useContractsFirebase';
+import { useBranchesFirebase } from '@/hooks/useBranchesFirebase';
 import { useAuth } from '@/contexts/AuthContextFirebase';
 import { useSearch } from '@/hooks/useSearch';
 import { SearchAndFilter } from '@/components/common/SearchAndFilter';
@@ -48,10 +48,10 @@ export function PlanningGrid({ className = '' }: PlanningGridProps) {
   const [showBulkActions, setShowBulkActions] = useState(false);
 
   // Data hooks
-  const { getWeeklyPlan, loading: visitsLoading, refreshVisits, deleteVisit, cancelVisit } = useVisits();
-  const { companies } = useCompanies();
-  const { contracts } = useContracts();
-  const { branches } = useBranches();
+  const { getWeeklyPlan, loading: visitsLoading, refreshVisits, deleteVisit, cancelVisit } = useVisitsFirebase();
+  const { companies } = useCompaniesFirebase();
+  const { contracts } = useContractsFirebase();
+  const { branches } = useBranchesFirebase();
 
   // Get current week data
   const originalWeeklyPlan: WeeklyPlanningGrid = getWeeklyPlan(currentWeekStart);

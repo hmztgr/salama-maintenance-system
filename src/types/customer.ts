@@ -159,7 +159,14 @@ export interface Visit {
     recommendations?: string[];
     nextVisitDate?: string;
   };
-  attachments?: string[];
+  attachments?: {
+    name: string;
+    url: string;
+    path: string;
+    size: number;
+    type: string;
+    uploadedAt: string;
+  }[];
   isArchived: boolean;
   createdAt: string; // Format: dd-mmm-yyyy
   updatedAt: string; // Format: dd-mmm-yyyy

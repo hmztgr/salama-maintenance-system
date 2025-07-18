@@ -27,14 +27,14 @@ import {
   UserCheck,
   AlertTriangle
 } from 'lucide-react';
-import { useInvitations } from '@/hooks/useInvitations';
+import { useInvitationsFirebase } from '@/hooks/useInvitationsFirebase';
 import { useAuth } from '@/contexts/AuthContextFirebase';
 import { InvitationFormData, InvitationType, UserRole, InvitationStatus } from '@/types/invitation';
 import { formatDateForDisplay } from '@/lib/date-handler';
 
 export function InvitationManagement() {
   const { hasPermission } = useAuth();
-  const { invitations, loading, error, stats, actions, refreshInvitations } = useInvitations();
+  const { invitations, loading, error, stats, actions, refreshInvitations } = useInvitationsFirebase();
 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');

@@ -1,76 +1,160 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper functions
+    
+    // Helper functions for authentication and authorization
     function isAuthenticated() {
       return request.auth != null;
     }
-
+    
     function getUserRole() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
     }
-
+    
+    function isAdmin() {
+      return isAuthenticated() && getUserRole() == 'admin';
+    }
+    
+    function isSupervisor() {
+      return isAuthenticated() && getUserRole() == 'supervisor';
+    }
+    
+    function isViewer() {
+      return isAuthenticated() && getUserRole() == 'viewer';
+    }
+    
     function hasRole(role) {
-      return getUserRole() == role;
+      return isAuthenticated() && getUserRole() == role;
     }
-
-    function hasMinRole(role) {
-      let userRole = getUserRole();
-      return (role == 'viewer' && userRole in ['viewer', 'supervisor', 'admin']) ||
-             (role == 'supervisor' && userRole in ['supervisor', 'admin']) ||
-             (role == 'admin' && userRole == 'admin');
+    
+    function canRead() {
+      return isAuthenticated(); // All authenticated users can read
     }
-
-    // Users collection - users can read/write their own profile, admins can manage all
+    
+    function canWrite() {
+      return isAdmin() || isSupervisor(); // Only admin and supervisor can write
+    }
+    
+    function canDelete() {
+      return isAdmin(); // Only admin can delete
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Users collection - user profiles and roles
     match /users/{userId} {
-      allow read: if isAuthenticated() && (userId == request.auth.uid || hasMinRole('admin'));
-      allow write: if isAuthenticated() && (userId == request.auth.uid || hasMinRole('admin'));
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || isOwner(userId);
+      allow delete: if isAdmin();
     }
-
-    // Companies collection - Temporarily relaxed for testing
+    
+    // Companies collection
     match /companies/{companyId} {
-      allow read, write: if isAuthenticated();
+      allow read: if canRead();
+      allow create: if canWrite();
+      allow update: if canWrite();
+      allow delete: if canDelete();
     }
-
+    
     // Contracts collection
     match /contracts/{contractId} {
-      allow read: if isAuthenticated() && hasMinRole('viewer');
-      allow write: if isAuthenticated() && hasMinRole('supervisor');
+      allow read: if canRead();
+      allow create: if canWrite();
+      allow update: if canWrite();
+      allow delete: if canDelete();
     }
-
+    
     // Branches collection
     match /branches/{branchId} {
-      allow read: if isAuthenticated() && hasMinRole('viewer');
-      allow write: if isAuthenticated() && hasMinRole('supervisor');
+      allow read: if canRead();
+      allow create: if canWrite();
+      allow update: if canWrite();
+      allow delete: if canDelete();
     }
-
-    // Visits collection - viewers can update visit results
+    
+    // Visits collection
     match /visits/{visitId} {
-      allow read: if isAuthenticated() && hasMinRole('viewer');
-      allow write: if isAuthenticated() && hasMinRole('supervisor');
-      allow update: if isAuthenticated() && hasMinRole('viewer') &&
-                   onlyUpdatingFields(['status', 'completedDate', 'completedTime', 'results', 'photos', 'notes']);
+      allow read: if canRead();
+      allow create: if canWrite();
+      allow update: if canWrite() || (isViewer() && isOwner(resource.data.createdBy));
+      allow delete: if canDelete();
     }
-
-    // Invitations collection - admin only
+    
+    // Invitations collection
     match /invitations/{invitationId} {
-      allow read, write: if isAuthenticated() && hasMinRole('admin');
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
-
-    // Helper function to check which fields are being updated
-    function onlyUpdatingFields(allowedFields) {
-      let affectedKeys = request.resource.data.diff(resource.data).affectedKeys();
-      return affectedKeys.hasOnly(allowedFields.toSet());
+    
+    // File metadata collection (for Firebase Storage file tracking)
+    match /files/{fileId} {
+      allow read: if canRead();
+      allow create: if canWrite();
+      allow update: if canWrite() || isOwner(resource.data.uploadedBy);
+      allow delete: if canDelete() || isOwner(resource.data.uploadedBy);
     }
-
-    // Temporary: Allow unauthenticated read access for testing
-    match /test/{document} {
-      allow read, write: if true;
+    
+    // Activity logs collection (for audit trail)
+    match /activity_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated(); // All users can create logs
+      allow update: if false; // Logs should be immutable
+      allow delete: if false; // Logs should never be deleted
     }
-
-    // Temporary: Easier access for initial setup (remove in production)
-    match /users/{userId} {
-      allow read, write: if true;
+    
+    // System settings collection
+    match /settings/{settingId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+      allow delete: if false; // Settings should not be deleted
+    }
+    
+    // Notifications collection
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && (
+        isAdmin() || 
+        resource.data.userId == request.auth.uid
+      );
+      allow create: if canWrite();
+      allow update: if isAuthenticated() && (
+        isAdmin() || 
+        resource.data.userId == request.auth.uid
+      );
+      allow delete: if isAdmin();
+    }
+    
+    // Reports collection (for generated reports)
+    match /reports/{reportId} {
+      allow read: if canRead();
+      allow create: if canWrite();
+      allow update: if canWrite();
+      allow delete: if canDelete();
+    }
+    
+    // Backup/export data (for system maintenance)
+    match /backups/{backupId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if false; // Backups should be immutable
+      allow delete: if isAdmin();
+    }
+    
+    // Temporary data (for imports, processing, etc.)
+    match /temp/{tempId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
+    
+    // Deny all other paths
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

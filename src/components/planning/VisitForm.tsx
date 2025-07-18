@@ -11,11 +11,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { AlertCircle, CheckCircle, Save, X, Calendar, Clock } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Visit } from '@/types/customer';
-import { useVisits } from '@/hooks/useVisits';
-import { useCompanies } from '@/hooks/useCompanies';
-import { useContracts } from '@/hooks/useContracts';
-import { useBranches } from '@/hooks/useBranches';
+import { useVisitsFirebase } from '@/hooks/useVisitsFirebase';
+import { useCompaniesFirebase } from '@/hooks/useCompaniesFirebase';
+import { useContractsFirebase } from '@/hooks/useContractsFirebase';
+import { useBranchesFirebase } from '@/hooks/useBranchesFirebase';
 import { formatDateForInput, convertInputDateToStandard } from '@/lib/date-handler';
+import { FileUpload } from '@/components/common/FileUpload';
+import { UploadedFile } from '@/hooks/useFirebaseStorage';
 
 interface VisitFormProps {
   visit?: Visit;
@@ -24,10 +26,10 @@ interface VisitFormProps {
 }
 
 export function VisitForm({ visit, onSuccess, onCancel }: VisitFormProps) {
-  const { addVisit, updateVisit } = useVisits();
-  const { companies } = useCompanies();
-  const { contracts } = useContracts();
-  const { branches } = useBranches();
+  const { addVisit, updateVisit } = useVisitsFirebase();
+  const { companies } = useCompaniesFirebase();
+  const { contracts } = useContractsFirebase();
+  const { branches } = useBranchesFirebase();
 
   const [formData, setFormData] = useState({
     companyId: visit?.companyId || '',
@@ -55,6 +57,9 @@ export function VisitForm({ visit, onSuccess, onCancel }: VisitFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [visitAttachments, setVisitAttachments] = useState<UploadedFile[]>(
+    visit?.attachments || []
+  );
 
   // Filter data based on selections
   const availableContracts = contracts.filter(contract =>
@@ -186,6 +191,7 @@ export function VisitForm({ visit, onSuccess, onCancel }: VisitFormProps) {
         ...formData,
         scheduledDate: convertInputDateToStandard(formData.scheduledDate),
         duration: formData.duration ? parseInt(formData.duration) : undefined,
+        attachments: visitAttachments,
         createdBy: 'current-user', // This should come from auth context
       };
 
@@ -244,6 +250,15 @@ export function VisitForm({ visit, onSuccess, onCancel }: VisitFormProps) {
     if (checked && errors.services) {
       setErrors(prev => ({ ...prev, services: '' }));
     }
+  };
+
+  // Handle file uploads
+  const handleFilesUploaded = (files: UploadedFile[]) => {
+    setVisitAttachments(prev => [...prev, ...files]);
+  };
+
+  const handleFileDeleted = (filePath: string) => {
+    setVisitAttachments(prev => prev.filter(file => file.path !== filePath));
   };
 
   return (
@@ -496,6 +511,28 @@ export function VisitForm({ visit, onSuccess, onCancel }: VisitFormProps) {
                 className="text-right min-h-[100px]"
                 dir="rtl"
               />
+            </div>
+
+            {/* File Attachments */}
+            <div className="space-y-2">
+              <Label className="text-right block">
+                مرفقات الزيارة
+              </Label>
+              <FileUpload
+                onFilesUploaded={handleFilesUploaded}
+                onFileDeleted={handleFileDeleted}
+                existingFiles={visitAttachments}
+                folder={`visits/${formData.branchId || 'temp'}`}
+                maxFiles={10}
+                maxSize={25}
+                allowedTypes={['image', 'pdf', 'doc', 'docx']}
+                accept="image/*,.pdf,.doc,.docx"
+                multiple={true}
+                className="mt-2"
+              />
+              <p className="text-xs text-gray-500 text-right">
+                يمكنك رفع صور الزيارة والتقارير والمستندات الداعمة
+              </p>
             </div>
 
             {/* Warning Messages */}

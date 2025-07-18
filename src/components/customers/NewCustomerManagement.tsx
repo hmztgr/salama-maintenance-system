@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { Company, Contract, Branch } from '@/types/customer';
 import { useAuth } from '@/contexts/AuthContextFirebase';
 import { useCompaniesFirebase } from '@/hooks/useCompaniesFirebase';
-import { useContracts } from '@/hooks/useContracts';
-import { useBranches } from '@/hooks/useBranches';
+import { useContractsFirebase } from '@/hooks/useContractsFirebase';
+import { useBranchesFirebase } from '@/hooks/useBranchesFirebase';
 import { useVisits } from '@/hooks/useVisits';
 import { CompanyForm } from './forms/CompanyForm';
 import { ContractForm } from './forms/ContractForm';
@@ -73,7 +73,7 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
     unarchiveContract,
     deleteContract,
     clearError: clearContractsError
-  } = useContracts();
+  } = useContractsFirebase();
 
   const {
     branches,
@@ -84,9 +84,8 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
     archiveBranch,
     unarchiveBranch,
     deleteBranch,
-    refreshBranches,
     clearError: clearBranchesError
-  } = useBranches();
+  } = useBranchesFirebase();
 
   const { visits, deleteVisit } = useVisits();
 

@@ -58,6 +58,7 @@ export interface InvitationStats {
   accepted: number;
   expired: number;
   revoked: number;
+  acceptanceRate: number;
   byRole: Record<UserRole, number>;
   byType: Record<InvitationType, number>;
 }

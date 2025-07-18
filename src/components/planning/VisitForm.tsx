@@ -197,7 +197,7 @@ export function VisitForm({ visit, onSuccess, onCancel }: VisitFormProps) {
 
       if (visit) {
         // Update existing visit
-        const success = updateVisit(visit.id, visitData);
+        const success = await updateVisit(visit.id, visitData);
         if (success) {
           setSuccessMessage('تم تحديث بيانات الزيارة بنجاح');
           setTimeout(() => {

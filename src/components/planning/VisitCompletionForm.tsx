@@ -63,7 +63,11 @@ export function VisitCompletionForm({ visit, onSuccess, onCancel }: VisitComplet
       newIssue: '',
       newRecommendation: '',
     });
-    setExistingAttachments(visit.attachments || []);
+    setExistingAttachments(
+      Array.isArray(visit.attachments) 
+        ? visit.attachments.map(att => typeof att === 'string' ? att : att.url || att.name || att.path || '') 
+        : []
+    );
   }, [visit, convertToInputDate]);
 
   const handleSubmit = async (e: React.FormEvent) => {

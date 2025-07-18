@@ -43,7 +43,11 @@ export function VisitCompletionForm({ visit, onSuccess, onCancel }: VisitComplet
   });
 
   const [attachments, setAttachments] = useState<File[]>([]);
-  const [existingAttachments, setExistingAttachments] = useState<string[]>(visit.attachments || []);
+  const [existingAttachments, setExistingAttachments] = useState<string[]>(
+    Array.isArray(visit.attachments) 
+      ? visit.attachments.map(att => typeof att === 'string' ? att : att.url || att.name || att.path || '') 
+      : []
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');

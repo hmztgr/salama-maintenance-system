@@ -221,7 +221,7 @@ export function PlanningGrid({ className = '' }: PlanningGridProps) {
   };
 
   // Bulk delete handler
-  const handleBulkDelete = () => {
+  const handleBulkDelete = async () => {
     if (!hasPermission('supervisor') || selectedVisits.size === 0) return;
 
     const visitsToDelete = originalWeeklyPlan.visits.filter(v => selectedVisits.has(v.id));
@@ -234,11 +234,14 @@ export function PlanningGrid({ className = '' }: PlanningGridProps) {
 
     if (confirm(confirmMessage)) {
       let successCount = 0;
-      visitsToDelete.forEach(visit => {
-        if (deleteVisit(visit.id)) {
+      
+      // Use for...of loop to properly handle async deleteVisit calls
+      for (const visit of visitsToDelete) {
+        const result = await deleteVisit(visit.id);
+        if (result) {
           successCount++;
         }
-      });
+      }
 
       alert(`تم حذف ${successCount} زيارة من أصل ${selectedVisits.size}`);
       setSelectedVisits(new Set());

@@ -10,9 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertCircle, CheckCircle, Save, X } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Branch } from '@/types/customer';
-import { useBranches } from '@/hooks/useBranches';
-import { useCompanies } from '@/hooks/useCompanies';
-import { useContracts } from '@/hooks/useContracts';
+import { useBranchesFirebase } from '@/hooks/useBranchesFirebase';
+import { useCompaniesFirebase } from '@/hooks/useCompaniesFirebase';
 
 interface BranchFormProps {
   branch?: Branch;
@@ -27,13 +26,12 @@ const SAUDI_CITIES = [
 ];
 
 export function BranchForm({ branch, onSuccess, onCancel }: BranchFormProps) {
-  const { addBranch, updateBranch } = useBranches();
-  const { companies } = useCompanies();
-  const { contracts } = useContracts();
+  const { addBranch, updateBranch } = useBranchesFirebase();
+  const { companies } = useCompaniesFirebase();
 
   const [formData, setFormData] = useState({
     companyId: branch?.companyId || '',
-    contractIds: branch?.contractIds || [],
+    contractIds: [], // Empty by default - contracts will be linked from contract creation
     city: branch?.city || '',
     location: branch?.location || '',
     branchName: branch?.branchName || '',
@@ -49,20 +47,13 @@ export function BranchForm({ branch, onSuccess, onCancel }: BranchFormProps) {
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Filter contracts based on selected company
-  const availableContracts = contracts.filter(contract =>
-    contract.companyId === formData.companyId && !contract.isArchived
-  );
+  // Note: Contract handling moved to contract creation flow
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.companyId.trim()) {
       newErrors.companyId = 'اختيار الشركة مطلوب';
-    }
-
-    if (formData.contractIds.length === 0) {
-      newErrors.contractIds = 'يجب اختيار عقد واحد على الأقل';
     }
 
     if (!formData.city.trim()) {
@@ -97,18 +88,18 @@ export function BranchForm({ branch, onSuccess, onCancel }: BranchFormProps) {
     try {
       if (branch) {
         // Update existing branch
-        const success = updateBranch(branch.id, formData);
-        if (success) {
+        const result = await updateBranch(branch.id, formData);
+        if (result.success) {
           setSuccessMessage('تم تحديث بيانات الفرع بنجاح');
           setTimeout(() => {
             onSuccess();
           }, 1500);
         } else {
-          setErrorMessage('فشل في تحديث بيانات الفرع');
+          setErrorMessage(result.warnings?.join(', ') || 'فشل في تحديث بيانات الفرع');
         }
       } else {
         // Add new branch
-        const result = addBranch(formData);
+        const result = await addBranch(formData);
         if (result.success) {
           setSuccessMessage('تم إضافة الفرع بنجاح');
 
@@ -140,23 +131,6 @@ export function BranchForm({ branch, onSuccess, onCancel }: BranchFormProps) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
 
-    // Reset contracts when company changes
-    if (field === 'companyId') {
-      setFormData(prev => ({ ...prev, contractIds: [] }));
-    }
-  };
-
-  const handleContractToggle = (contractId: string) => {
-    const updatedContracts = formData.contractIds.includes(contractId)
-      ? formData.contractIds.filter(id => id !== contractId)
-      : [...formData.contractIds, contractId];
-
-    handleInputChange('contractIds', updatedContracts);
-  };
-
-  const getSelectedCompanyName = () => {
-    const company = companies.find(c => c.companyId === formData.companyId);
-    return company?.companyName || '';
   };
 
   return (
@@ -196,38 +170,7 @@ export function BranchForm({ branch, onSuccess, onCancel }: BranchFormProps) {
             )}
           </div>
 
-          {/* Contract Selection */}
-          {formData.companyId && (
-            <div className="space-y-2">
-              <Label className="text-right block">
-                العقود المرتبطة *
-              </Label>
-              <div className="space-y-2 max-h-32 overflow-y-auto border rounded-md p-2">
-                {availableContracts.length === 0 ? (
-                  <p className="text-sm text-gray-500 text-right">
-                    لا توجد عقود متاحة لهذه الشركة
-                  </p>
-                ) : (
-                  availableContracts.map((contract) => (
-                    <div key={contract.contractId} className="flex items-center gap-2 justify-end">
-                      <span className="text-sm">
-                        عقد {contract.contractId} ({contract.contractStartDate} - {contract.contractEndDate})
-                      </span>
-                      <input
-                        type="checkbox"
-                        checked={formData.contractIds.includes(contract.contractId)}
-                        onChange={() => handleContractToggle(contract.contractId)}
-                        className="rounded border-gray-300"
-                      />
-                    </div>
-                  ))
-                )}
-              </div>
-              {errors.contractIds && (
-                <p className="text-sm text-red-500 text-right">{errors.contractIds}</p>
-              )}
-            </div>
-          )}
+          {/* Note: Contract selection moved to contract creation flow */}
 
           {/* City Selection - Enhanced Searchable */}
           <div className="space-y-2">

@@ -37,6 +37,7 @@ export function useSearch<T>(data: T[], searchConfig: {
   cityField?: keyof T;
   teamMemberField?: keyof T;
   dateField?: keyof T;
+  defaultSortField?: string;
   contractFields?: {
     fireExtinguisher?: keyof T;
     alarmSystem?: keyof T;
@@ -55,12 +56,11 @@ export function useSearch<T>(data: T[], searchConfig: {
     regularVisits: { min: '', max: '' },
     emergencyVisits: { min: '', max: '' },
     dateRange: { start: '', end: '' },
-    sortBy: 'id',
+    sortBy: searchConfig.defaultSortField || 'id',
     sortDirection: 'asc'
   });
 
-  // Debug log to verify default sort
-  console.log('🔍 useSearch initialized with sortBy:', filters.sortBy);
+
 
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
 

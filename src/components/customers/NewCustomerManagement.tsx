@@ -106,12 +106,14 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
     statusField: 'isArchived' as keyof Company,
     cityField: 'address' as keyof Company, // Using address as city equivalent
     teamMemberField: 'contactPerson' as keyof Company,
+    defaultSortField: 'companyId',
   };
 
   const contractSearchConfig = {
     searchFields: ['contractId', 'companyId', 'notes'] as (keyof Contract)[],
     statusField: 'isArchived' as keyof Contract,
     dateField: 'contractEndDate' as keyof Contract,
+    defaultSortField: 'contractId',
     contractFields: {
       fireExtinguisher: 'fireExtinguisherMaintenance' as keyof Contract,
       alarmSystem: 'alarmSystemMaintenance' as keyof Contract,
@@ -127,6 +129,7 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
     cityField: 'city' as keyof Branch,
     locationField: 'location' as keyof Branch,
     teamMemberField: 'teamMember' as keyof Branch,
+    defaultSortField: 'branchId',
   };
 
   const companySearch = useSearch(companies, companySearchConfig);
@@ -173,7 +176,6 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
 
   // Detail view handlers
   const handleCompanyClick = (company: Company) => {
-    console.log('🔍 Company clicked:', company.companyId, 'Modal should open');
     setSelectedCompany(company);
   };
 

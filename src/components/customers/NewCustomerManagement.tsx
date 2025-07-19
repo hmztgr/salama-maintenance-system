@@ -555,31 +555,52 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                   <tbody className="bg-white divide-y divide-gray-200">
                     {contractSearch.filteredData.map((contract) => {
                       const company = companies.find(c => c.companyId === contract.companyId);
-                      const services = [];
-                      if (contract.fireExtinguisherMaintenance) services.push({
-                        name: 'طفايات',
-                        icon: '🧯',
-                        color: 'bg-red-100 text-red-800 border-red-200'
-                      });
-                      if (contract.alarmSystemMaintenance) services.push({
-                        name: 'إنذار',
-                        icon: '⚠️',
-                        color: 'bg-yellow-100 text-yellow-800 border-yellow-200'
-                      });
-                      if (contract.fireSuppressionMaintenance) services.push({
-                        name: 'إطفاء',
-                        icon: '💧',
-                        color: 'bg-blue-100 text-blue-800 border-blue-200'
-                      });
-                      if (contract.gasFireSuppression) services.push({
-                        name: 'غاز',
-                        icon: '🟦',
-                        color: 'bg-indigo-100 text-indigo-800 border-indigo-200'
-                      });
-                      if (contract.foamFireSuppression) services.push({
-                        name: 'فوم',
-                        icon: '🟢',
-                        color: 'bg-green-100 text-green-800 border-green-200'
+                      
+                      // NEW: Extract services from all service batches
+                      const services: Array<{name: string; icon: string; color: string}> = [];
+                      const serviceSet = new Set<string>(); // Avoid duplicates
+                      
+                      contract.serviceBatches?.forEach(batch => {
+                        if (batch.services.fireExtinguisherMaintenance && !serviceSet.has('fireExtinguisher')) {
+                          services.push({
+                            name: 'طفايات',
+                            icon: '🧯',
+                            color: 'bg-red-100 text-red-800 border-red-200'
+                          });
+                          serviceSet.add('fireExtinguisher');
+                        }
+                        if (batch.services.alarmSystemMaintenance && !serviceSet.has('alarm')) {
+                          services.push({
+                            name: 'إنذار',
+                            icon: '⚠️',
+                            color: 'bg-yellow-100 text-yellow-800 border-yellow-200'
+                          });
+                          serviceSet.add('alarm');
+                        }
+                        if (batch.services.fireSuppressionMaintenance && !serviceSet.has('suppression')) {
+                          services.push({
+                            name: 'إطفاء',
+                            icon: '💧',
+                            color: 'bg-blue-100 text-blue-800 border-blue-200'
+                          });
+                          serviceSet.add('suppression');
+                        }
+                        if (batch.services.gasFireSuppression && !serviceSet.has('gas')) {
+                          services.push({
+                            name: 'غاز',
+                            icon: '🟦',
+                            color: 'bg-indigo-100 text-indigo-800 border-indigo-200'
+                          });
+                          serviceSet.add('gas');
+                        }
+                        if (batch.services.foamFireSuppression && !serviceSet.has('foam')) {
+                          services.push({
+                            name: 'فوم',
+                            icon: '🟢',
+                            color: 'bg-green-100 text-green-800 border-green-200'
+                          });
+                          serviceSet.add('foam');
+                        }
                       });
 
                       return (
@@ -618,10 +639,19 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                               ))}
                             </div>
                             <div className="text-xs text-gray-500 mt-1 flex items-center gap-2">
-                              <span>📅 {contract.regularVisitsPerYear} زيارة عادية/سنة</span>
-                              {contract.emergencyVisitsPerYear > 0 && (
-                                <span>🚨 {contract.emergencyVisitsPerYear} زيارة طارئة/سنة</span>
-                              )}
+                              {(() => {
+                                // Calculate total visits from all service batches
+                                const totalRegular = contract.serviceBatches?.reduce((sum, batch) => sum + (batch.regularVisitsPerYear || 0), 0) || 0;
+                                const totalEmergency = contract.serviceBatches?.reduce((sum, batch) => sum + (batch.emergencyVisitsPerYear || 0), 0) || 0;
+                                return (
+                                  <>
+                                    <span>📅 {totalRegular} زيارة عادية/سنة</span>
+                                    {totalEmergency > 0 && (
+                                      <span>🚨 {totalEmergency} زيارة طارئة/سنة</span>
+                                    )}
+                                  </>
+                                );
+                              })()}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

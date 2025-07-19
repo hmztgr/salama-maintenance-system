@@ -9,6 +9,7 @@ import { useBranchesFirebase } from '@/hooks/useBranchesFirebase';
 import { useVisits } from '@/hooks/useVisits';
 import { CompanyForm } from './forms/CompanyForm';
 import { ContractForm } from './forms/ContractForm';
+import { EnhancedContractForm } from './forms/EnhancedContractForm';
 import { BranchForm } from './forms/BranchForm';
 import { SearchAndFilter } from '@/components/common/SearchAndFilter';
 import { useSearch } from '@/hooks/useSearch';
@@ -32,6 +33,7 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
   const [showCompanyForm, setShowCompanyForm] = useState(false);
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
   const [showContractForm, setShowContractForm] = useState(false);
+  const [showEnhancedContractForm, setShowEnhancedContractForm] = useState(false);
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
   const [showBranchForm, setShowBranchForm] = useState(false);
   const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
@@ -456,16 +458,28 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                   </button>
                 )}
                 {hasPermission('supervisor') && (
-                  <button
-                    onClick={() => {
-                      setEditingContract(null);
-                      setShowContractForm(true);
-                    }}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
-                  >
-                    <span className="ml-2">➕</span>
-                    إضافة عقد جديد
-                  </button>
+                  <div className="flex space-x-2 space-x-reverse">
+                    <button
+                      onClick={() => {
+                        setEditingContract(null);
+                        setShowEnhancedContractForm(true);
+                      }}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
+                    >
+                      <span className="ml-2">✨</span>
+                      إضافة عقد متقدم (خدمات متعددة)
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditingContract(null);
+                        setShowContractForm(true);
+                      }}
+                      className="bg-gray-600 text-white px-3 py-2 rounded-md hover:bg-gray-700 flex items-center text-sm"
+                    >
+                      <span className="ml-2">➕</span>
+                      عقد بسيط
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -659,13 +673,22 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2 space-x-reverse">
                             <button
-                              className="text-blue-600 hover:text-blue-900"
+                              className="text-blue-600 hover:text-blue-900 ml-2"
+                              onClick={() => {
+                                setEditingContract(contract);
+                                setShowEnhancedContractForm(true);
+                              }}
+                            >
+                              تعديل متقدم
+                            </button>
+                            <button
+                              className="text-green-600 hover:text-green-900"
                               onClick={() => {
                                 setEditingContract(contract);
                                 setShowContractForm(true);
                               }}
                             >
-                              تعديل
+                              تعديل بسيط
                             </button>
                             {hasPermission('admin') && (
                               <button
@@ -954,6 +977,42 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
               }}
               onCancel={() => {
                 setShowContractForm(false);
+                setEditingContract(null);
+              }}
+              isLoading={formLoading}
+            />
+          </div>
+        </div>
+      )}
+
+      {showEnhancedContractForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-6xl w-full mx-4 max-h-[95vh] overflow-y-auto">
+            <EnhancedContractForm
+              contract={editingContract || undefined}
+              companies={companies}
+              branches={branches}
+              onSubmit={async (data) => {
+                setFormLoading(true);
+                try {
+                  if (editingContract) {
+                    await updateContract(editingContract.id, data);
+                    setSuccessMessage('تم تحديث بيانات العقد بنجاح مع الخدمات المتقدمة');
+                  } else {
+                    await addContract(data);
+                    setSuccessMessage('تمت إضافة العقد بنجاح مع الخدمات المتقدمة');
+                  }
+                } catch (e) {
+                  // handle error
+                } finally {
+                  setFormLoading(false);
+                  setShowEnhancedContractForm(false);
+                  setEditingContract(null);
+                  setTimeout(() => setSuccessMessage(''), 5000);
+                }
+              }}
+              onCancel={() => {
+                setShowEnhancedContractForm(false);
                 setEditingContract(null);
               }}
               isLoading={formLoading}

@@ -1164,8 +1164,8 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
       {/* Detail View Modals */}
       {selectedCompany && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg w-full max-w-7xl h-[95vh] overflow-hidden">
-            <div className="h-full overflow-y-auto">
+          <div className="bg-white rounded-lg w-full max-w-7xl h-[95vh] flex flex-col">
+            <div className="flex-1 overflow-y-auto p-6">
               <CompanyDetailView
                 company={selectedCompany}
                 onBack={() => setSelectedCompany(null)}
@@ -1195,8 +1195,8 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
 
       {selectedContract && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg w-full max-w-7xl h-[95vh] overflow-hidden">
-            <div className="h-full overflow-y-auto">
+          <div className="bg-white rounded-lg w-full max-w-7xl h-[95vh] flex flex-col">
+            <div className="flex-1 overflow-y-auto p-6">
               <ContractDetailView
                 contract={selectedContract}
                 company={companies.find(c => c.companyId === selectedContract.companyId)}
@@ -1228,8 +1228,8 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
 
       {selectedBranch && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg w-full max-w-7xl h-[95vh] overflow-hidden">
-            <div className="h-full overflow-y-auto">
+          <div className="bg-white rounded-lg w-full max-w-7xl h-[95vh] flex flex-col">
+            <div className="flex-1 overflow-y-auto p-6">
               <BranchDetailView
                 branch={selectedBranch}
                 company={companies.find(c => c.companyId === selectedBranch.companyId)}

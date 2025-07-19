@@ -55,7 +55,7 @@ export function useSearch<T>(data: T[], searchConfig: {
     regularVisits: { min: '', max: '' },
     emergencyVisits: { min: '', max: '' },
     dateRange: { start: '', end: '' },
-    sortBy: 'name',
+    sortBy: 'id',
     sortDirection: 'asc'
   });
 

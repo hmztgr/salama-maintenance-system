@@ -17,10 +17,19 @@
 - **Netlify Deployment**: ✅ Ready for production
 - **Testing Status**: All critical functionality verified
 
-## 🚀 Recent Major Updates (v55)
+## 🚀 Recent Major Updates (v55+)
+
+### ✅ Complete Contract System Restructure (NEW)
+**Major architectural enhancement with full backward compatibility**:
+
+- **Service Batches**: Contracts now support multiple service batches per branch groups
+- **Flexible Architecture**: Different services can be assigned to different branch clusters
+- **Enhanced Planning**: Visit scheduling now works with granular service batch assignments
+- **Backward Compatibility**: All existing forms and data continue to work seamlessly
+- **Import/Export**: CSV import system upgraded to support new structure
 
 ### ✅ Complete TypeScript Compilation Resolution
-All 14 TypeScript compilation errors that were blocking Netlify deployment have been systematically resolved:
+All TypeScript compilation errors that were blocking Netlify deployment have been systematically resolved:
 
 - **System Fixes**: Import/export validation, Firebase hooks, branch configuration
 - **Async/Await Fixes**: 6 components updated with proper Promise handling
@@ -35,10 +44,11 @@ All 14 TypeScript compilation errors that were blocking Netlify deployment have 
 - Comprehensive permission checking
 
 ### 🏢 Customer Management
-- Complete company, branch, and contract management
+- Complete company, branch, and contract management with **new service batch architecture**
+- **Flexible Contract System**: Service batches allow different services for different branch groups
 - Arabic-first UI with full RTL support
 - Saudi cities validation and fuzzy matching
-- Excel/CSV import/export with enhanced validation
+- Excel/CSV import/export with enhanced validation and automatic structure conversion
 
 ### 📅 Visit Planning & Scheduling
 - Annual planning with automated scheduling
@@ -51,6 +61,39 @@ All 14 TypeScript compilation errors that were blocking Netlify deployment have 
 - Company service history tracking
 - Team performance analytics
 - Advanced filtering and CSV export
+
+## 🏗️ Contract System Architecture
+
+### 📋 New Service Batch Structure
+```typescript
+Contract {
+  companyId: string;
+  contractStartDate: string;
+  contractEndDate: string;
+  serviceBatches: ServiceBatch[];
+}
+
+ServiceBatch {
+  batchId: string;
+  branchIds: string[];  // Branches included in this service batch
+  services: {
+    fireExtinguisherMaintenance: boolean;
+    alarmSystemMaintenance: boolean;
+    fireSuppressionMaintenance: boolean;
+    gasFireSuppression: boolean;
+    foamFireSuppression: boolean;
+  };
+  regularVisitsPerYear: number;
+  emergencyVisitsPerYear: number;
+  notes: string;
+}
+```
+
+### 🔄 Backward Compatibility
+- **Old Forms**: Automatically convert single service selections to service batches
+- **CSV Import**: Converts old format (individual flags) to new structure seamlessly  
+- **Data Display**: Aggregates services from all batches for unified view
+- **Visit Planning**: Works with service batches to schedule appropriate visits
 
 ## 🛠 Technology Stack
 

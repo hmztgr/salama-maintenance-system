@@ -293,10 +293,38 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
               className="mb-6"
             />
 
-            {/* Results Summary */}
+            {/* Results Summary & Bulk Actions */}
             <div className="flex justify-between items-center mb-4">
-              <div className="text-sm text-gray-600">
-                عرض {companySearch.filteredData.length} من أصل {companies.filter(c => !c.isArchived).length} شركة
+              <div className="flex items-center gap-4">
+                <div className="text-sm text-gray-600">
+                  عرض {companySearch.filteredData.length} من أصل {companies.filter(c => !c.isArchived).length} شركة
+                </div>
+                {selectedCompanies.size > 0 && hasPermission('admin') && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-blue-600">
+                      {selectedCompanies.size} محدد
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        if (confirm(`هل أنت متأكد من حذف ${selectedCompanies.size} شركة؟`)) {
+                          let successCount = 0;
+                          for (const companyId of selectedCompanies) {
+                            const success = await deleteCompany(companyId);
+                            if (success) successCount++;
+                          }
+                          setSelectedCompanies(new Set());
+                          setSuccessMessage(`تم حذف ${successCount} شركة بنجاح`);
+                          setTimeout(() => setSuccessMessage(''), 3000);
+                        }
+                      }}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      🗑️ حذف المحدد
+                    </Button>
+                  </div>
+                )}
               </div>
               <div className="text-xs text-gray-500">
                 إجمالي الشركات (مع المؤرشف): {companies.length}
@@ -308,6 +336,18 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
+                      <th className="px-6 py-3 text-center">
+                        <Checkbox
+                          checked={companySearch.filteredData.length > 0 && selectedCompanies.size === companySearch.filteredData.length}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedCompanies(new Set(companySearch.filteredData.map(c => c.companyId)));
+                            } else {
+                              setSelectedCompanies(new Set());
+                            }
+                          }}
+                        />
+                      </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         معرف الشركة
                       </th>
@@ -325,6 +365,12 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                   <tbody className="bg-white divide-y divide-gray-200">
                     {companySearch.filteredData.map((company) => (
                       <tr key={company.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                          <Checkbox
+                            checked={selectedCompanies.has(company.companyId)}
+                            onCheckedChange={(checked) => handleCompanySelect(company.companyId, checked === true)}
+                          />
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
                           {company.companyId}
                         </td>
@@ -431,10 +477,38 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
               className="mb-6"
             />
 
-            {/* Results Summary */}
+            {/* Results Summary & Bulk Actions */}
             <div className="flex justify-between items-center mb-4">
-              <div className="text-sm text-gray-600">
-                عرض {contractSearch.filteredData.length} من أصل {contracts.filter(c => !c.isArchived).length} عقد
+              <div className="flex items-center gap-4">
+                <div className="text-sm text-gray-600">
+                  عرض {contractSearch.filteredData.length} من أصل {contracts.filter(c => !c.isArchived).length} عقد
+                </div>
+                {selectedContracts.size > 0 && hasPermission('admin') && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-blue-600">
+                      {selectedContracts.size} محدد
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        if (confirm(`هل أنت متأكد من حذف ${selectedContracts.size} عقد؟`)) {
+                          let successCount = 0;
+                          for (const contractId of selectedContracts) {
+                            const success = await deleteContract(contractId);
+                            if (success) successCount++;
+                          }
+                          setSelectedContracts(new Set());
+                          setSuccessMessage(`تم حذف ${successCount} عقد بنجاح`);
+                          setTimeout(() => setSuccessMessage(''), 3000);
+                        }
+                      }}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      🗑️ حذف المحدد
+                    </Button>
+                  </div>
+                )}
               </div>
               <div className="text-xs text-gray-500">
                 إجمالي العقود (مع المؤرشف): {contracts.length}
@@ -446,6 +520,18 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
+                      <th className="px-6 py-3 text-center">
+                        <Checkbox
+                          checked={contractSearch.filteredData.length > 0 && selectedContracts.size === contractSearch.filteredData.length}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedContracts(new Set(contractSearch.filteredData.map(c => c.contractId)));
+                            } else {
+                              setSelectedContracts(new Set());
+                            }
+                          }}
+                        />
+                      </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         معرف العقد
                       </th>
@@ -498,6 +584,12 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
 
                       return (
                         <tr key={contract.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <Checkbox
+                              checked={selectedContracts.has(contract.contractId)}
+                              onCheckedChange={(checked) => handleContractSelect(contract.contractId, checked === true)}
+                            />
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
                             {contract.contractId}
                           </td>
@@ -629,10 +721,38 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
               className="mb-6"
             />
 
-            {/* Results Summary */}
+            {/* Results Summary & Bulk Actions */}
             <div className="flex justify-between items-center mb-4">
-              <div className="text-sm text-gray-600">
-                عرض {branchSearch.filteredData.length} من أصل {branches.filter(b => !b.isArchived).length} فرع
+              <div className="flex items-center gap-4">
+                <div className="text-sm text-gray-600">
+                  عرض {branchSearch.filteredData.length} من أصل {branches.filter(b => !b.isArchived).length} فرع
+                </div>
+                {selectedBranches.size > 0 && hasPermission('admin') && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-blue-600">
+                      {selectedBranches.size} محدد
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        if (confirm(`هل أنت متأكد من حذف ${selectedBranches.size} فرع؟`)) {
+                          let successCount = 0;
+                          for (const branchId of selectedBranches) {
+                            const success = await deleteBranch(branchId);
+                            if (success) successCount++;
+                          }
+                          setSelectedBranches(new Set());
+                          setSuccessMessage(`تم حذف ${successCount} فرع بنجاح`);
+                          setTimeout(() => setSuccessMessage(''), 3000);
+                        }
+                      }}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      🗑️ حذف المحدد
+                    </Button>
+                  </div>
+                )}
               </div>
               <div className="text-xs text-gray-500">
                 إجمالي الفروع (مع المؤرشف): {branches.length}
@@ -644,6 +764,18 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
+                      <th className="px-6 py-3 text-center">
+                        <Checkbox
+                          checked={branchSearch.filteredData.length > 0 && selectedBranches.size === branchSearch.filteredData.length}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedBranches(new Set(branchSearch.filteredData.map(b => b.branchId)));
+                            } else {
+                              setSelectedBranches(new Set());
+                            }
+                          }}
+                        />
+                      </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         معرف الفرع
                       </th>
@@ -661,6 +793,12 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                   <tbody className="bg-white divide-y divide-gray-200">
                     {branchSearch.filteredData.map((branch) => (
                       <tr key={branch.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                          <Checkbox
+                            checked={selectedBranches.has(branch.branchId)}
+                            onCheckedChange={(checked) => handleBranchSelect(branch.branchId, checked === true)}
+                          />
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
                           {branch.branchId}
                         </td>

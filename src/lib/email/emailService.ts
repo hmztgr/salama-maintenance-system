@@ -1,4 +1,4 @@
-// Email Service for sending real invitations
+// Enhanced Email Service for sending real invitations
 // Uses EmailJS for client-side email sending (production-ready alternative)
 
 export interface EmailTemplate {
@@ -28,42 +28,82 @@ export interface EmailResult {
 class EmailService {
   private config: EmailConfig;
   private isEmailJSLoaded = false;
+  private configValidated = false;
 
   constructor(config: EmailConfig) {
     this.config = config;
+    this.validateConfigOnInit();
   }
 
-  // Load EmailJS dynamically
+  // Validate configuration on initialization
+  private validateConfigOnInit(): void {
+    const missing = [];
+    if (!this.config.serviceId) missing.push('NEXT_PUBLIC_EMAILJS_SERVICE_ID');
+    if (!this.config.templateId) missing.push('NEXT_PUBLIC_EMAILJS_TEMPLATE_ID');
+    if (!this.config.publicKey) missing.push('NEXT_PUBLIC_EMAILJS_PUBLIC_KEY');
+
+    if (missing.length > 0) {
+      console.warn('⚠️ EmailJS Configuration Missing:', {
+        missing,
+        message: 'Email invitations will not work without these environment variables'
+      });
+      this.configValidated = false;
+    } else {
+      this.configValidated = true;
+      console.log('✅ EmailJS Configuration validated successfully');
+    }
+  }
+
+  // Load EmailJS dynamically with better error handling
   private async loadEmailJS(): Promise<void> {
     if (this.isEmailJSLoaded || typeof window === 'undefined') return;
 
     return new Promise((resolve, reject) => {
       if (window.emailjs) {
-        this.isEmailJSLoaded = true;
-        resolve();
+        try {
+          window.emailjs.init(this.config.publicKey);
+          this.isEmailJSLoaded = true;
+          resolve();
+        } catch (error) {
+          reject(new Error(`Failed to initialize EmailJS: ${error}`));
+        }
         return;
       }
 
       const script = document.createElement('script');
       script.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js';
       script.onload = () => {
-        if (window.emailjs) {
-          window.emailjs.init(this.config.publicKey);
-          this.isEmailJSLoaded = true;
-          resolve();
-        } else {
-          reject(new Error('EmailJS failed to load'));
+        try {
+          if (window.emailjs) {
+            window.emailjs.init(this.config.publicKey);
+            this.isEmailJSLoaded = true;
+            resolve();
+          } else {
+            reject(new Error('EmailJS library loaded but not available'));
+          }
+        } catch (error) {
+          reject(new Error(`Failed to initialize EmailJS after loading: ${error}`));
         }
       };
-      script.onerror = () => reject(new Error('Failed to load EmailJS script'));
+      script.onerror = () => reject(new Error('Failed to load EmailJS script from CDN'));
       document.head.appendChild(script);
     });
   }
 
-  // Send invitation email
+  // Send invitation email with enhanced validation
   async sendInvitationEmail(template: EmailTemplate): Promise<EmailResult> {
     try {
       console.log('📧 Sending invitation email to:', template.to_email);
+
+      // Check configuration first
+      if (!this.configValidated) {
+        const missing = [];
+        if (!this.config.serviceId) missing.push('Service ID');
+        if (!this.config.templateId) missing.push('Template ID');
+        if (!this.config.publicKey) missing.push('Public Key');
+        
+        throw new Error(`إعدادات البريد الإلكتروني مفقودة: ${missing.join(', ')}. تحقق من متغيرات البيئة.`);
+      }
 
       // Check if we're in a browser environment
       if (typeof window === 'undefined') {
@@ -77,7 +117,7 @@ class EmailService {
       await this.loadEmailJS();
 
       if (!window.emailjs) {
-        throw new Error('EmailJS not available');
+        throw new Error('EmailJS library not loaded properly');
       }
 
       // Send email using EmailJS
@@ -203,6 +243,29 @@ ${invitationLink}
       role: roleName,
       company_name: 'شركة سلامة للصيانة',
       expiry_date: expiryDate
+    };
+  }
+
+  // Check if EmailJS is properly configured
+  static isConfigured(): boolean {
+    const config = {
+      serviceId: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || '',
+      templateId: process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || '',
+      publicKey: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || ''
+    };
+    return !!(config.serviceId && config.templateId && config.publicKey);
+  }
+
+  // Get configuration status with details
+  static getConfigurationStatus(): { configured: boolean; missing: string[] } {
+    const missing = [];
+    if (!process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID) missing.push('NEXT_PUBLIC_EMAILJS_SERVICE_ID');
+    if (!process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID) missing.push('NEXT_PUBLIC_EMAILJS_TEMPLATE_ID');
+    if (!process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY) missing.push('NEXT_PUBLIC_EMAILJS_PUBLIC_KEY');
+    
+    return {
+      configured: missing.length === 0,
+      missing
     };
   }
 

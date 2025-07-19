@@ -57,60 +57,96 @@ const SAUDI_CITIES = [
   'تربة', 'رنية', 'الخرمة', 'الموية', 'ميسان', 'أضم', 'الكامل'
 ];
 
-// Column mapping for different languages and variations
+// Enhanced Column mapping for different languages and variations with better Arabic support
 const COLUMN_MAPPINGS = {
   companies: {
-    companyName: ['companyName', 'company_name', 'اسم الشركة*', 'اسم الشركة', 'Company Name', 'الشركة'],
-    email: ['email', 'Email', 'البريد الإلكتروني', 'البريد', 'company_email'],
-    phone: ['phone', 'Phone', 'رقم الهاتف*', 'رقم الهاتف', 'الهاتف', 'phone_number'],
-    address: ['address', 'Address', 'العنوان*', 'العنوان', 'company_address'],
-    city: ['city', 'City', 'المدينة*', 'المدينة', 'company_city'],
-    contactPerson: ['contactPerson', 'contact_person', 'الشخص المسؤول', 'Contact Person', 'المسؤول'],
-    notes: ['notes', 'Notes', 'ملاحظات', 'Notes', 'التعليقات']
+    companyName: ['companyName', 'company_name', 'اسم الشركة*', 'اسم الشركة', 'Company Name', 'الشركة', 'اسم', 'شركة', 'الاسم'],
+    email: ['email', 'Email', 'البريد الإلكتروني', 'البريد', 'company_email', 'ايميل', 'بريد'],
+    phone: ['phone', 'Phone', 'رقم الهاتف*', 'رقم الهاتف', 'الهاتف', 'phone_number', 'هاتف', 'رقم', 'جوال', 'موبايل'],
+    address: ['address', 'Address', 'العنوان*', 'العنوان', 'company_address', 'عنوان', 'موقع'],
+    city: ['city', 'City', 'المدينة*', 'المدينة', 'company_city', 'مدينة'],
+    contactPerson: ['contactPerson', 'contact_person', 'الشخص المسؤول', 'Contact Person', 'المسؤول', 'شخص مسؤول', 'مسؤول', 'جهة اتصال'],
+    notes: ['notes', 'Notes', 'ملاحظات', 'Notes', 'التعليقات', 'تعليق', 'ملحوظات']
   },
   contracts: {
-    companyId: ['companyId', 'company_id', 'معرف الشركة*', 'معرف الشركة', 'Company ID'],
-    contractStartDate: ['contractStartDate', 'contract_start_date', 'تاريخ بداية العقد*', 'تاريخ البداية', 'Start Date'],
-    contractEndDate: ['contractEndDate', 'contract_end_date', 'تاريخ انتهاء العقد*', 'تاريخ الانتهاء', 'End Date'],
-    regularVisitsPerYear: ['regularVisitsPerYear', 'regular_visits', 'عدد الزيارات العادية سنوياً*', 'الزيارات العادية', 'Regular Visits'],
-    emergencyVisitsPerYear: ['emergencyVisitsPerYear', 'emergency_visits', 'عدد الزيارات الطارئة سنوياً*', 'الزيارات الطارئة', 'Emergency Visits'],
-    contractValue: ['contractValue', 'contract_value', 'قيمة العقد', 'Contract Value', 'القيمة'],
-    fireExtinguisherMaintenance: ['fireExtinguisherMaintenance', 'fire_extinguisher', 'صيانة الطفايات*', 'صيانة الطفايات', 'Fire Extinguisher'],
-    alarmSystemMaintenance: ['alarmSystemMaintenance', 'alarm_system', 'صيانة نظام الإنذار*', 'نظام الإنذار', 'Alarm System'],
-    fireSuppressionMaintenance: ['fireSuppressionMaintenance', 'fire_suppression', 'صيانة نظام الإطفاء*', 'نظام الإطفاء', 'Fire Suppression'],
-    gasFireSuppression: ['gasFireSuppression', 'gas_suppression', 'نظام الإطفاء بالغاز*', 'إطفاء الغاز', 'Gas Suppression'],
-    foamFireSuppression: ['foamFireSuppression', 'foam_suppression', 'نظام الإطفاء بالفوم*', 'إطفاء الفوم', 'Foam Suppression'],
-    notes: ['notes', 'Notes', 'ملاحظات', 'التعليقات']
+    companyId: ['companyId', 'company_id', 'معرف الشركة*', 'معرف الشركة', 'Company ID', 'معرف', 'رقم الشركة', 'id'],
+    contractStartDate: ['contractStartDate', 'contract_start_date', 'تاريخ بداية العقد*', 'تاريخ البداية', 'Start Date', 'بداية العقد', 'تاريخ بدء'],
+    contractEndDate: ['contractEndDate', 'contract_end_date', 'تاريخ انتهاء العقد*', 'تاريخ الانتهاء', 'End Date', 'انتهاء العقد', 'تاريخ انتهاء'],
+    regularVisitsPerYear: ['regularVisitsPerYear', 'regular_visits', 'عدد الزيارات العادية سنوياً*', 'الزيارات العادية', 'Regular Visits', 'زيارات عادية', 'زيارات'],
+    emergencyVisitsPerYear: ['emergencyVisitsPerYear', 'emergency_visits', 'عدد الزيارات الطارئة سنوياً*', 'الزيارات الطارئة', 'Emergency Visits', 'زيارات طارئة', 'طوارئ'],
+    contractValue: ['contractValue', 'contract_value', 'قيمة العقد', 'Contract Value', 'القيمة', 'قيمة', 'سعر'],
+    fireExtinguisherMaintenance: ['fireExtinguisherMaintenance', 'fire_extinguisher', 'صيانة الطفايات*', 'صيانة الطفايات', 'Fire Extinguisher', 'طفايات', 'صيانة طفايات'],
+    alarmSystemMaintenance: ['alarmSystemMaintenance', 'alarm_system', 'صيانة نظام الإنذار*', 'نظام الإنذار', 'Alarm System', 'إنذار', 'صيانة إنذار'],
+    fireSuppressionMaintenance: ['fireSuppressionMaintenance', 'fire_suppression', 'صيانة نظام الإطفاء*', 'نظام الإطفاء', 'Fire Suppression', 'إطفاء', 'صيانة إطفاء'],
+    gasFireSuppression: ['gasFireSuppression', 'gas_suppression', 'نظام الإطفاء بالغاز*', 'إطفاء الغاز', 'Gas Suppression', 'غاز', 'إطفاء غاز'],
+    foamFireSuppression: ['foamFireSuppression', 'foam_suppression', 'نظام الإطفاء بالفوم*', 'إطفاء الفوم', 'Foam Suppression', 'فوم', 'إطفاء فوم'],
+    notes: ['notes', 'Notes', 'ملاحظات', 'التعليقات', 'تعليق', 'ملحوظات']
   },
   branches: {
-    companyId: ['companyId', 'company_id', 'معرف الشركة*', 'معرف الشركة', 'Company ID'],
-    contractIds: ['contractIds', 'contract_ids', 'معرفات العقود*', 'معرفات العقود', 'Contract IDs'],
-    city: ['city', 'City', 'المدينة*', 'المدينة'],
-    location: ['location', 'Location', 'الموقع*', 'الموقع'],
-    branchName: ['branchName', 'branch_name', 'اسم الفرع*', 'اسم الفرع', 'Branch Name'],
-    address: ['address', 'Address', 'العنوان التفصيلي', 'العنوان', 'branch_address'],
-    contactPerson: ['contactPerson', 'contact_person', 'الشخص المسؤول', 'Contact Person', 'المسؤول'],
-    contactPhone: ['contactPhone', 'contact_phone', 'هاتف التواصل', 'رقم التواصل', 'Contact Phone'],
-    teamMember: ['teamMember', 'team_member', 'فريق العمل المختص', 'فريق العمل', 'Team Member'],
-    notes: ['notes', 'Notes', 'ملاحظات', 'التعليقات']
+    companyId: ['companyId', 'company_id', 'معرف الشركة*', 'معرف الشركة', 'Company ID', 'معرف', 'رقم الشركة'],
+    contractIds: ['contractIds', 'contract_ids', 'معرفات العقود*', 'معرفات العقود', 'Contract IDs', 'عقود', 'معرفات عقود'],
+    city: ['city', 'City', 'المدينة*', 'المدينة', 'مدينة'],
+    location: ['location', 'Location', 'الموقع*', 'الموقع', 'موقع', 'منطقة'],
+    branchName: ['branchName', 'branch_name', 'اسم الفرع*', 'اسم الفرع', 'Branch Name', 'فرع', 'اسم فرع'],
+    address: ['address', 'Address', 'العنوان التفصيلي', 'العنوان', 'branch_address', 'عنوان', 'عنوان تفصيلي'],
+    contactPerson: ['contactPerson', 'contact_person', 'الشخص المسؤول', 'Contact Person', 'المسؤول', 'مسؤول', 'جهة اتصال'],
+    contactPhone: ['contactPhone', 'contact_phone', 'هاتف التواصل', 'رقم التواصل', 'Contact Phone', 'هاتف', 'رقم هاتف', 'جوال'],
+    teamMember: ['teamMember', 'team_member', 'فريق العمل المختص', 'فريق العمل', 'Team Member', 'فريق', 'فريق عمل'],
+    notes: ['notes', 'Notes', 'ملاحظات', 'التعليقات', 'تعليق', 'ملحوظات']
   }
 };
 
-// Helper function to find the correct field name from header
+// Enhanced helper function with better fuzzy matching for Arabic text
 const mapHeaderToField = (header: string, entityType: 'companies' | 'contracts' | 'branches'): string | null => {
   const mappings = COLUMN_MAPPINGS[entityType];
   const cleanHeader = header.trim();
 
+  // First try exact matching
   for (const [fieldName, variations] of Object.entries(mappings)) {
     if (variations.some(variation => 
       variation.toLowerCase() === cleanHeader.toLowerCase() ||
-      variation === cleanHeader ||
-      cleanHeader.includes(variation) ||
-      variation.includes(cleanHeader)
+      variation === cleanHeader
     )) {
       return fieldName;
     }
   }
+
+  // Then try partial matching with Arabic support
+  for (const [fieldName, variations] of Object.entries(mappings)) {
+    if (variations.some(variation => {
+      const cleanVariation = variation.toLowerCase().replace(/\*/g, '');
+      const cleanHeaderLower = cleanHeader.toLowerCase().replace(/\*/g, '');
+      
+      // Check if header contains the variation or vice versa
+      return cleanHeaderLower.includes(cleanVariation) || 
+             cleanVariation.includes(cleanHeaderLower) ||
+             // Arabic-specific matching (remove diacritics and common prefixes)
+             cleanHeaderLower.replace(/[أإآ]/g, 'ا').includes(cleanVariation.replace(/[أإآ]/g, 'ا'));
+    })) {
+      return fieldName;
+    }
+  }
+
+  // Final fallback: check if any key Arabic words match
+  const arabicKeywords = {
+    phone: ['هاتف', 'جوال', 'موبايل', 'رقم'],
+    address: ['عنوان', 'موقع', 'مكان'],
+    city: ['مدينة', 'محافظة'],
+    name: ['اسم', 'اسم'],
+    email: ['ايميل', 'بريد', 'email']
+  };
+
+  for (const [fieldGroup, keywords] of Object.entries(arabicKeywords)) {
+    if (keywords.some(keyword => cleanHeader.includes(keyword))) {
+      // Map to specific field based on entity type
+      if (fieldGroup === 'phone' && entityType === 'companies') return 'phone';
+      if (fieldGroup === 'address' && entityType === 'companies') return 'address';
+      if (fieldGroup === 'city') return 'city';
+      if (fieldGroup === 'name' && entityType === 'companies') return 'companyName';
+      if (fieldGroup === 'email' && entityType === 'companies') return 'email';
+    }
+  }
+
   return null;
 };
 
@@ -451,9 +487,20 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
         }
       });
 
-      // If there are critical header issues, provide helpful error message
+      // If there are critical header issues, provide helpful error message with suggestions
       if (missingHeaders.length > 0) {
-        throw new Error(`أعمدة مطلوبة مفقودة: ${missingHeaders.join(', ')}. تأكد من استخدام القالب الصحيح أو تحقق من أسماء الأعمدة.`);
+        const suggestions = currentConfig.required.map((requiredField: string) => {
+          const arabicNames = COLUMN_MAPPINGS[entityType][requiredField as keyof typeof COLUMN_MAPPINGS[typeof entityType]];
+          const suggestionList = arabicNames?.slice(0, 3).join(' أو ') || requiredField;
+          return `• ${requiredField}: ${suggestionList}`;
+        }).join('\n');
+        
+        throw new Error(`أعمدة مطلوبة مفقودة: ${missingHeaders.join(', ')}.
+
+أسماء الأعمدة المقبولة:
+${suggestions}
+
+تأكد من استخدام القالب الصحيح أو تحقق من أسماء الأعمدة.`);
       }
 
       console.log('📋 Import Header Validation:', {

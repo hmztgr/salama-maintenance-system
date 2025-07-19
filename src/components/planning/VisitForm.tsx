@@ -68,7 +68,14 @@ export function VisitForm({ visit, onSuccess, onCancel }: VisitFormProps) {
 
   const availableBranches = branches.filter(branch =>
     branch.companyId === formData.companyId &&
-    (formData.contractId ? branch.contractIds.includes(formData.contractId) : true) &&
+    (formData.contractId ? 
+      contracts.some(contract => 
+        contract.contractId === formData.contractId &&
+        contract.serviceBatches?.some(batch => 
+          batch.branchIds.includes(branch.branchId)
+        )
+      ) : true
+    ) &&
     !branch.isArchived
   );
 

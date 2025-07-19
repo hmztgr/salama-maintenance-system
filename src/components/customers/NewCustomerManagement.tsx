@@ -16,8 +16,12 @@ import { useSearch } from '@/hooks/useSearch';
 import { formatDateForDisplay } from '@/lib/date-handler';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import { ImportTemplate } from './import/ImportTemplate';
 import { ExportTemplate } from './export/ExportTemplate';
+import { CompanyDetailView } from './CompanyDetailView';
+import { ContractDetailView } from './ContractDetailView';
+import { BranchDetailView } from './BranchDetailView';
 
 export interface NewCustomerManagementProps {
   className?: string;
@@ -49,6 +53,11 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
   const [showImportTemplate, setShowImportTemplate] = useState(false);
   const [showExportTemplate, setShowExportTemplate] = useState(false);
   const [importExportType, setImportExportType] = useState<'companies' | 'contracts' | 'branches'>('companies');
+
+  // Detail view state
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
+  const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
 
   // Data hooks - using Firebase
   const {
@@ -160,6 +169,25 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
       else newSet.delete(branchId);
       return newSet;
     });
+  };
+
+  // Detail view handlers
+  const handleCompanyClick = (company: Company) => {
+    setSelectedCompany(company);
+  };
+
+  const handleContractClick = (contract: Contract) => {
+    setSelectedContract(contract);
+  };
+
+  const handleBranchClick = (branch: Branch) => {
+    setSelectedBranch(branch);
+  };
+
+  const handleBackToList = () => {
+    setSelectedCompany(null);
+    setSelectedContract(null);
+    setSelectedBranch(null);
   };
 
   const tabs = [
@@ -374,7 +402,11 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {companySearch.filteredData.map((company) => (
-                      <tr key={company.id} className="hover:bg-gray-50">
+                      <tr 
+                        key={company.id} 
+                        className="hover:bg-gray-50 cursor-pointer"
+                        onClick={() => handleCompanyClick(company)}
+                      >
                         <td className="px-6 py-4 whitespace-nowrap text-center">
                           <Checkbox
                             checked={selectedCompanies.has(company.companyId)}
@@ -635,7 +667,11 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                       });
 
                       return (
-                        <tr key={contract.id} className="hover:bg-gray-50">
+                        <tr 
+                          key={contract.id} 
+                          className="hover:bg-gray-50 cursor-pointer"
+                          onClick={() => handleContractClick(contract)}
+                        >
                           <td className="px-6 py-4 whitespace-nowrap text-center">
                             <Checkbox
                               checked={selectedContracts.has(contract.contractId)}
@@ -877,7 +913,11 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {branchSearch.filteredData.map((branch) => (
-                      <tr key={branch.id} className="hover:bg-gray-50">
+                      <tr 
+                        key={branch.id} 
+                        className="hover:bg-gray-50 cursor-pointer"
+                        onClick={() => handleBranchClick(branch)}
+                      >
                         <td className="px-6 py-4 whitespace-nowrap text-center">
                           <Checkbox
                             checked={selectedBranches.has(branch.branchId)}
@@ -1119,6 +1159,86 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
             />
           </div>
         </div>
+      )}
+
+      {/* Detail Views */}
+      {selectedCompany && (
+        <CompanyDetailView
+          company={selectedCompany}
+          onBack={handleBackToList}
+          onEdit={() => {
+            setEditingCompany(selectedCompany);
+            setShowCompanyForm(true);
+            setSelectedCompany(null);
+          }}
+          onDelete={async () => {
+            if (confirm(`هل أنت متأكد من حذف الشركة "${selectedCompany.companyName}"؟`)) {
+              const success = await deleteCompany(selectedCompany.companyId);
+              if (success) {
+                setSuccessMessage('تم حذف الشركة بنجاح');
+                setSelectedCompany(null);
+              } else {
+                setSuccessMessage('فشل في حذف الشركة');
+              }
+              setTimeout(() => setSuccessMessage(''), 3000);
+            }
+          }}
+          hasPermission={hasPermission}
+        />
+      )}
+
+      {selectedContract && (
+        <ContractDetailView
+          contract={selectedContract}
+          company={companies.find(c => c.companyId === selectedContract.companyId)}
+          branches={branches}
+          onBack={handleBackToList}
+          onEdit={() => {
+            setEditingContract(selectedContract);
+            setShowEnhancedContractForm(true);
+            setSelectedContract(null);
+          }}
+          onDelete={async () => {
+            if (confirm(`هل أنت متأكد من حذف العقد "${selectedContract.contractId}"؟`)) {
+              const success = await deleteContract(selectedContract.id);
+              if (success) {
+                setSuccessMessage('تم حذف العقد بنجاح');
+                setSelectedContract(null);
+              } else {
+                setSuccessMessage('فشل في حذف العقد');
+              }
+              setTimeout(() => setSuccessMessage(''), 3000);
+            }
+          }}
+          hasPermission={hasPermission}
+        />
+      )}
+
+      {selectedBranch && (
+        <BranchDetailView
+          branch={selectedBranch}
+          company={companies.find(c => c.companyId === selectedBranch.companyId)}
+          contracts={contracts}
+          onBack={handleBackToList}
+          onEdit={() => {
+            setEditingBranch(selectedBranch);
+            setShowBranchForm(true);
+            setSelectedBranch(null);
+          }}
+          onDelete={async () => {
+            if (confirm(`هل أنت متأكد من حذف الفرع "${selectedBranch.branchName}"؟`)) {
+              const success = await deleteBranch(selectedBranch.id);
+              if (success) {
+                setSuccessMessage('تم حذف الفرع بنجاح');
+                setSelectedBranch(null);
+              } else {
+                setSuccessMessage('فشل في حذف الفرع');
+              }
+              setTimeout(() => setSuccessMessage(''), 3000);
+            }
+          }}
+          hasPermission={hasPermission}
+        />
       )}
     </div>
   );

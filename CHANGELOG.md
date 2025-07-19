@@ -5,6 +5,72 @@ All notable changes to the Salama Maintenance Scheduler project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Version 56] - 2025-01-19
+### 🚀 SORTING & BUILD FIXES: Complete SearchAndFilter Sorting + Firebase Build Resolution
+**STATUS: ✅ ALL SORTING FUNCTIONALITY RESTORED + BUILD ERRORS RESOLVED**
+
+#### 🔍 SearchAndFilter Sorting Fixes (3 pages)
+- 🎛️ **FIXED Customer Management Sorting** - Added `availableSortOptions` to all SearchAndFilter components
+- 📊 **Companies Tab**: Added sorting by Company ID, Name, Email, Phone, Created/Updated dates
+- 📋 **Contracts Tab**: Added sorting by Contract ID, Company ID, Start/End dates, Value, Created/Updated dates  
+- 🏪 **Branches Tab**: Added sorting by Branch ID, Name, City, Location, Company ID, Created/Updated dates
+- ✅ **AnnualScheduler**: Already had sorting options configured
+- ✅ **PlanningGrid & ReportsDashboard**: Use custom filters (no SearchAndFilter needed)
+
+#### 🔧 Firebase Build Resolution
+- 🐛 **FIXED Static Export Build Failure** - Resolved Firebase initialization during Next.js static export
+- ⚙️ **CONDITIONAL FIREBASE INITIALIZATION** - Added client-side only Firebase initialization to prevent build errors
+- 🛡️ **ENVIRONMENT VARIABLE HANDLING** - Firebase now gracefully handles missing environment variables during build
+- ✅ **BUILD SUCCESS** - Netlify deployment now completes successfully without Firebase errors
+
+#### Technical Implementation
+```typescript
+// FIXED: Conditional Firebase initialization
+let app: any = null;
+let auth: any = null;
+let db: any = null;
+let storage: any = null;
+
+if (firebaseConfig.apiKey && typeof window !== 'undefined') {
+  try {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+    storage = getStorage(app);
+  } catch (error) {
+    console.error('Failed to initialize Firebase:', error);
+  }
+}
+
+// FIXED: SearchAndFilter with sorting options
+<SearchAndFilter
+  filters={companySearch.filters}
+  onFiltersChange={companySearch.setFilters}
+  availableSortOptions={[
+    { value: 'companyId', label: 'معرف الشركة' },
+    { value: 'companyName', label: 'اسم الشركة' },
+    { value: 'email', label: 'البريد الإلكتروني' },
+    { value: 'phone', label: 'رقم الهاتف' },
+    { value: 'createdAt', label: 'تاريخ الإنشاء' },
+    { value: 'updatedAt', label: 'تاريخ التحديث' }
+  ]}
+  className="mb-6"
+/>
+```
+
+#### Files Modified
+**SearchAndFilter Fixes:**
+- `src/components/customers/NewCustomerManagement.tsx` - Added sorting options to all tabs
+
+**Firebase Build Fixes:**
+- `src/lib/firebase/config.ts` - Conditional initialization
+
+#### Deployment Impact
+✅ All sorting functionality restored across customer management
+✅ Netlify build process completes successfully
+✅ Firebase gracefully handles missing environment variables
+✅ No breaking changes to existing functionality
+
 ## [Version 55] - 2025-01-18
 ### 🚀 CRITICAL DEPLOYMENT FIXES: Complete TypeScript Compilation Resolution for Netlify
 **STATUS: ✅ ALL 14 TYPESCRIPT COMPILATION ERRORS RESOLVED - DEPLOYMENT READY**

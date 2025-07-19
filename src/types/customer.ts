@@ -53,6 +53,22 @@ export interface Company {
   updatedAt: string; // Format: dd-mmm-yyyy
 }
 
+// Service batch for specific branches within a contract
+export interface ContractServiceBatch {
+  batchId: string; // Unique identifier within contract
+  branchIds: string[]; // Array of branch IDs affected by this service batch
+  services: {
+    fireExtinguisherMaintenance: boolean;
+    alarmSystemMaintenance: boolean;
+    fireSuppressionMaintenance: boolean;
+    gasFireSuppression: boolean;
+    foamFireSuppression: boolean;
+  };
+  regularVisitsPerYear: number;
+  emergencyVisitsPerYear: number;
+  notes?: string;
+}
+
 export interface Contract {
   id: string;
   contractId: string; // Format: 0001-001, 0001-002, 0002-001...
@@ -60,17 +76,11 @@ export interface Contract {
   contractStartDate: string; // Format: dd-mmm-yyyy
   contractEndDate: string; // Format: dd-mmm-yyyy
   contractPeriodMonths?: number;
-  regularVisitsPerYear: number;
-  emergencyVisitsPerYear: number;
   contractDocument?: File;
   contractValue?: number;
   notes?: string;
-  // Fire safety services
-  fireExtinguisherMaintenance: boolean;
-  alarmSystemMaintenance: boolean;
-  fireSuppressionMaintenance: boolean;
-  gasFireSuppression: boolean;
-  foamFireSuppression: boolean;
+  // NEW: Service batches per branch instead of global services
+  serviceBatches: ContractServiceBatch[];
   isArchived: boolean;
   archivedBy?: string;
   archivedAt?: string; // Format: dd-mmm-yyyy
@@ -82,7 +92,6 @@ export interface Branch {
   id: string;
   branchId: string; // Format: 0001-JED-001-0001, 0001-JED-001-0002...
   companyId: string; // Reference to company
-  contractIds: string[]; // References to contracts (one or more contracts can connect to same branch)
   city: string;
   location: string;
   branchName: string;
@@ -91,6 +100,8 @@ export interface Branch {
   contactPhone?: string;
   notes?: string;
   teamMember?: string;
+  // NEW: Future feature
+  snagListEnabled?: boolean; // For future snag list functionality
   isArchived: boolean;
   archivedBy?: string;
   archivedAt?: string; // Format: dd-mmm-yyyy

@@ -318,43 +318,6 @@ export function ContractDetailView({
                 <p className="text-gray-500 text-center py-4">لا توجد مستندات مرفقة</p>
               )}
             </CardContent>
-                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <FileText className="w-5 h-5 text-blue-500" />
-                        <div>
-                          <p className="font-medium">{doc.name}</p>
-                          <p className="text-sm text-gray-500">
-                            {doc.size ? `${(doc.size / 1024 / 1024).toFixed(2)} MB` : 'غير محدد'}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDocumentView(doc.url)}
-                          className="gap-1"
-                        >
-                          <Eye className="w-4 h-4" />
-                          عرض
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDocumentDownload(doc.url, doc.name)}
-                          className="gap-1"
-                        >
-                          <Download className="w-4 h-4" />
-                          تحميل
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-500 text-center py-4">لا توجد مستندات مرفقة</p>
-              )}
-            </CardContent>
           </Card>
         </div>
 

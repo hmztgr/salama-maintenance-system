@@ -4,8 +4,14 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Download, Upload, FileSpreadsheet, Info, CheckCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Download, Upload, FileText, CheckCircle, AlertTriangle, Info } from 'lucide-react';
 import { ImportReview } from './ImportReview';
+
+// Firebase integration for saving imported data
+import { useCompaniesFirebase } from '@/hooks/useCompaniesFirebase';
+import { useContractsFirebase } from '@/hooks/useContractsFirebase';
+import { useBranchesFirebase } from '@/hooks/useBranchesFirebase';
 
 interface ImportTemplateProps {
   entityType: 'companies' | 'contracts' | 'branches';
@@ -27,6 +33,11 @@ export function ImportTemplate({ entityType, onClose }: ImportTemplateProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showReview, setShowReview] = useState(false);
   const [importResults, setImportResults] = useState<ImportResults | null>(null);
+
+  // Firebase hooks for saving imported data
+  const { addCompany } = useCompaniesFirebase();
+  const { addContract } = useContractsFirebase(); 
+  const { addBranch } = useBranchesFirebase();
 
   // Template configurations for different entity types
   const templateConfigs = {
@@ -260,21 +271,95 @@ export function ImportTemplate({ entityType, onClose }: ImportTemplateProps) {
     setImportResults(null);
   };
 
-  const handleImportComplete = (results: ImportResults) => {
+  const handleImportComplete = async (results: ImportResults) => {
     setImportResults(results);
     setShowReview(false);
+    setIsProcessing(true);
 
-    // Here you would typically save the imported data to your data store
-    console.log('Import completed:', results);
+    try {
+      console.log('🚀 Starting Firebase import for', entityType, ':', results);
 
-    // Show success message
-    const message = `تم الاستيراد بنجاح!\n\n` +
-      `إجمالي السجلات: ${results.totalRows}\n` +
-      `تم استيراد: ${results.successfulRows}\n` +
-      `أخطاء: ${results.errorRows}\n` +
-      `تحذيرات: ${results.warningRows}`;
+      let successCount = 0;
+      let errorCount = 0;
+      const errors: string[] = [];
 
-    alert(message);
+      // Save each imported item to Firebase
+      for (const importedItem of results.importedData) {
+        try {
+          if (entityType === 'companies') {
+            console.log('💾 Saving company to Firebase:', importedItem);
+            
+            // Map import data to Company format
+            const companyData = {
+              companyName: importedItem.companyName || '',
+              email: importedItem.email || '',
+              phone: importedItem.phone || '',
+              address: importedItem.address || '',
+              city: importedItem.city || '',
+              contactPerson: importedItem.contactPerson || '',
+              notes: importedItem.notes || '',
+              // Set default values
+              isActive: true,
+              totalContracts: 0,
+              totalBranches: 0,
+              lastActivityDate: new Date().toISOString().split('T')[0]
+            };
+
+            const result = await addCompany(companyData);
+            if (result.success) {
+              console.log('✅ Company saved successfully:', result.company?.companyId);
+              successCount++;
+            } else {
+              const errorMsg = result.warnings?.join(', ') || 'فشل في حفظ الشركة';
+              console.error('❌ Failed to save company:', errorMsg);
+              errors.push(`شركة "${companyData.companyName}": ${errorMsg}`);
+              errorCount++;
+            }
+
+          } else if (entityType === 'contracts') {
+            console.log('💾 Saving contract to Firebase:', importedItem);
+            // TODO: Implement contract saving logic
+            console.warn('⚠️ Contract import not yet implemented');
+            errors.push('استيراد العقود غير مطبق بعد');
+            errorCount++;
+
+          } else if (entityType === 'branches') {
+            console.log('💾 Saving branch to Firebase:', importedItem);
+            // TODO: Implement branch saving logic  
+            console.warn('⚠️ Branch import not yet implemented');
+            errors.push('استيراد الفروع غير مطبق بعد');
+            errorCount++;
+          }
+
+        } catch (error) {
+          console.error('❌ Error saving item to Firebase:', error);
+          errors.push(`خطأ في حفظ العنصر: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
+          errorCount++;
+        }
+      }
+
+      // Show results
+      console.log('📊 Import Results:', { successCount, errorCount, errors });
+
+      if (successCount > 0 && errorCount === 0) {
+        // Complete success
+        alert(`✅ تم الاستيراد بنجاح!\n\nتم حفظ ${successCount} عنصر في قاعدة البيانات.`);
+      } else if (successCount > 0 && errorCount > 0) {
+        // Partial success
+        const errorList = errors.slice(0, 3).join('\n'); // Show first 3 errors
+        alert(`⚠️ تم الاستيراد جزئياً!\n\nنجح: ${successCount}\nفشل: ${errorCount}\n\nأمثلة على الأخطاء:\n${errorList}`);
+      } else {
+        // Complete failure
+        const errorList = errors.slice(0, 5).join('\n'); // Show first 5 errors
+        alert(`❌ فشل الاستيراد!\n\nلم يتم حفظ أي عنصر.\n\nالأخطاء:\n${errorList}`);
+      }
+
+    } catch (error) {
+      console.error('❌ Critical error during import:', error);
+      alert(`❌ خطأ خطير أثناء الاستيراد: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   // Show review modal if file is uploaded

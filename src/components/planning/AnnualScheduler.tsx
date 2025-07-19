@@ -386,35 +386,46 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
       console.log(`📋 Found ${branchContracts.length} contracts for this branch`);
 
       if (branchContracts.length > 0) {
-        // Generate unique IDs for each visit
-        const uniqueId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${visitCounter++}`;
-        const visitId = `VISIT-${new Date().getFullYear()}-${String(visits.length + newVisits.length + 1).padStart(4, '0')}`;
+        // Find the service batch that includes this branch
+        const firstContract = branchContracts[0];
+        const relevantBatch = firstContract.serviceBatches?.find(batch => 
+          batch.branchIds.includes(branch.branchId)
+        );
 
-        const newVisit = {
-          branchId: branch.branchId,
-          contractId: branchContracts[0].contractId,
-          companyId: branch.companyId,
-          type: 'regular' as const,
-          status: 'scheduled' as const,
-          scheduledDate: weekData.startDate,
-          services: {
-            fireExtinguisher: branchContracts[0].fireExtinguisherMaintenance,
-            alarmSystem: branchContracts[0].alarmSystemMaintenance,
-            fireSuppression: branchContracts[0].fireSuppressionMaintenance,
-            gasSystem: branchContracts[0].gasFireSuppression,
-            foamSystem: branchContracts[0].foamFireSuppression,
-          },
-          createdBy: `system-bulk-plan-${uniqueId}`,
-          id: uniqueId,
-          visitId: visitId,
-          isArchived: false,
-          createdAt: getCurrentDate(),
-          updatedAt: getCurrentDate(),
-        };
+        if (relevantBatch) {
+          // Generate unique IDs for each visit
+          const uniqueId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${visitCounter++}`;
+          const visitId = `VISIT-${new Date().getFullYear()}-${String(visits.length + newVisits.length + 1).padStart(4, '0')}`;
 
-        newVisits.push(newVisit);
-        successCount++;
-        console.log(`✅ PREPARED: Visit for ${branch.branchName} - ID: ${newVisit.visitId}`);
+          const newVisit = {
+            branchId: branch.branchId,
+            contractId: firstContract.contractId,
+            companyId: branch.companyId,
+            type: 'regular' as const,
+            status: 'scheduled' as const,
+            scheduledDate: weekData.startDate,
+            services: {
+              fireExtinguisher: relevantBatch.services.fireExtinguisherMaintenance,
+              alarmSystem: relevantBatch.services.alarmSystemMaintenance,
+              fireSuppression: relevantBatch.services.fireSuppressionMaintenance,
+              gasSystem: relevantBatch.services.gasFireSuppression,
+              foamSystem: relevantBatch.services.foamFireSuppression,
+            },
+            createdBy: `system-bulk-plan-${uniqueId}`,
+            id: uniqueId,
+            visitId: visitId,
+            isArchived: false,
+            createdAt: getCurrentDate(),
+            updatedAt: getCurrentDate(),
+          };
+
+          newVisits.push(newVisit);
+          successCount++;
+          console.log(`✅ PREPARED: Visit for ${branch.branchName} - ID: ${newVisit.visitId}`);
+        } else {
+          failedBranches.push(branch.branchName);
+          console.log(`❌ NO SERVICE BATCH: No service batch found for branch: ${branch.branchName}`);
+        }
       } else {
         failedBranches.push(branch.branchName);
         console.log(`❌ NO CONTRACTS: No active contracts found for branch: ${branch.branchName}`);
@@ -856,7 +867,11 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
                             {branch.branchId}
                           </div>
                           <div className="text-xs text-blue-600 mt-1">
-                            عقود: {branch.contractIds.length} | زيارات: {visits.filter(v => v.branchId === branch.branchId).length}
+                            عقود: {contracts.filter(contract => 
+                              contract.serviceBatches?.some(batch => 
+                                batch.branchIds.includes(branch.branchId)
+                              ) && !contract.isArchived
+                            ).length} | زيارات: {visits.filter(v => v.branchId === branch.branchId).length}
                           </div>
                         </td>
                         {weeklyData.map(week => {

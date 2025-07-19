@@ -283,11 +283,30 @@ export function ImportTemplate({ entityType, onClose }: ImportTemplateProps) {
       let errorCount = 0;
       const errors: string[] = [];
 
-      // Save each imported item to Firebase
-      for (const importedItem of results.importedData) {
-        try {
-          if (entityType === 'companies') {
-            console.log('💾 Saving company to Firebase:', importedItem);
+      // For company ID generation, fetch fresh data to avoid duplicates
+      if (entityType === 'companies') {
+        // Get fresh company list from Firebase before import
+        const { getDocs, collection, query, orderBy } = await import('firebase/firestore');
+        const { db } = await import('@/lib/firebase/config');
+        
+        const companiesRef = collection(db, 'companies');
+        const q = query(companiesRef, orderBy('companyId', 'desc'));
+        const snapshot = await getDocs(q);
+        const existingCompanies = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+        
+        console.log('📊 Found existing companies for ID generation:', existingCompanies.length);
+
+        // Import companies with proper sequential IDs
+        for (let i = 0; i < results.importedData.length; i++) {
+          const importedItem = results.importedData[i];
+          try {
+            console.log(`💾 Saving company ${i + 1}/${results.importedData.length} to Firebase:`, importedItem);
+            
+            // Calculate next ID manually to avoid conflicts
+            const maxId = existingCompanies.length > 0 
+              ? Math.max(...existingCompanies.map(c => parseInt(c.companyId || '0', 10))) 
+              : 0;
+            const nextId = (maxId + i + 1).toString().padStart(4, '0');
             
             // Map import data to Company format
             const companyData = {
@@ -305,9 +324,9 @@ export function ImportTemplate({ entityType, onClose }: ImportTemplateProps) {
               lastActivityDate: new Date().toISOString().split('T')[0]
             };
 
-            const result = await addCompany(companyData);
+            const result = await addCompany(companyData, nextId); // Use manual ID
             if (result.success) {
-              console.log('✅ Company saved successfully:', result.company?.companyId);
+              console.log('✅ Company saved successfully with ID:', nextId);
               successCount++;
             } else {
               const errorMsg = result.warnings?.join(', ') || 'فشل في حفظ الشركة';
@@ -316,25 +335,91 @@ export function ImportTemplate({ entityType, onClose }: ImportTemplateProps) {
               errorCount++;
             }
 
-          } else if (entityType === 'contracts') {
-            console.log('💾 Saving contract to Firebase:', importedItem);
-            // TODO: Implement contract saving logic
-            console.warn('⚠️ Contract import not yet implemented');
-            errors.push('استيراد العقود غير مطبق بعد');
-            errorCount++;
-
-          } else if (entityType === 'branches') {
-            console.log('💾 Saving branch to Firebase:', importedItem);
-            // TODO: Implement branch saving logic  
-            console.warn('⚠️ Branch import not yet implemented');
-            errors.push('استيراد الفروع غير مطبق بعد');
+          } catch (error) {
+            console.error('❌ Error saving company to Firebase:', error);
+            errors.push(`خطأ في حفظ الشركة: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
             errorCount++;
           }
+        }
+        
+      } else if (entityType === 'contracts') {
+        console.log('💾 Saving contracts to Firebase...');
+        
+        for (const importedItem of results.importedData) {
+          try {
+            // Map import data to Contract format
+            const contractData = {
+              companyId: importedItem.companyId || '',
+              contractStartDate: importedItem.contractStartDate || '',
+              contractEndDate: importedItem.contractEndDate || '',
+              regularVisitsPerYear: parseInt(importedItem.regularVisitsPerYear || '0', 10),
+              emergencyVisitsPerYear: parseInt(importedItem.emergencyVisitsPerYear || '0', 10),
+              contractValue: parseFloat(importedItem.contractValue || '0'),
+              // Service flags - convert text to boolean
+              fireExtinguisherMaintenance: ['نعم', 'yes', 'true', '1'].includes(importedItem.fireExtinguisherMaintenance?.toLowerCase() || ''),
+              alarmSystemMaintenance: ['نعم', 'yes', 'true', '1'].includes(importedItem.alarmSystemMaintenance?.toLowerCase() || ''),
+              fireSuppressionMaintenance: ['نعم', 'yes', 'true', '1'].includes(importedItem.fireSuppressionMaintenance?.toLowerCase() || ''),
+              gasFireSuppression: ['نعم', 'yes', 'true', '1'].includes(importedItem.gasFireSuppression?.toLowerCase() || ''),
+              foamFireSuppression: ['نعم', 'yes', 'true', '1'].includes(importedItem.foamFireSuppression?.toLowerCase() || ''),
+              notes: importedItem.notes || ''
+            };
 
-        } catch (error) {
-          console.error('❌ Error saving item to Firebase:', error);
-          errors.push(`خطأ في حفظ العنصر: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
-          errorCount++;
+            const result = await addContract(contractData);
+            if (result.success) {
+              console.log('✅ Contract saved successfully:', result.contract?.contractId);
+              successCount++;
+            } else {
+              const errorMsg = result.warnings?.join(', ') || 'فشل في حفظ العقد';
+              console.error('❌ Failed to save contract:', errorMsg);
+              errors.push(`عقد الشركة "${contractData.companyId}": ${errorMsg}`);
+              errorCount++;
+            }
+
+          } catch (error) {
+            console.error('❌ Error saving contract to Firebase:', error);
+            errors.push(`خطأ في حفظ العقد: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
+            errorCount++;
+          }
+        }
+
+      } else if (entityType === 'branches') {
+        console.log('💾 Saving branches to Firebase...');
+        
+        for (const importedItem of results.importedData) {
+          try {
+            // Split contract IDs if comma-separated
+            const contractIds = importedItem.contractIds?.split(',').map(id => id.trim()) || [];
+            
+            // Map import data to Branch format
+            const branchData = {
+              companyId: importedItem.companyId || '',
+              contractIds: contractIds,
+              city: importedItem.city || '',
+              location: importedItem.location || '',
+              branchName: importedItem.branchName || '',
+              address: importedItem.address || '',
+              contactPerson: importedItem.contactPerson || '',
+              contactPhone: importedItem.contactPhone || '',
+              teamMember: importedItem.teamMember || '',
+              notes: importedItem.notes || ''
+            };
+
+            const result = await addBranch(branchData);
+            if (result.success) {
+              console.log('✅ Branch saved successfully:', result.branch?.branchId);
+              successCount++;
+            } else {
+              const errorMsg = result.warnings?.join(', ') || 'فشل في حفظ الفرع';
+              console.error('❌ Failed to save branch:', errorMsg);
+              errors.push(`فرع "${branchData.branchName}": ${errorMsg}`);
+              errorCount++;
+            }
+
+          } catch (error) {
+            console.error('❌ Error saving branch to Firebase:', error);
+            errors.push(`خطأ في حفظ الفرع: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
+            errorCount++;
+          }
         }
       }
 
@@ -343,7 +428,7 @@ export function ImportTemplate({ entityType, onClose }: ImportTemplateProps) {
 
       if (successCount > 0 && errorCount === 0) {
         // Complete success
-        alert(`✅ تم الاستيراد بنجاح!\n\nتم حفظ ${successCount} عنصر في قاعدة البيانات.`);
+        alert(`✅ تم الاستيراد بنجاح!\n\nتم حفظ ${successCount} عنصر في قاعدة البيانات.\n\nنوع البيانات: ${entityType === 'companies' ? 'شركات' : entityType === 'contracts' ? 'عقود' : 'فروع'}`);
       } else if (successCount > 0 && errorCount > 0) {
         // Partial success
         const errorList = errors.slice(0, 3).join('\n'); // Show first 3 errors

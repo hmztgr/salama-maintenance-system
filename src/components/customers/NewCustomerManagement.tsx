@@ -995,20 +995,24 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
               onSubmit={async (data) => {
                 setFormLoading(true);
                 try {
+                  let result;
                   if (editingContract) {
-                    await updateContract(editingContract.id, data);
+                    result = await updateContract(editingContract.id, data);
                     setSuccessMessage('تم تحديث بيانات العقد بنجاح مع الخدمات المتقدمة');
                   } else {
-                    await addContract(data);
+                    result = await addContract(data);
                     setSuccessMessage('تمت إضافة العقد بنجاح مع الخدمات المتقدمة');
                   }
-                } catch (e) {
-                  // handle error
-                } finally {
+                  
                   setFormLoading(false);
                   setShowEnhancedContractForm(false);
                   setEditingContract(null);
                   setTimeout(() => setSuccessMessage(''), 5000);
+                  
+                  return { success: true, contract: result.contract, warnings: result.warnings };
+                } catch (e) {
+                  setFormLoading(false);
+                  return { success: false, warnings: ['حدث خطأ أثناء حفظ العقد'] };
                 }
               }}
               onCancel={() => {

@@ -283,76 +283,9 @@ export function useBranches() {
     []
   );
 
-  const getBranchesByContract = useCallback(
-    (contractId: string): Branch[] => {
-      return branchesRef.current.filter(b => b.contractIds.includes(contractId));
-    },
-    []
-  );
-
-  const linkBranchToContract = useCallback(
-    (branchId: string, contractId: string): boolean => {
-      try {
-        const currentBranches = branchesRef.current;
-        const branchIndex = currentBranches.findIndex(b => b.id === branchId);
-        if (branchIndex === -1) {
-          setError('الفرع غير موجود');
-          return false;
-        }
-
-        const branch = currentBranches[branchIndex];
-        if (!branch.contractIds.includes(contractId)) {
-          const updatedBranch = {
-            ...branch,
-            contractIds: [...branch.contractIds, contractId],
-            updatedAt: getCurrentDate(),
-          };
-
-          const updatedBranches = [...currentBranches];
-          updatedBranches[branchIndex] = updatedBranch;
-          saveBranches(updatedBranches);
-        }
-
-        return true;
-      } catch (err) {
-        console.error('Failed to link branch to contract:', err);
-        setError('فشل في ربط الفرع بالعقد');
-        return false;
-      }
-    },
-    [saveBranches]
-  );
-
-  const unlinkBranchFromContract = useCallback(
-    (branchId: string, contractId: string): boolean => {
-      try {
-        const currentBranches = branchesRef.current;
-        const branchIndex = currentBranches.findIndex(b => b.id === branchId);
-        if (branchIndex === -1) {
-          setError('الفرع غير موجود');
-          return false;
-        }
-
-        const branch = currentBranches[branchIndex];
-        const updatedBranch = {
-          ...branch,
-          contractIds: branch.contractIds.filter(id => id !== contractId),
-          updatedAt: getCurrentDate(),
-        };
-
-        const updatedBranches = [...currentBranches];
-        updatedBranches[branchIndex] = updatedBranch;
-        saveBranches(updatedBranches);
-
-        return true;
-      } catch (err) {
-        console.error('Failed to unlink branch from contract:', err);
-        setError('فشل في إلغاء ربط الفرع بالعقد');
-        return false;
-      }
-    },
-    [saveBranches]
-  );
+  // Note: Contract-branch relationship functions removed as they're incompatible 
+  // with new serviceBatches architecture where branches are linked through 
+  // contract serviceBatches rather than branch contractIds
 
   const clearError = useCallback(() => {
     setError(null);
@@ -374,9 +307,6 @@ export function useBranches() {
     deleteBranch,
     getBranchById,
     getBranchesByCompany,
-    getBranchesByContract,
-    linkBranchToContract,
-    unlinkBranchFromContract,
     refreshBranches: loadBranches,
     clearError,
   };

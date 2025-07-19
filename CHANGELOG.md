@@ -5,6 +5,44 @@ All notable changes to the Salama Maintenance Scheduler project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Version 58] - 2025-01-19
+### 🔧 MODAL SCROLLING & SORTING FIXES: Full-Screen Modal Scrolling + Default ID Sorting
+**STATUS: ✅ MODAL SCROLLING FIXED + DEFAULT SORT BY ID IMPLEMENTED**
+
+#### 🖱️ Modal Scrolling Fix
+- ✅ **Fixed Modal Scrolling** - Content now scrolls within modal, not background page
+- ✅ **Proper Flexbox Layout** - Used `flex flex-col` with `flex-1` for correct scrolling
+- ✅ **Enhanced UX** - Added proper padding and overflow handling
+- ✅ **Full-Screen Experience** - Modal takes 95% viewport height with proper scrolling
+
+#### 📊 Default Sort by ID
+- ✅ **Updated Default Sort** - Changed from `'name'` to `'id'` in useSearch hook
+- ✅ **Consistent Across All Tables** - Companies, Contracts, and Branches all sort by ID by default
+- ✅ **ID Fields First** - All sort options have ID fields as the first option
+
+#### Technical Implementation
+```typescript
+// Modal scrolling fix
+<div className="bg-white rounded-lg w-full max-w-7xl h-[95vh] flex flex-col">
+  <div className="flex-1 overflow-y-auto p-6">
+    {/* Content now scrolls properly within modal */}
+  </div>
+</div>
+
+// Default sort by ID
+const [filters, setFilters] = useState<SearchFilters>({
+  // ... other filters
+  sortBy: 'id',  // Changed from 'name' to 'id'
+  sortDirection: 'asc'
+});
+```
+
+#### User Experience Improvements
+✅ **Smooth Modal Scrolling** - No more background page scrolling
+✅ **Consistent ID Sorting** - All tables default to ID-based sorting
+✅ **Better Navigation** - Proper modal behavior with close functionality
+✅ **Responsive Design** - Works on all screen sizes
+
 ## [Version 57] - 2025-01-19
 ### 🎯 DETAIL VIEWS & DOCUMENT MANAGEMENT: Clickable Entity Details with Document Viewer
 **STATUS: ✅ CLICKABLE DETAIL VIEWS IMPLEMENTED + DOCUMENT VIEWING READY**

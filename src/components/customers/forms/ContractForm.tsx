@@ -22,7 +22,8 @@ export function ContractForm({ contract, companies, onSubmit, onCancel, isLoadin
     contractEndDate: contract?.contractEndDate || '',
     contractPeriodMonths: contract?.contractPeriodMonths || 12,
     regularVisitsPerYear: firstBatch?.regularVisitsPerYear || 12,
-    emergencyVisitsPerYear: firstBatch?.emergencyVisitsPerYear || 4,
+    emergencyVisitsPerYear: firstBatch?.emergencyVisitsPerYear ?? 0,
+    emergencyVisitCost: firstBatch?.emergencyVisitCost || 0,
     contractValue: contract?.contractValue || 0,
     notes: contract?.notes || '',
     // Fire safety services - extract from first service batch for compatibility
@@ -152,6 +153,7 @@ export function ContractForm({ contract, companies, onSubmit, onCancel, isLoadin
         },
         regularVisitsPerYear: formData.regularVisitsPerYear,
         emergencyVisitsPerYear: formData.emergencyVisitsPerYear,
+        emergencyVisitCost: formData.emergencyVisitCost,
         notes: 'خدمات العقد الأساسية',
       }];
 
@@ -322,7 +324,7 @@ export function ContractForm({ contract, companies, onSubmit, onCancel, isLoadin
             <div className="border-b border-gray-200 pb-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">عدد الزيارات السنوية</h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     عدد الزيارات العادية <span className="text-red-500">*</span>
@@ -361,6 +363,25 @@ export function ContractForm({ contract, companies, onSubmit, onCancel, isLoadin
                   {errors.emergencyVisitsPerYear && (
                     <p className="text-red-500 text-xs mt-1">{errors.emergencyVisitsPerYear}</p>
                   )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    تكلفة الزيارة الطارئة الإضافية (ريال سعودي)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.emergencyVisitCost || ''}
+                    onChange={(e) => handleInputChange('emergencyVisitCost', parseFloat(e.target.value) || 0)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="0.00"
+                    disabled={isLoading}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    التكلفة للزيارات الطارئة التي تتجاوز العدد المجاني
+                  </p>
                 </div>
               </div>
             </div>

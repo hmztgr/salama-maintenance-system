@@ -1,5 +1,6 @@
 'use client';
 
+// Enhanced Contract Form with Period Checkbox and Emergency Visits Fix - Updated 2025-01-15
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,7 +55,8 @@ export function EnhancedContractForm({
       foamFireSuppression: false,
     },
     regularVisitsPerYear: 12,
-    emergencyVisitsPerYear: 4,
+    emergencyVisitsPerYear: 0, // Default to 0 for emergency visits
+    emergencyVisitCost: 0, // Default cost for additional emergency visits
     notes: '',
   });
 
@@ -63,6 +65,35 @@ export function EnhancedContractForm({
   const [showAddBatch, setShowAddBatch] = useState(false);
 
   const isEditing = !!contract;
+
+  // Debug and handle contract changes
+  useEffect(() => {
+    console.log('🔍 EnhancedContractForm - Contract prop changed:', {
+      contractExists: !!contract,
+      contractId: contract?.contractId,
+      serviceBatchesCount: contract?.serviceBatches?.length || 0,
+      serviceBatches: contract?.serviceBatches
+    });
+
+    if (contract) {
+      // Update form data when contract prop changes
+      setFormData({
+        companyId: contract.companyId || '',
+        contractStartDate: contract.contractStartDate || '',
+        contractEndDate: contract.contractEndDate || '',
+        contractPeriodMonths: contract.contractPeriodMonths || 12,
+        contractValue: contract.contractValue || 0,
+        notes: contract.notes || '',
+        contractDocument: undefined, // File objects can't be restored
+      });
+
+      // Update service batches
+      if (contract.serviceBatches) {
+        console.log('📦 Setting service batches from contract:', contract.serviceBatches);
+        setServiceBatches(contract.serviceBatches);
+      }
+    }
+  }, [contract]);
 
   // Get available branches for selected company
   const availableBranches = branches.filter(branch => 
@@ -92,8 +123,22 @@ export function EnhancedContractForm({
       newErrors.contractStartDate = 'تاريخ بداية العقد مطلوب';
     }
 
-    if (!formData.contractEndDate.trim()) {
+    if (!usePeriod && !formData.contractEndDate.trim()) {
       newErrors.contractEndDate = 'تاريخ نهاية العقد مطلوب';
+    }
+
+    if (usePeriod && (!formData.contractPeriodMonths || formData.contractPeriodMonths <= 0)) {
+      newErrors.contractPeriodMonths = 'مدة العقد بالأشهر مطلوبة';
+    }
+
+    // Date validation
+    if (formData.contractStartDate && formData.contractEndDate) {
+      const startDate = parseStandardDate(formData.contractStartDate);
+      const endDate = parseStandardDate(formData.contractEndDate);
+
+      if (startDate && endDate && endDate <= startDate) {
+        newErrors.contractEndDate = 'تاريخ انتهاء العقد يجب أن يكون بعد تاريخ البداية';
+      }
     }
 
     if (serviceBatches.length === 0) {
@@ -167,7 +212,8 @@ export function EnhancedContractForm({
           foamFireSuppression: false,
         },
         regularVisitsPerYear: 12,
-        emergencyVisitsPerYear: 4,
+        emergencyVisitsPerYear: 0, // Reset to 0 for emergency visits
+        emergencyVisitCost: 0, // Reset cost for additional emergency visits
         notes: '',
       });
     }
@@ -204,7 +250,8 @@ export function EnhancedContractForm({
       branchIds: currentBatch.branchIds!,
       services: currentBatch.services!,
       regularVisitsPerYear: currentBatch.regularVisitsPerYear || 12,
-      emergencyVisitsPerYear: currentBatch.emergencyVisitsPerYear || 4,
+      emergencyVisitsPerYear: currentBatch.emergencyVisitsPerYear ?? 0,
+      emergencyVisitCost: currentBatch.emergencyVisitCost || 0,
       notes: currentBatch.notes || '',
     };
 
@@ -221,7 +268,8 @@ export function EnhancedContractForm({
         foamFireSuppression: false,
       },
       regularVisitsPerYear: 12,
-      emergencyVisitsPerYear: 4,
+      emergencyVisitsPerYear: 0, // Reset to 0 for emergency visits
+      emergencyVisitCost: 0, // Reset cost for additional emergency visits
       notes: '',
     });
     
@@ -257,13 +305,21 @@ export function EnhancedContractForm({
       serviceBatches,
     };
 
+    console.log('🚀 EnhancedContractForm - Submitting contract data:', {
+      isEditing,
+      contractData,
+      serviceBatchesCount: serviceBatches.length,
+      serviceBatches
+    });
+
     try {
       const result = await onSubmit(contractData);
+      console.log('✅ EnhancedContractForm - Submission result:', result);
       if (result.success) {
         // Success will be handled by parent component
       }
     } catch (error) {
-      console.error('Contract submission error:', error);
+      console.error('❌ EnhancedContractForm - Contract submission error:', error);
     }
   };
 
@@ -331,19 +387,63 @@ export function EnhancedContractForm({
                 </div>
 
                 <div>
-                  <Label htmlFor="contractEndDate">تاريخ نهاية العقد *</Label>
-                  <Input
-                    id="contractEndDate"
-                    type="date"
-                    value={formData.contractEndDate ? parseStandardDate(formData.contractEndDate)?.toISOString().split('T')[0] : ''}
-                    onChange={(e) => handleInputChange('contractEndDate', e.target.value)}
-                    className={errors.contractEndDate ? 'border-red-500' : ''}
-                    disabled={isLoading || usePeriod}
-                  />
-                  {errors.contractEndDate && (
-                    <p className="text-red-500 text-xs mt-1">{errors.contractEndDate}</p>
+                  <div className="flex items-center mb-2">
+                    <Checkbox
+                      id="usePeriod"
+                      checked={usePeriod}
+                      onCheckedChange={(checked) => setUsePeriod(!!checked)}
+                      disabled={isLoading}
+                    />
+                    <Label htmlFor="usePeriod" className="mr-2 text-sm text-gray-700">
+                      تحديد مدة العقد بالأشهر
+                    </Label>
+                  </div>
+
+                  {usePeriod ? (
+                    <div>
+                      <Label htmlFor="contractPeriodMonths">مدة العقد (بالأشهر) *</Label>
+                      <Input
+                        id="contractPeriodMonths"
+                        type="number"
+                        min="1"
+                        max="120"
+                        value={formData.contractPeriodMonths || ''}
+                        onChange={(e) => handleInputChange('contractPeriodMonths', parseInt(e.target.value) || 0)}
+                        placeholder="12"
+                        disabled={isLoading}
+                      />
+                      {errors.contractPeriodMonths && (
+                        <p className="text-red-500 text-xs mt-1">{errors.contractPeriodMonths}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <div>
+                      <Label htmlFor="contractEndDate">تاريخ نهاية العقد *</Label>
+                      <Input
+                        id="contractEndDate"
+                        type="date"
+                        value={formData.contractEndDate ? parseStandardDate(formData.contractEndDate)?.toISOString().split('T')[0] : ''}
+                        onChange={(e) => handleInputChange('contractEndDate', e.target.value)}
+                        className={errors.contractEndDate ? 'border-red-500' : ''}
+                        disabled={isLoading}
+                      />
+                      {errors.contractEndDate && (
+                        <p className="text-red-500 text-xs mt-1">{errors.contractEndDate}</p>
+                      )}
+                    </div>
                   )}
                 </div>
+
+                {/* Display calculated end date when using period */}
+                {usePeriod && formData.contractEndDate && (
+                  <div className="md:col-span-2">
+                    <div className="p-3 bg-blue-50 rounded-md">
+                      <p className="text-sm text-blue-800">
+                        <strong>تاريخ انتهاء العقد المحسوب:</strong> {formData.contractEndDate}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Contract Value */}
                 <div>
@@ -446,6 +546,12 @@ export function EnhancedContractForm({
                             <span>زيارات دورية: {batch.regularVisitsPerYear} سنوياً</span>
                             <span className="mx-2">•</span>
                             <span>زيارات طارئة: {batch.emergencyVisitsPerYear} سنوياً</span>
+                            {batch.emergencyVisitCost && batch.emergencyVisitCost > 0 && (
+                              <>
+                                <span className="mx-2">•</span>
+                                <span>تكلفة الزيارة الطارئة الإضافية: {batch.emergencyVisitCost} ريال</span>
+                              </>
+                            )}
                           </div>
                           
                           {batch.notes && (
@@ -553,7 +659,7 @@ export function EnhancedContractForm({
                     </div>
 
                     {/* Visit Frequencies */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <Label htmlFor="regularVisits">الزيارات الدورية (سنوياً)</Label>
                         <Input
@@ -574,14 +680,33 @@ export function EnhancedContractForm({
                         <Input
                           id="emergencyVisits"
                           type="number"
-                          value={currentBatch.emergencyVisitsPerYear || 4}
+                          value={currentBatch.emergencyVisitsPerYear ?? 0}
                           onChange={(e) => setCurrentBatch(prev => ({ 
                             ...prev, 
-                            emergencyVisitsPerYear: parseInt(e.target.value) || 4 
+                            emergencyVisitsPerYear: parseInt(e.target.value) || 0 
                           }))}
                           min="0"
                           max="52"
                         />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="emergencyVisitCost">تكلفة الزيارة الطارئة الإضافية (ريال سعودي)</Label>
+                        <Input
+                          id="emergencyVisitCost"
+                          type="number"
+                          value={currentBatch.emergencyVisitCost ?? 0}
+                          onChange={(e) => setCurrentBatch(prev => ({ 
+                            ...prev, 
+                            emergencyVisitCost: parseFloat(e.target.value) || 0 
+                          }))}
+                          min="0"
+                          step="0.01"
+                          placeholder="0.00"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          التكلفة للزيارات الطارئة التي تتجاوز العدد المجاني
+                        </p>
                       </div>
                     </div>
 
@@ -666,4 +791,4 @@ export function EnhancedContractForm({
       </Card>
     </div>
   );
-} 
+}

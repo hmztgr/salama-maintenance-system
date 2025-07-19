@@ -675,6 +675,12 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                             <button
                               className="text-blue-600 hover:text-blue-900 ml-2"
                               onClick={() => {
+                                console.log('🖱️ Edit contract button clicked:', {
+                                  contractId: contract.contractId,
+                                  contract: contract,
+                                  serviceBatchesCount: contract.serviceBatches?.length || 0,
+                                  serviceBatches: contract.serviceBatches
+                                });
                                 setEditingContract(contract);
                                 setShowEnhancedContractForm(true);
                               }}
@@ -994,13 +1000,25 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
               branches={branches}
               onSubmit={async (data) => {
                 setFormLoading(true);
+                console.log('📝 NewCustomerManagement - Enhanced contract form submission:', {
+                  isEditing: !!editingContract,
+                  contractId: editingContract?.id,
+                  originalContract: editingContract,
+                  submittedData: data,
+                  serviceBatchesCount: data.serviceBatches?.length || 0
+                });
+                
                 try {
                   let result;
                   if (editingContract) {
+                    console.log('🔄 Updating existing contract:', editingContract.id);
                     result = await updateContract(editingContract.id, data);
+                    console.log('✅ Contract update result:', result);
                     setSuccessMessage('تم تحديث بيانات العقد بنجاح مع الخدمات المتقدمة');
                   } else {
+                    console.log('➕ Adding new contract');
                     result = await addContract(data);
+                    console.log('✅ Contract add result:', result);
                     setSuccessMessage('تمت إضافة العقد بنجاح مع الخدمات المتقدمة');
                   }
                   
@@ -1011,6 +1029,7 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                   
                   return { success: true, warnings: result.warnings };
                 } catch (e) {
+                  console.error('❌ NewCustomerManagement - Error saving contract:', e);
                   setFormLoading(false);
                   return { success: false, warnings: ['حدث خطأ أثناء حفظ العقد'] };
                 }

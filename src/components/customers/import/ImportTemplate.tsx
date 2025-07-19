@@ -363,6 +363,7 @@ export function ImportTemplate({ entityType, onClose }: ImportTemplateProps) {
               },
               regularVisitsPerYear: parseInt(importedItem.regularVisitsPerYear || '0', 10),
               emergencyVisitsPerYear: parseInt(importedItem.emergencyVisitsPerYear || '0', 10),
+              emergencyVisitCost: parseFloat(importedItem.emergencyVisitCost || '0'),
               notes: 'خدمات مستوردة من ملف CSV',
             }];
 

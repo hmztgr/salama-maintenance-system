@@ -66,6 +66,7 @@ export interface ContractServiceBatch {
   };
   regularVisitsPerYear: number;
   emergencyVisitsPerYear: number;
+  emergencyVisitCost?: number; // Cost per emergency visit after free visits
   notes?: string;
 }
 

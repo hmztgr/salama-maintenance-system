@@ -1168,8 +1168,6 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
             <div className="h-full overflow-y-auto">
               <CompanyDetailView
                 company={selectedCompany}
-                contracts={contracts.filter(c => c.companyId === selectedCompany.companyId)}
-                branches={branches.filter(b => b.companyId === selectedCompany.companyId)}
                 onBack={() => setSelectedCompany(null)}
                 onEdit={() => {
                   setSelectedCompany(null);

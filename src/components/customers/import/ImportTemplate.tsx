@@ -350,20 +350,30 @@ export function ImportTemplate({ entityType, onClose }: ImportTemplateProps) {
         
         for (const importedItem of results.importedData) {
           try {
-            // Map import data to Contract format
+            // Convert imported service flags to serviceBatches structure
+            const serviceBatches = [{
+              batchId: `import-batch-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              branchIds: [], // Empty for now - will be assigned when branches are linked
+              services: {
+                fireExtinguisherMaintenance: ['نعم', 'yes', 'true', '1'].includes(importedItem.fireExtinguisherMaintenance?.toLowerCase() || ''),
+                alarmSystemMaintenance: ['نعم', 'yes', 'true', '1'].includes(importedItem.alarmSystemMaintenance?.toLowerCase() || ''),
+                fireSuppressionMaintenance: ['نعم', 'yes', 'true', '1'].includes(importedItem.fireSuppressionMaintenance?.toLowerCase() || ''),
+                gasFireSuppression: ['نعم', 'yes', 'true', '1'].includes(importedItem.gasFireSuppression?.toLowerCase() || ''),
+                foamFireSuppression: ['نعم', 'yes', 'true', '1'].includes(importedItem.foamFireSuppression?.toLowerCase() || ''),
+              },
+              regularVisitsPerYear: parseInt(importedItem.regularVisitsPerYear || '0', 10),
+              emergencyVisitsPerYear: parseInt(importedItem.emergencyVisitsPerYear || '0', 10),
+              notes: 'خدمات مستوردة من ملف CSV',
+            }];
+
+            // Map import data to new Contract format with serviceBatches
             const contractData = {
               companyId: importedItem.companyId || '',
               contractStartDate: importedItem.contractStartDate || '',
               contractEndDate: importedItem.contractEndDate || '',
-              regularVisitsPerYear: parseInt(importedItem.regularVisitsPerYear || '0', 10),
-              emergencyVisitsPerYear: parseInt(importedItem.emergencyVisitsPerYear || '0', 10),
+              contractPeriodMonths: 12, // Default value since not in CSV
               contractValue: parseFloat(importedItem.contractValue || '0'),
-              // Service flags - convert text to boolean
-              fireExtinguisherMaintenance: ['نعم', 'yes', 'true', '1'].includes(importedItem.fireExtinguisherMaintenance?.toLowerCase() || ''),
-              alarmSystemMaintenance: ['نعم', 'yes', 'true', '1'].includes(importedItem.alarmSystemMaintenance?.toLowerCase() || ''),
-              fireSuppressionMaintenance: ['نعم', 'yes', 'true', '1'].includes(importedItem.fireSuppressionMaintenance?.toLowerCase() || ''),
-              gasFireSuppression: ['نعم', 'yes', 'true', '1'].includes(importedItem.gasFireSuppression?.toLowerCase() || ''),
-              foamFireSuppression: ['نعم', 'yes', 'true', '1'].includes(importedItem.foamFireSuppression?.toLowerCase() || ''),
+              serviceBatches,
               notes: importedItem.notes || ''
             };
 

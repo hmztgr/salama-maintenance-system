@@ -173,6 +173,7 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
 
   // Detail view handlers
   const handleCompanyClick = (company: Company) => {
+    console.log('🔍 Company clicked:', company.companyId, 'Modal should open');
     setSelectedCompany(company);
   };
 

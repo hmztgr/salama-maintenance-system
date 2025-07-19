@@ -59,6 +59,9 @@ export function useSearch<T>(data: T[], searchConfig: {
     sortDirection: 'asc'
   });
 
+  // Debug log to verify default sort
+  console.log('🔍 useSearch initialized with sortBy:', filters.sortBy);
+
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
 
   // Load saved searches on mount

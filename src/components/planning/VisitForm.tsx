@@ -138,11 +138,11 @@ export function VisitForm({ visit, onSuccess, onCancel }: VisitFormProps) {
       setFormData(prev => ({
         ...prev,
         services: {
-          fireExtinguisher: selectedContract.fireExtinguisherMaintenance,
-          alarmSystem: selectedContract.alarmSystemMaintenance,
-          fireSuppression: selectedContract.fireSuppressionMaintenance,
-          gasSystem: selectedContract.gasFireSuppression,
-          foamSystem: selectedContract.foamFireSuppression,
+          fireExtinguisher: selectedContract.serviceBatches?.[0]?.services?.fireExtinguisherMaintenance || false,
+          alarmSystem: selectedContract.serviceBatches?.[0]?.services?.alarmSystemMaintenance || false,
+          fireSuppression: selectedContract.serviceBatches?.[0]?.services?.fireSuppressionMaintenance || false,
+          gasSystem: selectedContract.serviceBatches?.[0]?.services?.gasFireSuppression || false,
+          foamSystem: selectedContract.serviceBatches?.[0]?.services?.foamFireSuppression || false,
         }
       }));
     }
@@ -473,11 +473,11 @@ export function VisitForm({ visit, onSuccess, onCancel }: VisitFormProps) {
               <Label className="text-right block">خدمات السلامة المطلوبة *</Label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {[
-                  { key: 'fireExtinguisher', label: '🧯 صيانة طفايات الحريق', enabled: selectedContract?.fireExtinguisherMaintenance },
-                  { key: 'alarmSystem', label: '⚠️ صيانة نظام الإنذار', enabled: selectedContract?.alarmSystemMaintenance },
-                  { key: 'fireSuppression', label: '💧 صيانة نظام الإطفاء', enabled: selectedContract?.fireSuppressionMaintenance },
-                  { key: 'gasSystem', label: '🟦 نظام الإطفاء بالغاز', enabled: selectedContract?.gasFireSuppression },
-                  { key: 'foamSystem', label: '🟢 نظام الإطفاء بالفوم', enabled: selectedContract?.foamFireSuppression },
+                        { key: 'fireExtinguisher', label: '🧯 صيانة طفايات الحريق', enabled: selectedContract?.serviceBatches?.[0]?.services?.fireExtinguisherMaintenance || false },
+      { key: 'alarmSystem', label: '⚠️ صيانة نظام الإنذار', enabled: selectedContract?.serviceBatches?.[0]?.services?.alarmSystemMaintenance || false },
+      { key: 'fireSuppression', label: '💧 صيانة نظام الإطفاء', enabled: selectedContract?.serviceBatches?.[0]?.services?.fireSuppressionMaintenance || false },
+      { key: 'gasSystem', label: '🟦 نظام الإطفاء بالغاز', enabled: selectedContract?.serviceBatches?.[0]?.services?.gasFireSuppression || false },
+      { key: 'foamSystem', label: '🟢 نظام الإطفاء بالفوم', enabled: selectedContract?.serviceBatches?.[0]?.services?.foamFireSuppression || false },
                 ].map(({ key, label, enabled }) => (
                   <div key={key} className="flex items-center space-x-2 space-x-reverse">
                     <Checkbox

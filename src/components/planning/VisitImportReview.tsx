@@ -224,7 +224,12 @@ export function VisitImportReview({ file, onClose, onImportComplete }: VisitImpo
         const branchId = rowData.branchId;
         if (branchId) {
           const branch = branches.find(b => b.branchId === branchId);
-          if (branch && !branch.contractIds.includes(value)) {
+          if (branch && !contracts.some(contract => 
+          contract.contractId === value &&
+          contract.serviceBatches?.some(batch => 
+            batch.branchIds.includes(branch.branchId)
+          )
+        )) {
             errors.push({
               row: rowNumber,
               field: fieldName,

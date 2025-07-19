@@ -292,6 +292,14 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
             <SearchAndFilter
               filters={companySearch.filters}
               onFiltersChange={companySearch.setFilters}
+              availableSortOptions={[
+                { value: 'companyId', label: 'معرف الشركة' },
+                { value: 'companyName', label: 'اسم الشركة' },
+                { value: 'email', label: 'البريد الإلكتروني' },
+                { value: 'phone', label: 'رقم الهاتف' },
+                { value: 'createdAt', label: 'تاريخ الإنشاء' },
+                { value: 'updatedAt', label: 'تاريخ التحديث' }
+              ]}
               className="mb-6"
             />
 
@@ -488,6 +496,15 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
             <SearchAndFilter
               filters={contractSearch.filters}
               onFiltersChange={contractSearch.setFilters}
+              availableSortOptions={[
+                { value: 'contractId', label: 'معرف العقد' },
+                { value: 'companyId', label: 'معرف الشركة' },
+                { value: 'contractStartDate', label: 'تاريخ بداية العقد' },
+                { value: 'contractEndDate', label: 'تاريخ انتهاء العقد' },
+                { value: 'contractValue', label: 'قيمة العقد' },
+                { value: 'createdAt', label: 'تاريخ الإنشاء' },
+                { value: 'updatedAt', label: 'تاريخ التحديث' }
+              ]}
               className="mb-6"
             />
 
@@ -777,6 +794,15 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
             <SearchAndFilter
               filters={branchSearch.filters}
               onFiltersChange={branchSearch.setFilters}
+              availableSortOptions={[
+                { value: 'branchId', label: 'معرف الفرع' },
+                { value: 'branchName', label: 'اسم الفرع' },
+                { value: 'city', label: 'المدينة' },
+                { value: 'location', label: 'الموقع' },
+                { value: 'companyId', label: 'معرف الشركة' },
+                { value: 'createdAt', label: 'تاريخ الإنشاء' },
+                { value: 'updatedAt', label: 'تاريخ التحديث' }
+              ]}
               className="mb-6"
             />
 

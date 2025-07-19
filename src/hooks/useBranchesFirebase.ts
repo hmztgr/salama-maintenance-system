@@ -75,7 +75,6 @@ export function useBranchesFirebase() {
                 id: doc.id,
                 branchId: data.branchId,
                 companyId: data.companyId,
-                contractIds: data.contractIds || [],
                 city: data.city,
                 location: data.location,
                 branchName: data.branchName,
@@ -124,7 +123,7 @@ export function useBranchesFirebase() {
                       id: doc.id,
                       branchId: data.branchId,
                       companyId: data.companyId,
-                      contractIds: data.contractIds || [],
+      
                       city: data.city,
                       location: data.location,
                       branchName: data.branchName,
@@ -220,7 +219,6 @@ export function useBranchesFirebase() {
         const newBranchData = {
           branchId: idResult.branchId,
           companyId: branchData.companyId,
-          contractIds: branchData.contractIds || [],
           city: branchData.city,
           location: branchData.location,
           branchName: branchData.branchName,
@@ -382,12 +380,7 @@ export function useBranchesFirebase() {
     [branches]
   );
 
-  const getBranchesByContract = useCallback(
-    (contractId: string): Branch[] => {
-      return branches.filter((b) => b.contractIds.includes(contractId));
-    },
-    [branches]
-  );
+  // Note: getBranchesByContract removed - incompatible with new serviceBatches architecture
 
   const clearError = useCallback(() => {
     setError(null);
@@ -403,7 +396,6 @@ export function useBranchesFirebase() {
     archiveBranch,
     unarchiveBranch,
     getBranchesByCompany,
-    getBranchesByContract,
     clearError,
   };
 } 

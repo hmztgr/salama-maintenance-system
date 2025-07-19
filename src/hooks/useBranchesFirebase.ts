@@ -215,6 +215,8 @@ export function useBranchesFirebase() {
         }
 
         const now = getCurrentDate();
+        
+        // Create branch data with proper undefined filtering for Firebase
         const newBranchData = {
           branchId: idResult.branchId,
           companyId: branchData.companyId,
@@ -233,6 +235,13 @@ export function useBranchesFirebase() {
           updatedAt: now,
           createdBy: userId,
         };
+
+        // Filter out any undefined values that might have slipped through
+        Object.keys(newBranchData).forEach(key => {
+          if (newBranchData[key as keyof typeof newBranchData] === undefined) {
+            delete newBranchData[key as keyof typeof newBranchData];
+          }
+        });
 
         const docRef = await addDoc(collection(db, 'branches'), newBranchData);
         console.log('✅ Branch added to Firebase with ID:', docRef.id);

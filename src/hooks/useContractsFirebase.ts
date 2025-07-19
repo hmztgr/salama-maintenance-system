@@ -210,7 +210,9 @@ export function useContractsFirebase() {
         }
 
         const now = getCurrentDate();
-        const newContractData = {
+        
+        // Create base contract data - filter out undefined values for Firebase
+        const baseContractData = {
           contractId,
           companyId: contractData.companyId,
           contractStartDate: contractData.contractStartDate,
@@ -218,7 +220,6 @@ export function useContractsFirebase() {
           contractPeriodMonths: contractData.contractPeriodMonths,
           regularVisitsPerYear: contractData.regularVisitsPerYear,
           emergencyVisitsPerYear: contractData.emergencyVisitsPerYear,
-          contractDocument: contractData.contractDocument,
           contractValue: contractData.contractValue,
           notes: contractData.notes || '',
           fireExtinguisherMaintenance: contractData.fireExtinguisherMaintenance,
@@ -231,6 +232,11 @@ export function useContractsFirebase() {
           updatedAt: now,
           createdBy: userId,
         };
+
+        // Only add contractDocument if it exists (Firebase rejects undefined values)
+        const newContractData = contractData.contractDocument 
+          ? { ...baseContractData, contractDocument: contractData.contractDocument }
+          : baseContractData;
 
         const docRef = await addDoc(collection(db, 'contracts'), newContractData);
         console.log('✅ Contract added to Firebase with ID:', docRef.id);

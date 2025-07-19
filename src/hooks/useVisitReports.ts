@@ -194,7 +194,11 @@ export function useVisitReports() {
 
       // Contract compliance calculation
       const companyContracts = contracts.filter(c => c.companyId === company.companyId);
-      const expectedVisitsPerYear = companyContracts.reduce((sum, c) => sum + c.regularVisitsPerYear, 0);
+      const expectedVisitsPerYear = companyContracts.reduce((sum, c) => {
+        const contractTotal = c.serviceBatches?.reduce((batchSum, batch) => 
+          batchSum + (batch.regularVisitsPerYear || 0), 0) || 0;
+        return sum + contractTotal;
+      }, 0);
       
       // Get current year visits
       const currentYear = new Date().getFullYear();

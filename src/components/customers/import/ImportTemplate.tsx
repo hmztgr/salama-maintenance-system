@@ -292,7 +292,10 @@ export function ImportTemplate({ entityType, onClose }: ImportTemplateProps) {
         const companiesRef = collection(db, 'companies');
         const q = query(companiesRef, orderBy('companyId', 'desc'));
         const snapshot = await getDocs(q);
-        const existingCompanies = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+        const existingCompanies = snapshot.docs.map(doc => ({ 
+          ...doc.data(), 
+          id: doc.id 
+        })) as Array<{ id: string; companyId?: string; [key: string]: any }>;
         
         console.log('📊 Found existing companies for ID generation:', existingCompanies.length);
 

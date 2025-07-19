@@ -5,6 +5,91 @@ All notable changes to the Salama Maintenance Scheduler project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Version 57] - 2025-01-19
+### 🎯 DETAIL VIEWS & DOCUMENT MANAGEMENT: Clickable Entity Details with Document Viewer
+**STATUS: ✅ CLICKABLE DETAIL VIEWS IMPLEMENTED + DOCUMENT VIEWING READY**
+
+#### 🔍 Interactive Detail Views (3 Components)
+- 🏢 **CompanyDetailView** - Comprehensive company information display
+- 📋 **ContractDetailView** - Detailed contract information with service batches
+- 🏪 **BranchDetailView** - Complete branch information with contract associations
+- 🖱️ **Clickable Table Rows** - All table rows now clickable to show details
+- 🔄 **Back Navigation** - Seamless navigation between list and detail views
+
+#### 📄 Document Management Features
+- 👁️ **Document Viewer Modal** - Built-in document viewing for PDFs and images
+- 📥 **Document Download** - Direct download functionality for all documents
+- 🔗 **External Link Support** - Fallback to external viewer for unsupported formats
+- 📋 **Document Types Supported**:
+  - PDF files (embedded viewer)
+  - Images (JPG, PNG, GIF, WebP)
+  - Other formats (external link)
+
+#### 🎛️ Detail View Components
+**CompanyDetailView Features:**
+- ✅ Basic company information (ID, name, status)
+- ✅ Contact information (email, phone, address)
+- ✅ Document attachments (commercial registration, VAT, national address)
+- ✅ Quick statistics (contracts, branches, creation dates)
+- ✅ Quick actions (add branch, add contract, view visits)
+
+**ContractDetailView Features:**
+- ✅ Contract details (ID, dates, value, status)
+- ✅ Service information (all service types with icons)
+- ✅ Service batches (detailed breakdown per batch)
+- ✅ Contract documents (contract file)
+- ✅ Associated branches (list of contract branches)
+- ✅ Quick actions (schedule visit, add document, add branch)
+
+**BranchDetailView Features:**
+- ✅ Branch information (ID, name, location, status)
+- ✅ Contact details (contact person, phone)
+- ✅ Associated contracts (list of branch contracts)
+- ✅ Branch services (visit frequencies per contract)
+- ✅ Quick actions (schedule visit, add document, add contract)
+
+#### Technical Implementation
+```typescript
+// Clickable table rows
+<tr 
+  key={company.id} 
+  className="hover:bg-gray-50 cursor-pointer"
+  onClick={() => handleCompanyClick(company)}
+>
+
+// Detail view state management
+const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
+const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
+
+// Document viewer modal
+{selectedDocument && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+      {/* Document viewer content */}
+    </div>
+  </div>
+)}
+```
+
+#### Files Added
+**New Components:**
+- `src/components/customers/CompanyDetailView.tsx`
+- `src/components/customers/ContractDetailView.tsx`
+- `src/components/customers/BranchDetailView.tsx`
+- `src/components/ui/separator.tsx`
+
+**Updated Components:**
+- `src/components/customers/NewCustomerManagement.tsx` - Added click handlers and detail view integration
+
+#### User Experience Improvements
+✅ **Intuitive Navigation** - Click any row to see detailed information
+✅ **Rich Information Display** - Comprehensive data presentation
+✅ **Document Accessibility** - Easy document viewing and downloading
+✅ **Quick Actions** - Direct access to common operations
+✅ **Responsive Design** - Works on all screen sizes
+✅ **Arabic Interface** - Full Arabic language support
+
 ## [Version 56] - 2025-01-19
 ### 🚀 SORTING & BUILD FIXES: Complete SearchAndFilter Sorting + Firebase Build Resolution
 **STATUS: ✅ ALL SORTING FUNCTIONALITY RESTORED + BUILD ERRORS RESOLVED**

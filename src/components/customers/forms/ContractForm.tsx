@@ -13,21 +13,24 @@ export interface ContractFormProps {
 }
 
 export function ContractForm({ contract, companies, onSubmit, onCancel, isLoading = false }: ContractFormProps) {
+  // Extract values from first service batch for backward compatibility
+  const firstBatch = contract?.serviceBatches?.[0];
+  
   const [formData, setFormData] = useState({
     companyId: contract?.companyId || '',
     contractStartDate: contract?.contractStartDate || '',
     contractEndDate: contract?.contractEndDate || '',
     contractPeriodMonths: contract?.contractPeriodMonths || 12,
-    regularVisitsPerYear: contract?.regularVisitsPerYear || 12,
-    emergencyVisitsPerYear: contract?.emergencyVisitsPerYear || 4,
+    regularVisitsPerYear: firstBatch?.regularVisitsPerYear || 12,
+    emergencyVisitsPerYear: firstBatch?.emergencyVisitsPerYear || 4,
     contractValue: contract?.contractValue || 0,
     notes: contract?.notes || '',
-    // Fire safety services
-    fireExtinguisherMaintenance: contract?.fireExtinguisherMaintenance || false,
-    alarmSystemMaintenance: contract?.alarmSystemMaintenance || false,
-    fireSuppressionMaintenance: contract?.fireSuppressionMaintenance || false,
-    gasFireSuppression: contract?.gasFireSuppression || false,
-    foamFireSuppression: contract?.foamFireSuppression || false,
+    // Fire safety services - extract from first service batch for compatibility
+    fireExtinguisherMaintenance: firstBatch?.services?.fireExtinguisherMaintenance || false,
+    alarmSystemMaintenance: firstBatch?.services?.alarmSystemMaintenance || false,
+    fireSuppressionMaintenance: firstBatch?.services?.fireSuppressionMaintenance || false,
+    gasFireSuppression: firstBatch?.services?.gasFireSuppression || false,
+    foamFireSuppression: firstBatch?.services?.foamFireSuppression || false,
     contractDocument: undefined as File | undefined,
   });
 
@@ -136,7 +139,34 @@ export function ContractForm({ contract, companies, onSubmit, onCancel, isLoadin
     e.preventDefault();
 
     if (validateForm()) {
-      onSubmit(formData);
+      // Convert old form structure to new serviceBatches structure
+      const serviceBatches = [{
+        batchId: `batch-${Date.now()}`,
+        branchIds: [], // Empty for now - will be assigned when branches are linked
+        services: {
+          fireExtinguisherMaintenance: formData.fireExtinguisherMaintenance,
+          alarmSystemMaintenance: formData.alarmSystemMaintenance,
+          fireSuppressionMaintenance: formData.fireSuppressionMaintenance,
+          gasFireSuppression: formData.gasFireSuppression,
+          foamFireSuppression: formData.foamFireSuppression,
+        },
+        regularVisitsPerYear: formData.regularVisitsPerYear,
+        emergencyVisitsPerYear: formData.emergencyVisitsPerYear,
+        notes: 'خدمات العقد الأساسية',
+      }];
+
+      const contractData = {
+        companyId: formData.companyId,
+        contractStartDate: formData.contractStartDate,
+        contractEndDate: formData.contractEndDate,
+        contractPeriodMonths: formData.contractPeriodMonths,
+        contractValue: formData.contractValue,
+        notes: formData.notes,
+        serviceBatches,
+        contractDocument: formData.contractDocument,
+      };
+
+      onSubmit(contractData);
     }
   };
 

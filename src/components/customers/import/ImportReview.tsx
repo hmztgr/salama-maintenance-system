@@ -454,17 +454,26 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
       const headers = rows[0].map(h => h.trim());
       const dataRows = rows.slice(1);
 
+      // Debug: Log the actual headers from the CSV file
+      console.log('📋 CSV Headers Found:', headers);
+      console.log('📋 Entity Type:', entityType);
+
       // Map headers to standard field names
       const headerMapping: Record<string, string> = {};
       const mappedFields: Set<string> = new Set();
 
       headers.forEach(header => {
         const mappedField = mapHeaderToField(header, entityType);
+        console.log(`📋 Mapping "${header}" -> "${mappedField}"`);
         if (mappedField) {
           headerMapping[header] = mappedField;
           mappedFields.add(mappedField);
         }
       });
+
+      console.log('📋 Header Mapping Result:', headerMapping);
+      console.log('📋 Mapped Fields Found:', Array.from(mappedFields));
+      console.log('📋 Required Fields:', currentConfig.required);
 
       // Validate headers with enhanced mapping support
       const missingHeaders: string[] = [];

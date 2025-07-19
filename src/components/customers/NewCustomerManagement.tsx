@@ -1009,7 +1009,7 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                   setEditingContract(null);
                   setTimeout(() => setSuccessMessage(''), 5000);
                   
-                  return { success: true, contract: result.contract, warnings: result.warnings };
+                  return { success: true, warnings: result.warnings };
                 } catch (e) {
                   setFormLoading(false);
                   return { success: false, warnings: ['حدث خطأ أثناء حفظ العقد'] };

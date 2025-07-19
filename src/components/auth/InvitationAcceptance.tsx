@@ -23,13 +23,18 @@ import {
   Shield
 } from 'lucide-react';
 
-// Simple client-side only invitation acceptance
+// Firebase imports for invitation validation
+import { collection, query, where, getDocs, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+
+// Enhanced client-side invitation acceptance with Firebase integration
 export function InvitationAcceptance() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [validationState, setValidationState] = useState<'loading' | 'valid' | 'invalid'>('loading');
   const [validationError, setValidationError] = useState<string>('');
+  const [invitation, setInvitation] = useState<any>(null);
 
   const [formData, setFormData] = useState({
     username: '',
@@ -44,7 +49,71 @@ export function InvitationAcceptance() {
   const [showPassword, setShowPassword] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
 
-  // Client-side only initialization
+  // Enhanced Firebase-based invitation validation
+  const validateInvitationToken = async (token: string) => {
+    try {
+      console.log('🔍 Validating invitation token:', token);
+      
+      // Query Firebase for invitation with this token
+      const invitationsRef = collection(db, 'invitations');
+      const q = query(invitationsRef, where('linkToken', '==', token));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        console.log('❌ No invitation found for token:', token);
+        setValidationState('invalid');
+        setValidationError('رمز الدعوة غير صحيح أو غير موجود');
+        return;
+      }
+
+      const invitationDoc = querySnapshot.docs[0];
+      const invitationData = invitationDoc.data();
+      
+      console.log('✅ Found invitation:', invitationData);
+
+      // Check expiration
+      const expiresAt = invitationData.expiresAt?.toDate ? invitationData.expiresAt.toDate() : new Date(invitationData.expiresAt);
+      if (expiresAt < new Date()) {
+        console.log('❌ Invitation expired:', expiresAt);
+        setValidationState('invalid');
+        setValidationError('انتهت صلاحية الدعوة');
+        return;
+      }
+
+      // Check if already accepted
+      if (invitationData.status === 'accepted') {
+        console.log('❌ Invitation already accepted');
+        setValidationState('invalid');
+        setValidationError('تم استخدام هذه الدعوة بالفعل');
+        return;
+      }
+
+      // Check if revoked
+      if (invitationData.status === 'revoked') {
+        console.log('❌ Invitation revoked');
+        setValidationState('invalid');
+        setValidationError('تم إلغاء هذه الدعوة');
+        return;
+      }
+
+      // Valid invitation
+      console.log('✅ Invitation is valid');
+      setInvitation({ id: invitationDoc.id, ...invitationData });
+      setValidationState('valid');
+      
+      // Pre-fill email if available
+      if (invitationData.email) {
+        setFormData(prev => ({ ...prev, email: invitationData.email }));
+      }
+
+    } catch (error) {
+      console.error('❌ Error validating invitation:', error);
+      setValidationState('invalid');
+      setValidationError('حدث خطأ أثناء التحقق من الدعوة');
+    }
+  };
+
+  // Client-side only initialization with Firebase integration
   useEffect(() => {
     setMounted(true);
 
@@ -60,40 +129,8 @@ export function InvitationAcceptance() {
         return;
       }
 
-      // Simple token validation (just check if it exists in localStorage)
-      try {
-        const stored = localStorage.getItem('invitations');
-        if (stored) {
-          const invitations = JSON.parse(stored);
-          const invitation = invitations.find((inv: any) => inv.linkToken === urlToken);
-
-          if (invitation) {
-            if (new Date(invitation.expiresAt) < new Date()) {
-              setValidationState('invalid');
-              setValidationError('انتهت صلاحية الدعوة');
-            } else if (invitation.status === 'accepted') {
-              setValidationState('invalid');
-              setValidationError('تم استخدام هذه الدعوة بالفعل');
-            } else {
-              setValidationState('valid');
-              // Pre-fill email if available
-              if (invitation.email) {
-                setFormData(prev => ({ ...prev, email: invitation.email }));
-              }
-            }
-          } else {
-            setValidationState('invalid');
-            setValidationError('رمز الدعوة غير صحيح');
-          }
-        } else {
-          setValidationState('invalid');
-          setValidationError('لم يتم العثور على دعوات في النظام');
-        }
-      } catch (error) {
-        console.error('Validation error:', error);
-        setValidationState('invalid');
-        setValidationError('حدث خطأ أثناء التحقق من الدعوة');
-      }
+      // Validate with Firebase
+      validateInvitationToken(urlToken);
     }
   }, []);
 
@@ -157,16 +194,12 @@ export function InvitationAcceptance() {
       // Mark invitation as accepted
       if (typeof window !== 'undefined' && token) {
         try {
-          const stored = localStorage.getItem('invitations');
-          if (stored) {
-            const invitations = JSON.parse(stored);
-            const updatedInvitations = invitations.map((inv: any) =>
-              inv.linkToken === token
-                ? { ...inv, status: 'accepted', acceptedAt: new Date().toISOString() }
-                : inv
-            );
-            localStorage.setItem('invitations', JSON.stringify(updatedInvitations));
-          }
+          const invitationRef = doc(db, 'invitations', invitation.id);
+          await updateDoc(invitationRef, {
+            status: 'accepted',
+            acceptedAt: serverTimestamp()
+          });
+          console.log('✅ Invitation status updated to accepted:', invitation.id);
         } catch (e) {
           console.error('Failed to update invitation status:', e);
         }

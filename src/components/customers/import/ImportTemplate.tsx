@@ -196,11 +196,9 @@ export function ImportTemplate({ entityType, onClose }: ImportTemplateProps) {
       content += `# ${currentConfig.description}\n`;
       content += `# تاريخ الإنشاء: ${new Date().toLocaleDateString('ar-SA')}\n\n`;
 
-      // Add validation rules as comments
-      content += '# قواعد التحقق والتحقق من صحة البيانات:\n';
-      currentConfig.validationRules.forEach(rule => {
-        content += `# ${rule}\n`;
-      });
+      // Add simple header comment
+      content += '# قالب استيراد بيانات ' + currentConfig.title.replace('استيراد بيانات ', '') + '\n';
+      content += '# يرجى ملء البيانات في الصفوف أدناه\n';
       content += '\n';
 
       // Add headers

@@ -42,19 +42,44 @@ interface ImportResults {
   importedData: Record<string, string>[];
 }
 
-// Saudi Arabia cities database for validation
+// Enhanced Saudi Arabia cities database with both Arabic and English names
 const SAUDI_CITIES = [
-  'الرياض', 'جدة', 'مكة المكرمة', 'المدينة المنورة', 'الدمام', 'الخبر', 'الظهران',
-  'الطائف', 'بريدة', 'تبوك', 'خميس مشيط', 'حائل', 'نجران', 'الجبيل', 'ينبع',
-  'أبها', 'عرعر', 'سكاكا', 'جيزان', 'القطيف', 'الأحساء', 'الباحة', 'القريات',
-  'الخرج', 'القصيم', 'الهفوف', 'المجمعة', 'رفحاء', 'الزلفي', 'وادي الدواسر',
+  // Major Cities (Arabic and English)
+  'الرياض', 'Riyadh',
+  'جدة', 'Jeddah', 'Jidda',
+  'مكة المكرمة', 'Mecca', 'Makkah',
+  'المدينة المنورة', 'Medina', 'Madinah',
+  'الدمام', 'Dammam',
+  'الخبر', 'Khobar', 'Al-Khobar',
+  'الظهران', 'Dhahran',
+  'الطائف', 'Taif', 'At-Taif',
+  'بريدة', 'Buraydah',
+  'تبوك', 'Tabuk',
+  'خميس مشيط', 'Khamis Mushait',
+  'حائل', 'Hail', 'Ha\'il',
+  'نجران', 'Najran',
+  'الجبيل', 'Jubail', 'Al-Jubail',
+  'ينبع', 'Yanbu', 'Yenbo',
+  'أبها', 'Abha',
+  'عرعر', 'Arar',
+  'سكاكا', 'Sakaka',
+  'جيزان', 'Jazan', 'Gizan',
+  'القطيف', 'Qatif', 'Al-Qatif',
+  'الأحساء', 'Al-Ahsa', 'Hofuf',
+  'الباحة', 'Al-Baha',
+  'القريات', 'Qurayyat',
+  'الخرج', 'Al-Kharj',
+  'القصيم', 'Qassim', 'Al-Qassim',
+  'الهفوف', 'Hofuf', 'Al-Hofuf',
+  // Additional cities (keeping existing Arabic names)
+  'المجمعة', 'رفحاء', 'الزلفي', 'وادي الدواسر',
   'الافلاج', 'صبيا', 'محايل عسير', 'القنفذة', 'الليث', 'رابغ', 'الحوية',
   'تيماء', 'العلا', 'بدر', 'المهد', 'خيبر', 'العيص', 'املج', 'الوجه',
   'ضباء', 'حقل', 'البدع', 'الطوال', 'بيشة', 'النماص', 'تنومة', 'ظهران الجنوب',
-  'سراة عبيدة', 'الباحة', 'المندق', 'العقيق', 'قلوة', 'المخواة', 'بلجرشي',
+  'سراة عبيدة', 'المندق', 'العقيق', 'قلوة', 'المخواة', 'بلجرشي',
   'العارضة', 'فرسان', 'ابو عريش', 'صامطة', 'احد رفيدة', 'الداير',
-  'هروب', 'فيفا', 'العيدابي', 'الحرث', 'بيش', 'الطائف', 'الليث',
-  'تربة', 'رنية', 'الخرمة', 'الموية', 'ميسان', 'أضم', 'الكامل'
+  'هروب', 'فيفا', 'العيدابي', 'الحرث', 'بيش', 'تربة', 'رنية', 'الخرمة', 
+  'الموية', 'ميسان', 'أضم', 'الكامل'
 ];
 
 // Enhanced Column mapping for different languages and variations with better Arabic support
@@ -371,16 +396,26 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
 
       if (!isValid) {
         if (fieldName === 'city') {
-          const suggestion = SAUDI_CITIES.find(city =>
-            city.includes(value) || value.includes(city)
-          );
+          // Enhanced city suggestion with fuzzy matching for both Arabic and English
+          const suggestion = SAUDI_CITIES.find(city => {
+            const cityLower = city.toLowerCase();
+            const valueLower = value.toLowerCase();
+            
+            // Exact or partial match
+            return cityLower.includes(valueLower) || 
+                   valueLower.includes(cityLower) ||
+                   // Handle common English variations
+                   (cityLower === 'jeddah' && valueLower === 'jidda') ||
+                   (cityLower === 'riyadh' && valueLower === 'riyad') ||
+                   (cityLower === 'makkah' && valueLower === 'mecca');
+          });
 
           errors.push({
             row: rowNumber,
             field: fieldName,
             value,
-            error: 'المدينة غير موجودة في قاعدة بيانات المدن السعودية',
-            suggestion: suggestion ? `هل تقصد "${suggestion}"؟` : 'اختر مدينة من القائمة المعتمدة',
+            error: 'المدينة غير معترف بها',
+            suggestion: suggestion ? `هل تقصد "${suggestion}"؟` : 'استخدم اسم مدينة سعودية بالعربية أو الإنجليزية (مثال: الرياض، Riyadh، جدة، Jeddah)',
             severity: 'error'
           });
         } else if (fieldName.includes('Maintenance') || fieldName.includes('Suppression')) {

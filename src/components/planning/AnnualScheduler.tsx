@@ -103,18 +103,41 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
     teamMemberField: 'teamMember' as keyof Branch,
   };
 
-  // Enhanced branch search with contract type filtering
+  // Enhanced branch search with contract type filtering using new serviceBatches structure
   const enhancedBranches = useMemo(() => {
     return branches.map(branch => {
-      const branchContracts = contracts.filter(c => branch.contractIds.includes(c.contractId));
+      // Find contracts that include this branch in their service batches
+      const branchContracts = contracts.filter(contract => 
+        contract.serviceBatches?.some(batch => 
+          batch.branchIds.includes(branch.branchId)
+        )
+      );
+      
+      // Aggregate services from all service batches that include this branch
+      const aggregatedServices = {
+        fireExtinguisherMaintenance: false,
+        alarmSystemMaintenance: false,
+        fireSuppressionMaintenance: false,
+        gasFireSuppression: false,
+        foamFireSuppression: false,
+      };
+
+      branchContracts.forEach(contract => {
+        contract.serviceBatches?.forEach(batch => {
+          if (batch.branchIds.includes(branch.branchId)) {
+            Object.keys(aggregatedServices).forEach(service => {
+              if (batch.services[service as keyof typeof batch.services]) {
+                aggregatedServices[service as keyof typeof aggregatedServices] = true;
+              }
+            });
+          }
+        });
+      });
+
       return {
         ...branch,
         // Add contract type flags for filtering
-        fireExtinguisherMaintenance: branchContracts.some(c => c.fireExtinguisherMaintenance),
-        alarmSystemMaintenance: branchContracts.some(c => c.alarmSystemMaintenance),
-        fireSuppressionMaintenance: branchContracts.some(c => c.fireSuppressionMaintenance),
-        gasFireSuppression: branchContracts.some(c => c.gasFireSuppression),
-        foamFireSuppression: branchContracts.some(c => c.foamFireSuppression),
+        ...aggregatedServices,
       };
     });
   }, [branches, contracts]);
@@ -272,28 +295,43 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
       return;
     }
 
-    // Get the branch's contracts to determine services
-    const branchContracts = contracts.filter(c => branch.contractIds.includes(c.contractId));
+    // Get the branch's contracts that include this branch in their service batches
+    const branchContracts = contracts.filter(contract => 
+      contract.serviceBatches?.some(batch => 
+        batch.branchIds.includes(branch.branchId)
+      )
+    );
 
     if (branchContracts.length === 0) {
       alert('لا توجد عقود مرتبطة بهذا الفرع');
       return;
     }
 
+    // Get services from the first service batch that includes this branch
+    const firstContract = branchContracts[0];
+    const relevantBatch = firstContract.serviceBatches?.find(batch => 
+      batch.branchIds.includes(branch.branchId)
+    );
+
+    if (!relevantBatch) {
+      alert('لا توجد خدمات محددة لهذا الفرع');
+      return;
+    }
+
     // Create a regular visit for the week
     const visitData = {
       branchId: branch.branchId,
-      contractId: branchContracts[0].contractId, // Use first contract
+      contractId: firstContract.contractId, // Use first contract
       companyId: branch.companyId,
       type: 'regular' as const,
       status: 'scheduled' as const,
       scheduledDate: weekData.startDate,
       services: {
-        fireExtinguisher: branchContracts[0].fireExtinguisherMaintenance,
-        alarmSystem: branchContracts[0].alarmSystemMaintenance,
-        fireSuppression: branchContracts[0].fireSuppressionMaintenance,
-        gasSystem: branchContracts[0].gasFireSuppression,
-        foamSystem: branchContracts[0].foamFireSuppression,
+        fireExtinguisher: relevantBatch.services.fireExtinguisherMaintenance,
+        alarmSystem: relevantBatch.services.alarmSystemMaintenance,
+        fireSuppression: relevantBatch.services.fireSuppressionMaintenance,
+        gasSystem: relevantBatch.services.gasFireSuppression,
+        foamSystem: relevantBatch.services.foamFireSuppression,
       },
       createdBy: 'system-auto-plan'
     };
@@ -338,7 +376,11 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
 
     for (const branchData of branchesToPlan) {
       const branch = branchData.branch;
-      const branchContracts = contracts.filter(c => branch.contractIds.includes(c.contractId) && !c.isArchived);
+      const branchContracts = contracts.filter(contract => 
+        contract.serviceBatches?.some(batch => 
+          batch.branchIds.includes(branch.branchId)
+        ) && !contract.isArchived
+      );
 
       console.log(`📋 Processing branch: ${branch.branchName} (${branch.branchId})`);
       console.log(`📋 Found ${branchContracts.length} contracts for this branch`);
@@ -863,9 +905,30 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
                         <td className="px-1 py-1 border text-center">
                           <div className="text-xs">
                             {(() => {
-                              const branchContracts = contracts.filter(c => branch.contractIds.includes(c.contractId) && !c.isArchived);
-                              const totalRegularVisits = branchContracts.reduce((sum, contract) => sum + (contract.regularVisitsPerYear || 0), 0);
-                              const totalEmergencyVisits = branchContracts.reduce((sum, contract) => sum + (contract.emergencyVisitsPerYear || 0), 0);
+                              const branchContracts = contracts.filter(contract => 
+                                contract.serviceBatches?.some(batch => 
+                                  batch.branchIds.includes(branch.branchId)
+                                ) && !contract.isArchived
+                              );
+                              
+                              // Calculate total visits from all service batches for this branch
+                              const totalRegularVisits = branchContracts.reduce((sum, contract) => {
+                                const branchBatches = contract.serviceBatches?.filter(batch => 
+                                  batch.branchIds.includes(branch.branchId)
+                                ) || [];
+                                return sum + branchBatches.reduce((batchSum, batch) => 
+                                  batchSum + (batch.regularVisitsPerYear || 0), 0
+                                );
+                              }, 0);
+                              
+                              const totalEmergencyVisits = branchContracts.reduce((sum, contract) => {
+                                const branchBatches = contract.serviceBatches?.filter(batch => 
+                                  batch.branchIds.includes(branch.branchId)
+                                ) || [];
+                                return sum + branchBatches.reduce((batchSum, batch) => 
+                                  batchSum + (batch.emergencyVisitsPerYear || 0), 0
+                                );
+                              }, 0);
 
                               // Count only visits within contract periods
                               const allBranchVisits = visits.filter(v => v.branchId === branch.branchId && !v.isArchived);

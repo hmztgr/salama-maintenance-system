@@ -19,12 +19,24 @@ if (!firebaseConfig.apiKey) {
   console.warn('⚠️ Firebase configuration missing. Check .env.local file.');
 }
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase only if we have the required configuration
+let app: any = null;
+let auth: any = null;
+let db: any = null;
+let storage: any = null;
 
-// Initialize Firebase services
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+if (firebaseConfig.apiKey && typeof window !== 'undefined') {
+  try {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+    storage = getStorage(app);
+  } catch (error) {
+    console.error('Failed to initialize Firebase:', error);
+  }
+}
+
+// Export services (will be null if Firebase is not initialized)
+export { auth, db, storage };
 
 export default app;

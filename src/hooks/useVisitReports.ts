@@ -51,8 +51,8 @@ export interface ReportFilters {
   companyIds?: string[];
   teamMembers?: string[];
   contractTypes?: string[];
-  visitTypes?: ('regular' | 'emergency')[];
-  status?: ('scheduled' | 'in_progress' | 'completed')[];
+  visitTypes?: ('regular' | 'emergency' | 'followup')[];
+  status?: ('scheduled' | 'in_progress' | 'completed' | 'cancelled' | 'rescheduled')[];
 }
 
 export function useVisitReports() {

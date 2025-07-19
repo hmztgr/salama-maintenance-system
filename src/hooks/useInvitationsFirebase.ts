@@ -139,17 +139,17 @@ export function useInvitationsFirebase() {
 
   // Create email invitation
   const createEmailInvitation = useCallback(
-    async (formData: InvitationFormData): Promise<{ success: boolean; invitation?: UserInvitation; error?: string }> => {
+    async (data: Omit<InvitationFormData, 'type'> & { email: string }): Promise<{ success: boolean; invitation?: UserInvitation; error?: string }> => {
       try {
-        console.log('📧 Creating email invitation for:', formData.email);
+        console.log('📧 Creating email invitation for:', data.email);
 
-        if (!formData.email) {
+        if (!data.email) {
           throw new Error('البريد الإلكتروني مطلوب');
         }
 
         // Check if email already has pending invitation
         const existingInvitation = invitations.find(
-          inv => inv.email === formData.email && inv.status === 'pending'
+          inv => inv.email === data.email && inv.status === 'pending'
         );
 
         if (existingInvitation) {
@@ -158,15 +158,15 @@ export function useInvitationsFirebase() {
 
         const token = generateInvitationToken();
         const invitationLink = generateInvitationLink(token);
-        const expiryDate = calculateExpiryDate(formData.expirationDays);
+        const expiryDate = calculateExpiryDate(data.expirationDays);
 
         const invitationData = {
           type: 'email' as InvitationType,
-          email: formData.email,
-          role: formData.role,
+          email: data.email,
+          role: data.role,
           invitedBy: 'current-user', // Should come from auth context
           invitedByName: 'النظام', // Should come from auth context
-          customMessage: formData.customMessage || '',
+          customMessage: data.customMessage || '',
           invitationLink,
           linkToken: token,
           status: 'pending' as InvitationStatus,
@@ -183,12 +183,12 @@ export function useInvitationsFirebase() {
 
         // Send email
         const emailTemplate = EmailService.generateInvitationContent(
-          formData.email,
+          data.email,
           'النظام',
-          formData.role,
+          data.role,
           invitationLink,
           expiryDate.toLocaleDateString('ar-SA'),
-          formData.customMessage
+          data.customMessage
         );
 
         const emailResult = await emailService.sendInvitationEmail(emailTemplate);
@@ -237,28 +237,28 @@ export function useInvitationsFirebase() {
 
   // Create link invitation
   const createLinkInvitation = useCallback(
-    async (formData: InvitationFormData): Promise<{ success: boolean; invitation?: UserInvitation; error?: string }> => {
+    async (data: Omit<InvitationFormData, 'type' | 'email'>): Promise<{ success: boolean; invitation?: UserInvitation; error?: string }> => {
       try {
         console.log('🔗 Creating link invitation');
 
         const token = generateInvitationToken();
         const invitationLink = generateInvitationLink(token);
-        const expiryDate = calculateExpiryDate(formData.expirationDays);
+        const expiryDate = calculateExpiryDate(data.expirationDays);
 
         const invitationData = {
           type: 'link' as InvitationType,
-          role: formData.role,
+          role: data.role,
           invitedBy: 'current-user', // Should come from auth context
           invitedByName: 'النظام', // Should come from auth context
-          customMessage: formData.customMessage || '',
+          customMessage: data.customMessage || '',
           invitationLink,
           linkToken: token,
           status: 'pending' as InvitationStatus,
           createdAt: serverTimestamp(),
           expiresAt: Timestamp.fromDate(expiryDate),
-          usageLimit: formData.usageLimit || undefined,
+          usageLimit: data.usageLimit || undefined,
           usageCount: 0,
-          allowedDomains: formData.allowedDomains || [],
+          allowedDomains: data.allowedDomains || [],
         };
 
         const docRef = await addDoc(collection(db, 'invitations'), invitationData);
@@ -418,9 +418,14 @@ export function useInvitationsFirebase() {
     createLinkInvitation,
     resendInvitation,
     revokeInvitation,
-    validateInvitation: async () => ({ valid: false }), // Placeholder
+    updateInvitation: async () => ({ success: false }), // Placeholder
+    validateInvitation: async () => ({ isValid: false }), // Placeholder
     acceptInvitation: async () => ({ success: false }), // Placeholder
-    getInvitationByToken: async () => null, // Placeholder
+    trackInvitationOpened: async () => {}, // Placeholder
+    getInvitations: () => invitations, // Return current invitations
+    getInvitationById: (id: string) => invitations.find(inv => inv.id === id) || null,
+    getInvitationByToken: (token: string) => invitations.find(inv => inv.linkToken === token) || null,
+    getInvitationStats: () => stats,
   };
 
   // Refresh function (compatibility)

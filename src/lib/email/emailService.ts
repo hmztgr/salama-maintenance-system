@@ -121,21 +121,27 @@ class EmailService {
       }
 
       // Send email using EmailJS
+      const emailData = {
+        to_email: template.to_email,
+        to_name: template.to_name || template.to_email,
+        from_name: template.from_name,
+        subject: template.subject,
+        message: template.message,
+        invitation_link: template.invitation_link,
+        user_role: template.role,
+        company_name: template.company_name,
+        expiry_date: template.expiry_date,
+        current_year: new Date().getFullYear().toString()
+      };
+
+      console.log('📧 EmailJS Data being sent:', emailData);
+      console.log('📧 Service ID:', this.config.serviceId);
+      console.log('📧 Template ID:', this.config.templateId);
+
       const response = await window.emailjs.send(
         this.config.serviceId,
         this.config.templateId,
-        {
-          to_email: template.to_email,
-          to_name: template.to_name || template.to_email,
-          from_name: template.from_name,
-          subject: template.subject,
-          message: template.message,
-          invitation_link: template.invitation_link,
-          user_role: template.role,
-          company_name: template.company_name,
-          expiry_date: template.expiry_date,
-          current_year: new Date().getFullYear().toString()
-        }
+        emailData
       );
 
       console.log('✅ Email sent successfully:', response);

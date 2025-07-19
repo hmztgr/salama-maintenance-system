@@ -327,15 +327,39 @@ export function BranchDetailView({
               <CardTitle className="text-lg">إجراءات سريعة</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button className="w-full" variant="outline">
+              <Button 
+                className="w-full" 
+                variant="outline"
+                onClick={() => {
+                  console.log('Schedule visit for branch:', branch.branchId);
+                  // This would open the visit scheduling form
+                  // You can implement this by passing a callback prop
+                }}
+              >
                 <Calendar className="w-4 h-4 ml-2" />
                 جدولة زيارة
               </Button>
-              <Button className="w-full" variant="outline">
+              <Button 
+                className="w-full" 
+                variant="outline"
+                onClick={() => {
+                  console.log('Add document for branch:', branch.branchId);
+                  // This would open the document upload form
+                  // You can implement this by passing a callback prop
+                }}
+              >
                 <FileText className="w-4 h-4 ml-2" />
                 إضافة مستند
               </Button>
-              <Button className="w-full" variant="outline">
+              <Button 
+                className="w-full" 
+                variant="outline"
+                onClick={() => {
+                  console.log('Add contract for branch:', branch.branchId);
+                  // This would open the contract form with branch pre-selected
+                  // You can implement this by passing a callback prop
+                }}
+              >
                 <Users className="w-4 h-4 ml-2" />
                 إضافة عقد
               </Button>

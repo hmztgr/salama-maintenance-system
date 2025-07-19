@@ -223,8 +223,13 @@ export function useCompaniesFirebase() {
         if (!userId) {
           return { success: false, warnings: ['لا يمكن تحديد هوية المستخدم'] };
         }
+        // Filter out undefined values to prevent Firebase errors
+        const filteredUpdates = Object.fromEntries(
+          Object.entries(updates).filter(([_, value]) => value !== undefined)
+        );
+        
         const updateData = {
-          ...updates,
+          ...filteredUpdates,
           updatedAt: new Date().toISOString(),
           lastModifiedBy: userId,
         };

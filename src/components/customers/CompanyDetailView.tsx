@@ -294,15 +294,39 @@ export function CompanyDetailView({
               <CardTitle className="text-lg">إجراءات سريعة</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button className="w-full" variant="outline">
+              <Button 
+                className="w-full" 
+                variant="outline"
+                onClick={() => {
+                  console.log('Add branch for company:', company.companyId);
+                  // This would open the branch form with company pre-selected
+                  // You can implement this by passing a callback prop
+                }}
+              >
                 <Users className="w-4 h-4 ml-2" />
                 إضافة فرع جديد
               </Button>
-              <Button className="w-full" variant="outline">
+              <Button 
+                className="w-full" 
+                variant="outline"
+                onClick={() => {
+                  console.log('Add contract for company:', company.companyId);
+                  // This would open the contract form with company pre-selected
+                  // You can implement this by passing a callback prop
+                }}
+              >
                 <FileText className="w-4 h-4 ml-2" />
                 إضافة عقد جديد
               </Button>
-              <Button className="w-full" variant="outline">
+              <Button 
+                className="w-full" 
+                variant="outline"
+                onClick={() => {
+                  console.log('View visits for company:', company.companyId);
+                  // This would navigate to visits page filtered by company
+                  // You can implement this by passing a callback prop
+                }}
+              >
                 <Calendar className="w-4 h-4 ml-2" />
                 عرض الزيارات
               </Button>

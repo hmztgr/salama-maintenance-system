@@ -1161,84 +1161,104 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
         </div>
       )}
 
-      {/* Detail Views */}
+      {/* Detail View Modals */}
       {selectedCompany && (
-        <CompanyDetailView
-          company={selectedCompany}
-          onBack={handleBackToList}
-          onEdit={() => {
-            setEditingCompany(selectedCompany);
-            setShowCompanyForm(true);
-            setSelectedCompany(null);
-          }}
-          onDelete={async () => {
-            if (confirm(`هل أنت متأكد من حذف الشركة "${selectedCompany.companyName}"؟`)) {
-              const success = await deleteCompany(selectedCompany.companyId);
-              if (success) {
-                setSuccessMessage('تم حذف الشركة بنجاح');
-                setSelectedCompany(null);
-              } else {
-                setSuccessMessage('فشل في حذف الشركة');
-              }
-              setTimeout(() => setSuccessMessage(''), 3000);
-            }
-          }}
-          hasPermission={hasPermission}
-        />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-7xl h-[95vh] overflow-hidden">
+            <div className="h-full overflow-y-auto">
+              <CompanyDetailView
+                company={selectedCompany}
+                contracts={contracts.filter(c => c.companyId === selectedCompany.companyId)}
+                branches={branches.filter(b => b.companyId === selectedCompany.companyId)}
+                onBack={() => setSelectedCompany(null)}
+                onEdit={() => {
+                  setSelectedCompany(null);
+                  setEditingCompany(selectedCompany);
+                  setShowCompanyForm(true);
+                }}
+                onDelete={async () => {
+                  if (confirm(`هل أنت متأكد من حذف الشركة "${selectedCompany.companyName}"؟`)) {
+                    const success = await deleteCompany(selectedCompany.companyId);
+                    if (success) {
+                      setSuccessMessage('تم حذف الشركة بنجاح');
+                      setSelectedCompany(null);
+                    } else {
+                      setSuccessMessage('فشل في حذف الشركة');
+                    }
+                    setTimeout(() => setSuccessMessage(''), 3000);
+                  }
+                }}
+                hasPermission={hasPermission}
+              />
+            </div>
+          </div>
+        </div>
       )}
 
       {selectedContract && (
-        <ContractDetailView
-          contract={selectedContract}
-          company={companies.find(c => c.companyId === selectedContract.companyId)}
-          branches={branches}
-          onBack={handleBackToList}
-          onEdit={() => {
-            setEditingContract(selectedContract);
-            setShowEnhancedContractForm(true);
-            setSelectedContract(null);
-          }}
-          onDelete={async () => {
-            if (confirm(`هل أنت متأكد من حذف العقد "${selectedContract.contractId}"؟`)) {
-              const success = await deleteContract(selectedContract.id);
-              if (success) {
-                setSuccessMessage('تم حذف العقد بنجاح');
-                setSelectedContract(null);
-              } else {
-                setSuccessMessage('فشل في حذف العقد');
-              }
-              setTimeout(() => setSuccessMessage(''), 3000);
-            }
-          }}
-          hasPermission={hasPermission}
-        />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-7xl h-[95vh] overflow-hidden">
+            <div className="h-full overflow-y-auto">
+              <ContractDetailView
+                contract={selectedContract}
+                company={companies.find(c => c.companyId === selectedContract.companyId)}
+                branches={branches.filter(b => b.companyId === selectedContract.companyId)}
+                onBack={() => setSelectedContract(null)}
+                onEdit={() => {
+                  setSelectedContract(null);
+                  setEditingContract(selectedContract);
+                  setShowEnhancedContractForm(true);
+                }}
+                onDelete={async () => {
+                  if (confirm(`هل أنت متأكد من حذف العقد "${selectedContract.contractId}"؟`)) {
+                    const success = await deleteContract(selectedContract.id);
+                    if (success) {
+                      setSuccessMessage('تم حذف العقد بنجاح');
+                      setSelectedContract(null);
+                    } else {
+                      setSuccessMessage('فشل في حذف العقد');
+                    }
+                    setTimeout(() => setSuccessMessage(''), 3000);
+                  }
+                }}
+                hasPermission={hasPermission}
+              />
+            </div>
+          </div>
+        </div>
       )}
 
       {selectedBranch && (
-        <BranchDetailView
-          branch={selectedBranch}
-          company={companies.find(c => c.companyId === selectedBranch.companyId)}
-          contracts={contracts}
-          onBack={handleBackToList}
-          onEdit={() => {
-            setEditingBranch(selectedBranch);
-            setShowBranchForm(true);
-            setSelectedBranch(null);
-          }}
-          onDelete={async () => {
-            if (confirm(`هل أنت متأكد من حذف الفرع "${selectedBranch.branchName}"؟`)) {
-              const success = await deleteBranch(selectedBranch.id);
-              if (success) {
-                setSuccessMessage('تم حذف الفرع بنجاح');
-                setSelectedBranch(null);
-              } else {
-                setSuccessMessage('فشل في حذف الفرع');
-              }
-              setTimeout(() => setSuccessMessage(''), 3000);
-            }
-          }}
-          hasPermission={hasPermission}
-        />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-7xl h-[95vh] overflow-hidden">
+            <div className="h-full overflow-y-auto">
+              <BranchDetailView
+                branch={selectedBranch}
+                company={companies.find(c => c.companyId === selectedBranch.companyId)}
+                contracts={contracts.filter(c => c.companyId === selectedBranch.companyId)}
+                onBack={() => setSelectedBranch(null)}
+                onEdit={() => {
+                  setSelectedBranch(null);
+                  setEditingBranch(selectedBranch);
+                  setShowBranchForm(true);
+                }}
+                onDelete={async () => {
+                  if (confirm(`هل أنت متأكد من حذف الفرع "${selectedBranch.branchName}"؟`)) {
+                    const success = await deleteBranch(selectedBranch.id);
+                    if (success) {
+                      setSuccessMessage('تم حذف الفرع بنجاح');
+                      setSelectedBranch(null);
+                    } else {
+                      setSuccessMessage('فشل في حذف الفرع');
+                    }
+                    setTimeout(() => setSuccessMessage(''), 3000);
+                  }
+                }}
+                hasPermission={hasPermission}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

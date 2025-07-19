@@ -390,15 +390,39 @@ export function ContractDetailView({
               <CardTitle className="text-lg">إجراءات سريعة</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button className="w-full" variant="outline">
+              <Button 
+                className="w-full" 
+                variant="outline"
+                onClick={() => {
+                  console.log('Schedule visit for contract:', contract.contractId);
+                  // This would open the visit scheduling form
+                  // You can implement this by passing a callback prop
+                }}
+              >
                 <Calendar className="w-4 h-4 ml-2" />
                 جدولة زيارة
               </Button>
-              <Button className="w-full" variant="outline">
+              <Button 
+                className="w-full" 
+                variant="outline"
+                onClick={() => {
+                  console.log('Add document for contract:', contract.contractId);
+                  // This would open the document upload form
+                  // You can implement this by passing a callback prop
+                }}
+              >
                 <FileText className="w-4 h-4 ml-2" />
                 إضافة مستند
               </Button>
-              <Button className="w-full" variant="outline">
+              <Button 
+                className="w-full" 
+                variant="outline"
+                onClick={() => {
+                  console.log('Add branch for contract:', contract.contractId);
+                  // This would open the branch form with contract pre-selected
+                  // You can implement this by passing a callback prop
+                }}
+              >
                 <Users className="w-4 h-4 ml-2" />
                 إضافة فرع
               </Button>

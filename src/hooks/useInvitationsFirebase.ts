@@ -388,6 +388,16 @@ export function useInvitationsFirebase() {
     const expired = invitations.filter(inv => inv.status === 'expired').length;
     const revoked = invitations.filter(inv => inv.status === 'revoked').length;
 
+    const byRole = invitations.reduce((acc, inv) => {
+      acc[inv.role] = (acc[inv.role] || 0) + 1;
+      return acc;
+    }, {} as Record<UserRole, number>);
+
+    const byType = invitations.reduce((acc, inv) => {
+      acc[inv.type] = (acc[inv.type] || 0) + 1;
+      return acc;
+    }, {} as Record<InvitationType, number>);
+
     return {
       total,
       pending,
@@ -396,7 +406,9 @@ export function useInvitationsFirebase() {
       accepted,
       expired,
       revoked,
-      acceptanceRate: total > 0 ? Math.round((accepted / total) * 100) : 0
+      acceptanceRate: total > 0 ? Math.round((accepted / total) * 100) : 0,
+      byRole,
+      byType
     };
   }, [invitations]);
 

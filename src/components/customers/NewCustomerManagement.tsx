@@ -102,7 +102,7 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
 
   // Search functionality for each tab
   const companySearchConfig = {
-    searchFields: ['companyName', 'unifiedNumber', 'email', 'phone'] as (keyof Company)[],
+    searchFields: ['companyId', 'companyName', 'unifiedNumber', 'email', 'phone'] as (keyof Company)[],
     statusField: 'isArchived' as keyof Company,
     cityField: 'address' as keyof Company, // Using address as city equivalent
     teamMemberField: 'contactPerson' as keyof Company,

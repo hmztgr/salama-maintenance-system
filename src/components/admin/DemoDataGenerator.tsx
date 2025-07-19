@@ -218,14 +218,44 @@ export function DemoDataGenerator() {
             };
           }
 
+          // Create demo service batches for the new contract structure
+          const serviceBatches = [];
+          
+          // For demo purposes, create 1-2 service batches per contract
+          const numBatches = hasMultipleContracts ? (contractIndex === 0 ? 1 : 2) : Math.random() > 0.7 ? 2 : 1;
+          
+          for (let batchIndex = 0; batchIndex < numBatches; batchIndex++) {
+            const batch = {
+              batchId: `batch-${Date.now()}-${batchIndex}`,
+              branchIds: [], // Will be populated when branches are created
+              services: batchIndex === 0 ? {
+                // First batch: basic services
+                fireExtinguisherMaintenance: true,
+                alarmSystemMaintenance: Math.random() > 0.3,
+                fireSuppressionMaintenance: Math.random() > 0.7,
+                gasFireSuppression: Math.random() > 0.8,
+                foamFireSuppression: Math.random() > 0.9
+              } : {
+                // Second batch: advanced services
+                fireExtinguisherMaintenance: false,
+                alarmSystemMaintenance: false,
+                fireSuppressionMaintenance: true,
+                gasFireSuppression: Math.random() > 0.5,
+                foamFireSuppression: Math.random() > 0.5
+              },
+              regularVisitsPerYear: [12, 6, 4, 3, 2][Math.floor(Math.random() * 5)],
+              emergencyVisitsPerYear: Math.floor(Math.random() * 4) + 1,
+              notes: batchIndex === 0 ? 'مجموعة الخدمات الأساسية' : 'مجموعة الخدمات المتقدمة'
+            };
+            serviceBatches.push(batch);
+          }
+
           const contractData = {
             companyId: company.companyId,
             contractStartDate,
             contractEndDate,
-            regularVisitsPerYear: [12, 6, 4, 3, 2][Math.floor(Math.random() * 5)],
-            emergencyVisitsPerYear: Math.floor(Math.random() * 4) + 1,
             contractValue: (Math.floor(Math.random() * 100) + 20) * 1000,
-            ...services,
+            serviceBatches,
             notes: hasMultipleContracts
               ? `عقد ${contractIndex === 0 ? 'الخدمات الأساسية' : 'الخدمات المتقدمة'}`
               : 'عقد صيانة شامل'
@@ -264,7 +294,6 @@ export function DemoDataGenerator() {
 
           const branchData = {
             companyId: company.companyId,
-            contractIds: companyContracts.map(c => c.contractId),
             city,
             location,
             branchName: `${location} - ${city}`,
@@ -289,7 +318,10 @@ export function DemoDataGenerator() {
       }
 
       // Generate visits based on contracts
-      setGenerationProgress('إنشاء الزيارات...');
+      // TEMPORARILY DISABLED: Visit generation needs update for new serviceBatches structure
+      setGenerationProgress('تخطي إنشاء الزيارات مؤقتاً...');
+      console.log('⚠️ Visit generation temporarily disabled during restructure');
+      /*
       const today = new Date();
       const oneYearAgo = new Date(today.getTime() - 365 * 24 * 60 * 60 * 1000);
       const oneYearFromNow = new Date(today.getTime() + 365 * 24 * 60 * 60 * 1000);
@@ -299,14 +331,21 @@ export function DemoDataGenerator() {
       for (const branch of generatedBranches) {
         console.log('🏪 Creating visits for branch:', branch.branchName, 'ID:', branch.branchId);
 
-        for (const contractId of branch.contractIds) {
-          const contract = generatedContracts.find(c => c.contractId === contractId);
-          if (!contract) {
-            console.log('⚠️ Contract not found:', contractId);
-            continue;
-          }
+        // Find contracts that include this branch in their service batches
+        const relevantContracts = generatedContracts.filter(contract => 
+          contract.companyId === branch.companyId &&
+          contract.serviceBatches.some(batch => batch.branchIds.includes(branch.branchId))
+        );
 
-          console.log('📋 Processing contract:', contract.contractId, 'visits per year:', contract.regularVisitsPerYear);
+        for (const contract of relevantContracts) {
+          // Find the service batch that includes this branch
+          const serviceBatch = contract.serviceBatches.find(batch => 
+            batch.branchIds.includes(branch.branchId)
+          );
+          
+          if (!serviceBatch) continue;
+
+          console.log('📋 Processing contract:', contract.contractId, 'visits per year:', serviceBatch.regularVisitsPerYear);
 
           // Fix date parsing for dd-mmm-yyyy format (e.g., "27-Jul-2023")
           const parseContractDate = (dateStr: string): Date => {
@@ -484,6 +523,9 @@ export function DemoDataGenerator() {
 
       setGenerationProgress('تم إنشاء البيانات التجريبية بنجاح!');
 
+      */
+      // End of temporarily disabled visit generation section
+      
     } catch (error) {
       console.error('Error generating demo data:', error);
       setGenerationProgress('حدث خطأ أثناء إنشاء البيانات التجريبية');

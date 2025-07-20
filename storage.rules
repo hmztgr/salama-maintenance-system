@@ -1,0 +1,93 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions for authentication and authorization
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserRole() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && getUserRole() == 'admin';
+    }
+    
+    function isSupervisor() {
+      return isAuthenticated() && getUserRole() == 'supervisor';
+    }
+    
+    function isViewer() {
+      return isAuthenticated() && getUserRole() == 'viewer';
+    }
+    
+    function canRead() {
+      return isAuthenticated(); // All authenticated users can read
+    }
+    
+    function canWrite() {
+      return isAdmin() || isSupervisor(); // Only admin and supervisor can write
+    }
+    
+    function canDelete() {
+      return isAdmin(); // Only admin can delete
+    }
+    
+    // Allow access to company files
+    match /companies/{companyId}/{fileName} {
+      allow read: if canRead();
+      allow write: if canWrite();
+      allow delete: if canDelete();
+    }
+    
+    // Allow access to contract files
+    match /contracts/{contractId}/{fileName} {
+      allow read: if canRead();
+      allow write: if canWrite();
+      allow delete: if canDelete();
+    }
+    
+    // Allow access to branch files
+    match /branches/{branchId}/{fileName} {
+      allow read: if canRead();
+      allow write: if canWrite();
+      allow delete: if canDelete();
+    }
+    
+    // Allow access to visit files
+    match /visits/{visitId}/{fileName} {
+      allow read: if canRead();
+      allow write: if canWrite();
+      allow delete: if canDelete();
+    }
+    
+    // Allow access to user profile files
+    match /users/{userId}/{fileName} {
+      allow read: if canRead();
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+      allow delete: if isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Allow access to general uploads
+    match /uploads/{fileName} {
+      allow read: if canRead();
+      allow write: if canWrite();
+      allow delete: if canDelete();
+    }
+    
+    // Allow access to temporary files
+    match /temp/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
+    
+    // Deny all other paths
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+} 

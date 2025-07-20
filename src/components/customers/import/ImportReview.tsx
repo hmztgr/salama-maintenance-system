@@ -196,6 +196,19 @@ const mapHeaderToField = (header: string, entityType: 'companies' | 'contracts' 
   return null;
 };
 
+// Helper function to safely get Arabic names from COLUMN_MAPPINGS
+const getArabicNames = (entityType: string, fieldName: string): string[] => {
+  try {
+    const entityMappings = COLUMN_MAPPINGS[entityType as keyof typeof COLUMN_MAPPINGS];
+    if (entityMappings && fieldName in entityMappings) {
+      return entityMappings[fieldName as keyof typeof entityMappings] as string[];
+    }
+  } catch (error) {
+    console.warn('Error accessing COLUMN_MAPPINGS:', error);
+  }
+  return [];
+};
+
 export function ImportReview({ file, entityType, onClose, onImportComplete }: ImportReviewProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [importRows, setImportRows] = useState<ImportRow[]>([]);
@@ -536,7 +549,7 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
       currentConfig.required.forEach((requiredField: string) => {
         if (!mappedFields.has(requiredField)) {
           // Find the Arabic name for better error messages
-          const arabicNames = (COLUMN_MAPPINGS[entityType] as any)[requiredField] as string[];
+          const arabicNames = getArabicNames(entityType, requiredField);
           const arabicName = arabicNames?.find(name => name.includes('*')) || arabicNames?.[0] || requiredField;
           missingHeaders.push(arabicName);
         }
@@ -552,7 +565,7 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
       // If there are critical header issues, provide helpful error message with suggestions
       if (missingHeaders.length > 0) {
         const suggestions = currentConfig.required.map((requiredField: string) => {
-          const arabicNames = (COLUMN_MAPPINGS[entityType] as any)[requiredField] as string[];
+          const arabicNames = getArabicNames(entityType, requiredField);
           const suggestionList = arabicNames?.slice(0, 3).join(' أو ') || requiredField;
           return `• ${requiredField}: ${suggestionList}`;
         }).join('\n');

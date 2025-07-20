@@ -284,7 +284,7 @@ export function ContractDetailView({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {contract.contractDocument ? (
+              {typeof contract.contractDocument === 'string' && contract.contractDocument ? (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex items-center gap-3">
@@ -299,6 +299,7 @@ export function ContractDetailView({
                         variant="outline"
                         size="sm"
                         className="gap-1"
+                        onClick={() => window.open(contract.contractDocument as string, '_blank')}
                       >
                         <Eye className="w-4 h-4" />
                         عرض
@@ -307,6 +308,12 @@ export function ContractDetailView({
                         variant="outline"
                         size="sm"
                         className="gap-1"
+                        onClick={() => {
+                          const link = document.createElement('a');
+                          link.href = contract.contractDocument as string;
+                          link.download = 'contract_document.pdf';
+                          link.click();
+                        }}
                       >
                         <Download className="w-4 h-4" />
                         تحميل

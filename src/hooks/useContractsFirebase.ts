@@ -20,12 +20,14 @@ import { useAuth } from '@/contexts/AuthContextFirebase';
 import { Contract } from '@/types/customer';
 import { generateContractId } from '@/lib/id-generator';
 import { getCurrentDate } from '@/lib/date-handler';
+import { useFirebaseStorage } from './useFirebaseStorage';
 
 export function useContractsFirebase() {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { authState } = useAuth();
+  const { uploadFile } = useFirebaseStorage();
   const unsubscribeRef = useRef<Unsubscribe | null>(null);
   const isListenerActiveRef = useRef(false);
   const componentMountedRef = useRef(true);
@@ -199,6 +201,25 @@ export function useContractsFirebase() {
           };
         }
 
+        // Handle file uploads
+        const warnings: string[] = [];
+        let contractDocumentUrl = '';
+
+        try {
+          if (contractData.contractDocument && contractData.contractDocument instanceof File) {
+            console.log('📤 Uploading contract document...');
+            const uploadedFile = await uploadFile(contractData.contractDocument, {
+              folder: `contracts/${contractId}/documents`,
+              customName: 'contract_document'
+            });
+            contractDocumentUrl = uploadedFile.url;
+          } else if (typeof contractData.contractDocument === 'string') {
+            contractDocumentUrl = contractData.contractDocument;
+          }
+        } catch (error) {
+          warnings.push(`فشل في رفع وثيقة العقد: ${error}`);
+        }
+
         const now = getCurrentDate();
         
         // Create base contract data - filter out undefined values for Firebase
@@ -208,6 +229,7 @@ export function useContractsFirebase() {
           contractStartDate: contractData.contractStartDate,
           contractEndDate: contractData.contractEndDate,
           contractPeriodMonths: contractData.contractPeriodMonths,
+          contractDocument: contractDocumentUrl,
           contractValue: contractData.contractValue,
           notes: contractData.notes || '',
           // NEW: Service batches structure instead of individual service flags
@@ -218,10 +240,7 @@ export function useContractsFirebase() {
           createdBy: userId,
         };
 
-        // Only add contractDocument if it exists (Firebase rejects undefined values)
-        const newContractData = contractData.contractDocument 
-          ? { ...baseContractData, contractDocument: contractData.contractDocument }
-          : baseContractData;
+        const newContractData = baseContractData;
 
         const docRef = await addDoc(collection(db, 'contracts'), newContractData);
         console.log('✅ Contract added to Firebase with ID:', docRef.id);

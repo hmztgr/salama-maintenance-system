@@ -58,6 +58,7 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
+  const [editingFromDetailView, setEditingFromDetailView] = useState<'company' | 'contract' | 'branch' | null>(null);
 
   // Data hooks - using Firebase
   const {
@@ -998,13 +999,18 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                     }
                   } else {
                     const result = await addCompany(data);
-                    if (result.success) {
-                      setSuccessMessage('تمت إضافة الشركة بنجاح');
-                      setShowCompanyForm(false);
-                      setEditingCompany(null);
-                    } else {
-                      setSuccessMessage('فشل في إضافة الشركة: ' + (result.warnings?.join(', ') || 'خطأ غير معروف'));
+                                      if (result.success) {
+                    setSuccessMessage('تمت إضافة الشركة بنجاح');
+                    setShowCompanyForm(false);
+                    setEditingCompany(null);
+                    // If editing from detail view, refresh the company data
+                    if (editingFromDetailView === 'company' && selectedCompany) {
+                      // The company data will be refreshed by the Firebase listener
                     }
+                    setEditingFromDetailView(null);
+                  } else {
+                    setSuccessMessage('فشل في إضافة الشركة: ' + (result.warnings?.join(', ') || 'خطأ غير معروف'));
+                  }
                   }
                 } catch (e) {
                   console.error('Form submission error:', e);
@@ -1018,6 +1024,7 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
               onCancel={() => {
                 setShowCompanyForm(false);
                 setEditingCompany(null);
+                setEditingFromDetailView(null);
               }}
               isLoading={formLoading}
             />
@@ -1094,6 +1101,11 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                   setFormLoading(false);
                   setShowEnhancedContractForm(false);
                   setEditingContract(null);
+                  // If editing from detail view, refresh the contract data
+                  if (editingFromDetailView === 'contract' && selectedContract) {
+                    // The contract data will be refreshed by the Firebase listener
+                  }
+                  setEditingFromDetailView(null);
                   setTimeout(() => setSuccessMessage(''), 5000);
                   
                   return { success: true, warnings: result.warnings };
@@ -1106,6 +1118,7 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
               onCancel={() => {
                 setShowEnhancedContractForm(false);
                 setEditingContract(null);
+                setEditingFromDetailView(null);
               }}
               isLoading={formLoading}
             />
@@ -1121,6 +1134,11 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
               onSuccess={() => {
                 setShowBranchForm(false);
                 setEditingBranch(null);
+                // If editing from detail view, refresh the branch data
+                if (editingFromDetailView === 'branch' && selectedBranch) {
+                  // The branch data will be refreshed by the Firebase listener
+                }
+                setEditingFromDetailView(null);
                 if (editingBranch) {
                   setSuccessMessage('تم تحديث بيانات الفرع بنجاح');
                 } else {
@@ -1131,6 +1149,7 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
               onCancel={() => {
                 setShowBranchForm(false);
                 setEditingBranch(null);
+                setEditingFromDetailView(null);
               }}
             />
           </div>
@@ -1166,15 +1185,18 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
 
       {/* Detail View Modals */}
       {selectedCompany && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-hidden">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-hidden"
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+        >
           <div className="bg-white rounded-lg w-full max-w-7xl h-[95vh] flex flex-col overflow-hidden">
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-6" style={{ overflowY: 'auto' }}>
               <CompanyDetailView
                 company={selectedCompany}
                 onBack={() => setSelectedCompany(null)}
                 onEdit={() => {
-                  setSelectedCompany(null);
                   setEditingCompany(selectedCompany);
+                  setEditingFromDetailView('company');
                   setShowCompanyForm(true);
                 }}
                 onDelete={async () => {
@@ -1206,8 +1228,8 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                 branches={branches.filter(b => b.companyId === selectedContract.companyId)}
                 onBack={() => setSelectedContract(null)}
                 onEdit={() => {
-                  setSelectedContract(null);
                   setEditingContract(selectedContract);
+                  setEditingFromDetailView('contract');
                   setShowEnhancedContractForm(true);
                 }}
                 onDelete={async () => {
@@ -1239,8 +1261,8 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                 contracts={contracts.filter(c => c.companyId === selectedBranch.companyId)}
                 onBack={() => setSelectedBranch(null)}
                 onEdit={() => {
-                  setSelectedBranch(null);
                   setEditingBranch(selectedBranch);
+                  setEditingFromDetailView('branch');
                   setShowBranchForm(true);
                 }}
                 onDelete={async () => {

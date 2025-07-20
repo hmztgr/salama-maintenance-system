@@ -101,9 +101,9 @@ export function VisitImportTemplate({ onClose }: VisitImportTemplateProps) {
       'معرف الفرع: مطلوب، يجب أن يكون موجود في النظام',
       'معرف العقد: مطلوب، يجب أن يكون مرتبط بالفرع',
       'نوع الزيارة: مطلوب، regular/emergency/followup',
-      'تاريخ الجدولة: مطلوب، تنسيق dd-mmm-yyyy أو dd-mmm-yy',
+      'تاريخ الجدولة: مطلوب، تنسيق d-mmm-yyyy أو dd-mmm-yyyy أو d-mmm-yy أو dd-mmm-yy',
       'وقت الجدولة: اختياري، تنسيق HH:mm',
-      'تاريخ التنفيذ: اختياري، تنسيق dd-mmm-yyyy أو dd-mmm-yy',
+      'تاريخ التنفيذ: اختياري، تنسيق d-mmm-yyyy أو dd-mmm-yyyy أو d-mmm-yy أو dd-mmm-yy',
       'وقت التنفيذ: اختياري، تنسيق HH:mm',
       'حالة الزيارة: مطلوب، scheduled/completed/cancelled',
       'الخدمات: نعم/لا، يجب أن تتطابق مع العقد',
@@ -366,7 +366,7 @@ export function VisitImportTemplate({ onClose }: VisitImportTemplateProps) {
               <li>• حالة الزيارة: scheduled, completed, cancelled</li>
               <li>• الخدمات المطلوبة يجب أن تتطابق مع خدمات العقد</li>
               <li>• النتيجة العامة مطلوبة فقط للزيارات المكتملة</li>
-              <li>• استخدم تنسيق dd-mmm-yyyy أو dd-mmm-yy للتواريخ و HH:mm للأوقات</li>
+              <li>• استخدم تنسيق d-mmm-yyyy أو dd-mmm-yyyy أو d-mmm-yy أو dd-mmm-yy للتواريخ و HH:mm للأوقات</li>
             </ul>
           </div>
 

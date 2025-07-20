@@ -178,49 +178,59 @@ export function useCompaniesFirebase() {
         let vatFileUrl = '';
         let nationalAddressFileUrl = '';
 
-        try {
-          if (companyData.commercialRegistrationFile && companyData.commercialRegistrationFile instanceof File) {
+        console.log('📁 Processing file data from CompanyForm:', {
+          commercialRegistrationFile: companyData.commercialRegistrationFile,
+          vatFile: companyData.vatFile,
+          nationalAddressFile: companyData.nationalAddressFile
+        });
+
+        // Handle file data from CompanyForm (pipe-separated URLs)
+        if (companyData.commercialRegistrationFile && typeof companyData.commercialRegistrationFile === 'string') {
+          commercialRegistrationUrl = companyData.commercialRegistrationFile;
+          console.log('📁 Using commercial registration URL:', commercialRegistrationUrl);
+        } else if (companyData.commercialRegistrationFile && companyData.commercialRegistrationFile instanceof File) {
+          try {
             console.log('📤 Uploading commercial registration file...');
             const uploadedFile = await uploadFile(companyData.commercialRegistrationFile, {
               folder: `companies/${companyId}/documents`,
               customName: 'commercial_registration'
             });
             commercialRegistrationUrl = uploadedFile.url;
-          } else if (typeof companyData.commercialRegistrationFile === 'string') {
-            commercialRegistrationUrl = companyData.commercialRegistrationFile;
+          } catch (error) {
+            warnings.push(`فشل في رفع السجل التجاري: ${error}`);
           }
-        } catch (error) {
-          warnings.push(`فشل في رفع السجل التجاري: ${error}`);
         }
 
-        try {
-          if (companyData.vatFile && companyData.vatFile instanceof File) {
+        if (companyData.vatFile && typeof companyData.vatFile === 'string') {
+          vatFileUrl = companyData.vatFile;
+          console.log('📁 Using VAT file URL:', vatFileUrl);
+        } else if (companyData.vatFile && companyData.vatFile instanceof File) {
+          try {
             console.log('📤 Uploading VAT file...');
             const uploadedFile = await uploadFile(companyData.vatFile, {
               folder: `companies/${companyId}/documents`,
               customName: 'vat_certificate'
             });
             vatFileUrl = uploadedFile.url;
-          } else if (typeof companyData.vatFile === 'string') {
-            vatFileUrl = companyData.vatFile;
+          } catch (error) {
+            warnings.push(`فشل في رفع شهادة الضريبة: ${error}`);
           }
-        } catch (error) {
-          warnings.push(`فشل في رفع شهادة الضريبة: ${error}`);
         }
 
-        try {
-          if (companyData.nationalAddressFile && companyData.nationalAddressFile instanceof File) {
+        if (companyData.nationalAddressFile && typeof companyData.nationalAddressFile === 'string') {
+          nationalAddressFileUrl = companyData.nationalAddressFile;
+          console.log('📁 Using national address file URL:', nationalAddressFileUrl);
+        } else if (companyData.nationalAddressFile && companyData.nationalAddressFile instanceof File) {
+          try {
             console.log('📤 Uploading national address file...');
             const uploadedFile = await uploadFile(companyData.nationalAddressFile, {
               folder: `companies/${companyId}/documents`,
               customName: 'national_address'
             });
             nationalAddressFileUrl = uploadedFile.url;
-          } else if (typeof companyData.nationalAddressFile === 'string') {
-            nationalAddressFileUrl = companyData.nationalAddressFile;
+          } catch (error) {
+            warnings.push(`فشل في رفع العنوان الوطني: ${error}`);
           }
-        } catch (error) {
-          warnings.push(`فشل في رفع العنوان الوطني: ${error}`);
         }
 
         const now = new Date().toISOString();
@@ -246,6 +256,13 @@ export function useCompaniesFirebase() {
           updatedAt: now,
           createdBy: userId,
         };
+        
+        console.log('📁 Saving company data to Firebase with files:', {
+          commercialRegistrationFile: newCompanyData.commercialRegistrationFile,
+          vatFile: newCompanyData.vatFile,
+          nationalAddressFile: newCompanyData.nationalAddressFile
+        });
+        
         const docRef = await addDoc(collection(db, 'companies'), newCompanyData);
         console.log('✅ Company added to Firebase with ID:', docRef.id);
         const newCompany: Company = {

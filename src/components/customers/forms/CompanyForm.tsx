@@ -94,7 +94,12 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
   };
 
   const handleFilesUploaded = (field: keyof typeof uploadedFiles, files: UploadedFile[]) => {
-    setUploadedFiles(prev => ({ ...prev, [field]: files }));
+    console.log(`📁 Files uploaded for ${field}:`, files);
+    setUploadedFiles(prev => {
+      const newState = { ...prev, [field]: files };
+      console.log(`📁 Updated uploadedFiles state:`, newState);
+      return newState;
+    });
   };
 
   const handleFileDeleted = (field: keyof typeof uploadedFiles, filePath: string) => {
@@ -108,6 +113,8 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
     e.preventDefault();
 
     if (validateForm()) {
+      console.log('📁 Current uploadedFiles state before submission:', uploadedFiles);
+      
       const submitData = {
         ...formData,
         // Store all file URLs as arrays for multiple files

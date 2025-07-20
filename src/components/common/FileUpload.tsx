@@ -145,12 +145,13 @@ export function FileUpload({
       const uploaded = await uploadFiles(selectedFiles, uploadOptions);
       
       // Update state
-      setUploadedFiles(prev => [...prev, ...uploaded]);
+      const newUploadedFiles = [...uploadedFiles, ...uploaded];
+      setUploadedFiles(newUploadedFiles);
       setSelectedFiles([]);
       setUploadProgress({});
       
-      // Notify parent component
-      onFilesUploaded?.(uploaded);
+      // Notify parent component with ALL files (existing + new)
+      onFilesUploaded?.(newUploadedFiles);
       
       console.log('✅ All files uploaded successfully');
     } catch (err) {

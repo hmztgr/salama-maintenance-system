@@ -41,7 +41,7 @@ export function FileViewer({ file, isOpen, onClose }: FileViewerProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg max-w-6xl w-full mx-4 max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-lg max-w-7xl w-full mx-4 max-h-[95vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center gap-3">
@@ -87,9 +87,9 @@ export function FileViewer({ file, isOpen, onClose }: FileViewerProps) {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden min-h-[70vh]">
           {isViewable ? (
-            <div className="w-full h-full flex items-center justify-center bg-gray-100">
+            <div className="w-full h-full flex items-center justify-center bg-gray-100 min-h-[70vh]">
               {isImage ? (
                 <img
                   src={file.url}

@@ -536,7 +536,7 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
       currentConfig.required.forEach((requiredField: string) => {
         if (!mappedFields.has(requiredField)) {
           // Find the Arabic name for better error messages
-          const arabicNames = COLUMN_MAPPINGS[entityType][requiredField as keyof typeof COLUMN_MAPPINGS[typeof entityType]];
+          const arabicNames = (COLUMN_MAPPINGS[entityType] as any)[requiredField] as string[];
           const arabicName = arabicNames?.find(name => name.includes('*')) || arabicNames?.[0] || requiredField;
           missingHeaders.push(arabicName);
         }
@@ -552,7 +552,7 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
       // If there are critical header issues, provide helpful error message with suggestions
       if (missingHeaders.length > 0) {
         const suggestions = currentConfig.required.map((requiredField: string) => {
-          const arabicNames = COLUMN_MAPPINGS[entityType][requiredField as keyof typeof COLUMN_MAPPINGS[typeof entityType]];
+          const arabicNames = (COLUMN_MAPPINGS[entityType] as any)[requiredField] as string[];
           const suggestionList = arabicNames?.slice(0, 3).join(' أو ') || requiredField;
           return `• ${requiredField}: ${suggestionList}`;
         }).join('\n');

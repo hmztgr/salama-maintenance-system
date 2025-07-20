@@ -179,39 +179,45 @@ export function useCompaniesFirebase() {
         let nationalAddressFileUrl = '';
 
         try {
-          if (companyData.commercialRegistrationFile) {
+          if (companyData.commercialRegistrationFile && companyData.commercialRegistrationFile instanceof File) {
             console.log('📤 Uploading commercial registration file...');
             const uploadedFile = await uploadFile(companyData.commercialRegistrationFile, {
               folder: `companies/${companyId}/documents`,
               customName: 'commercial_registration'
             });
             commercialRegistrationUrl = uploadedFile.url;
+          } else if (typeof companyData.commercialRegistrationFile === 'string') {
+            commercialRegistrationUrl = companyData.commercialRegistrationFile;
           }
         } catch (error) {
           warnings.push(`فشل في رفع السجل التجاري: ${error}`);
         }
 
         try {
-          if (companyData.vatFile) {
+          if (companyData.vatFile && companyData.vatFile instanceof File) {
             console.log('📤 Uploading VAT file...');
             const uploadedFile = await uploadFile(companyData.vatFile, {
               folder: `companies/${companyId}/documents`,
               customName: 'vat_certificate'
             });
             vatFileUrl = uploadedFile.url;
+          } else if (typeof companyData.vatFile === 'string') {
+            vatFileUrl = companyData.vatFile;
           }
         } catch (error) {
           warnings.push(`فشل في رفع شهادة الضريبة: ${error}`);
         }
 
         try {
-          if (companyData.nationalAddressFile) {
+          if (companyData.nationalAddressFile && companyData.nationalAddressFile instanceof File) {
             console.log('📤 Uploading national address file...');
             const uploadedFile = await uploadFile(companyData.nationalAddressFile, {
               folder: `companies/${companyId}/documents`,
               customName: 'national_address'
             });
             nationalAddressFileUrl = uploadedFile.url;
+          } else if (typeof companyData.nationalAddressFile === 'string') {
+            nationalAddressFileUrl = companyData.nationalAddressFile;
           }
         } catch (error) {
           warnings.push(`فشل في رفع العنوان الوطني: ${error}`);

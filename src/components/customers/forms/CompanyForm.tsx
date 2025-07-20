@@ -68,6 +68,63 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Update uploadedFiles when company prop changes (for editing)
+  useEffect(() => {
+    if (company) {
+      setUploadedFiles({
+        commercialRegistrationFile: company.commercialRegistrationFile && typeof company.commercialRegistrationFile === 'string' 
+          ? company.commercialRegistrationFile.split('|').filter(url => url.trim()).map((url, index) => ({
+              name: `Commercial Registration ${index + 1}`,
+              url: url.trim(),
+              path: 'companies/commercial-registration/' + company.companyId + '_' + index,
+              size: 0,
+              type: 'application/pdf',
+              uploadedAt: new Date().toISOString(),
+            }))
+          : [],
+        vatFile: company.vatFile && typeof company.vatFile === 'string'
+          ? company.vatFile.split('|').filter(url => url.trim()).map((url, index) => ({
+              name: `VAT Certificate ${index + 1}`,
+              url: url.trim(),
+              path: 'companies/vat/' + company.companyId + '_' + index,
+              size: 0,
+              type: 'application/pdf',
+              uploadedAt: new Date().toISOString(),
+            }))
+          : [],
+        nationalAddressFile: company.nationalAddressFile && typeof company.nationalAddressFile === 'string'
+          ? company.nationalAddressFile.split('|').filter(url => url.trim()).map((url, index) => ({
+              name: `National Address ${index + 1}`,
+              url: url.trim(),
+              path: 'companies/national-address/' + company.companyId + '_' + index,
+              size: 0,
+              type: 'application/pdf',
+              uploadedAt: new Date().toISOString(),
+            }))
+          : [],
+      });
+
+      // Also update form data
+      setFormData({
+        companyName: company.companyName || '',
+        unifiedNumber: company.unifiedNumber || '',
+        commercialRegistration: company.commercialRegistration || '',
+        vatNumber: company.vatNumber || '',
+        email: company.email || '',
+        phone: company.phone || '',
+        mobile: company.mobile || '',
+        address: company.address || '',
+        website: company.website || '',
+        contactPerson: company.contactPerson || '',
+        contactPersonTitle: company.contactPersonTitle || '',
+        notes: company.notes || '',
+      });
+    }
+    
+    // Reset submission state when company changes
+    setIsSubmitting(false);
+  }, [company]);
+
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -117,7 +174,7 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     if (isSubmitting) {
       console.log('🚫 Form submission already in progress');
       return;
@@ -137,13 +194,15 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
       
       console.log('📤 Submitting company data:', submitData);
       
-      // Reset submitting state after a delay to prevent double submission
-      setTimeout(() => {
-        setIsSubmitting(false);
-      }, 2000);
-      
+      // Call onSubmit and let the parent component handle the form closing
       onSubmit(submitData);
     }
+  };
+
+  const handleCancel = () => {
+    // Reset submission state before canceling
+    setIsSubmitting(false);
+    onCancel();
   };
 
   const isEditing = !!company;
@@ -157,7 +216,7 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
               {isEditing ? 'تعديل الشركة' : 'إضافة شركة جديدة'}
             </h2>
             <button
-              onClick={onCancel}
+              onClick={handleCancel}
               className="text-gray-400 hover:text-gray-600"
               disabled={isLoading}
             >
@@ -422,7 +481,7 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
             <div className="flex justify-end space-x-3 space-x-reverse pt-4">
               <button
                 type="button"
-                onClick={onCancel}
+                onClick={handleCancel}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
                 disabled={isLoading}
               >

@@ -164,122 +164,142 @@ export function CompanyDetailView({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {(typeof company.commercialRegistrationFile === 'string' && company.commercialRegistrationFile) || 
-               (typeof company.vatFile === 'string' && company.vatFile) || 
-               (typeof company.nationalAddressFile === 'string' && company.nationalAddressFile) ? (
-                <div className="space-y-3">
-                  {typeof company.commercialRegistrationFile === 'string' && company.commercialRegistrationFile && (
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <FileText className="w-5 h-5 text-blue-500" />
-                        <div>
-                          <p className="font-medium">السجل التجاري</p>
-                          <p className="text-sm text-gray-500">مستند مرفق</p>
+              {(() => {
+                // Parse file URLs from pipe-separated strings
+                const commercialRegFiles = typeof company.commercialRegistrationFile === 'string' && company.commercialRegistrationFile
+                  ? company.commercialRegistrationFile.split('|').filter(url => url.trim())
+                  : [];
+                const vatFiles = typeof company.vatFile === 'string' && company.vatFile
+                  ? company.vatFile.split('|').filter(url => url.trim())
+                  : [];
+                const nationalAddressFiles = typeof company.nationalAddressFile === 'string' && company.nationalAddressFile
+                  ? company.nationalAddressFile.split('|').filter(url => url.trim())
+                  : [];
+                
+                const allFiles = [...commercialRegFiles, ...vatFiles, ...nationalAddressFiles];
+                
+                if (allFiles.length === 0) {
+                  return <p className="text-gray-500 text-center py-4">لا توجد مستندات مرفقة</p>;
+                }
+                
+                return (
+                  <div className="space-y-3">
+                    {/* Commercial Registration Files */}
+                    {commercialRegFiles.map((fileUrl, index) => (
+                      <div key={`commercial-${index}`} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <FileText className="w-5 h-5 text-blue-500" />
+                          <div>
+                            <p className="font-medium">السجل التجاري {commercialRegFiles.length > 1 ? `(${index + 1})` : ''}</p>
+                            <p className="text-sm text-gray-500">مستند مرفق</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-1"
+                            onClick={() => window.open(fileUrl, '_blank')}
+                          >
+                            <Eye className="w-4 h-4" />
+                            عرض
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-1"
+                            onClick={() => {
+                              const link = document.createElement('a');
+                              link.href = fileUrl;
+                              link.download = `commercial_registration_${index + 1}.pdf`;
+                              link.click();
+                            }}
+                          >
+                            <Download className="w-4 h-4" />
+                            تحميل
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-1"
-                          onClick={() => window.open(company.commercialRegistrationFile as string, '_blank')}
-                        >
-                          <Eye className="w-4 h-4" />
-                          عرض
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-1"
-                          onClick={() => {
-                            const link = document.createElement('a');
-                            link.href = company.commercialRegistrationFile as string;
-                            link.download = 'commercial_registration.pdf';
-                            link.click();
-                          }}
-                        >
-                          <Download className="w-4 h-4" />
-                          تحميل
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                  {typeof company.vatFile === 'string' && company.vatFile && (
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <FileText className="w-5 h-5 text-blue-500" />
-                        <div>
-                          <p className="font-medium">شهادة ضريبة القيمة المضافة</p>
-                          <p className="text-sm text-gray-500">مستند مرفق</p>
+                    ))}
+                    
+                    {/* VAT Files */}
+                    {vatFiles.map((fileUrl, index) => (
+                      <div key={`vat-${index}`} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <FileText className="w-5 h-5 text-green-500" />
+                          <div>
+                            <p className="font-medium">شهادة ضريبة القيمة المضافة {vatFiles.length > 1 ? `(${index + 1})` : ''}</p>
+                            <p className="text-sm text-gray-500">مستند مرفق</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-1"
+                            onClick={() => window.open(fileUrl, '_blank')}
+                          >
+                            <Eye className="w-4 h-4" />
+                            عرض
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-1"
+                            onClick={() => {
+                              const link = document.createElement('a');
+                              link.href = fileUrl;
+                              link.download = `vat_certificate_${index + 1}.pdf`;
+                              link.click();
+                            }}
+                          >
+                            <Download className="w-4 h-4" />
+                            تحميل
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-1"
-                          onClick={() => window.open(company.vatFile as string, '_blank')}
-                        >
-                          <Eye className="w-4 h-4" />
-                          عرض
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-1"
-                          onClick={() => {
-                            const link = document.createElement('a');
-                            link.href = company.vatFile as string;
-                            link.download = 'vat_certificate.pdf';
-                            link.click();
-                          }}
-                        >
-                          <Download className="w-4 h-4" />
-                          تحميل
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                  {typeof company.nationalAddressFile === 'string' && company.nationalAddressFile && (
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <FileText className="w-5 h-5 text-blue-500" />
-                        <div>
-                          <p className="font-medium">العنوان الوطني</p>
-                          <p className="text-sm text-gray-500">مستند مرفق</p>
+                    ))}
+                    
+                    {/* National Address Files */}
+                    {nationalAddressFiles.map((fileUrl, index) => (
+                      <div key={`national-${index}`} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <FileText className="w-5 h-5 text-purple-500" />
+                          <div>
+                            <p className="font-medium">العنوان الوطني {nationalAddressFiles.length > 1 ? `(${index + 1})` : ''}</p>
+                            <p className="text-sm text-gray-500">مستند مرفق</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-1"
+                            onClick={() => window.open(fileUrl, '_blank')}
+                          >
+                            <Eye className="w-4 h-4" />
+                            عرض
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-1"
+                            onClick={() => {
+                              const link = document.createElement('a');
+                              link.href = fileUrl;
+                              link.download = `national_address_${index + 1}.pdf`;
+                              link.click();
+                            }}
+                          >
+                            <Download className="w-4 h-4" />
+                            تحميل
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-1"
-                          onClick={() => window.open(company.nationalAddressFile as string, '_blank')}
-                        >
-                          <Eye className="w-4 h-4" />
-                          عرض
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-1"
-                          onClick={() => {
-                            const link = document.createElement('a');
-                            link.href = company.nationalAddressFile as string;
-                            link.download = 'national_address.pdf';
-                            link.click();
-                          }}
-                        >
-                          <Download className="w-4 h-4" />
-                          تحميل
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <p className="text-gray-500 text-center py-4">لا توجد مستندات مرفقة</p>
-              )}
+                    ))}
+                  </div>
+                );
+              })()}
             </CardContent>
           </Card>
         </div>

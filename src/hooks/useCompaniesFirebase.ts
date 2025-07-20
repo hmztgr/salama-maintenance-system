@@ -287,16 +287,41 @@ export function useCompaniesFirebase() {
         if (!userId) {
           return { success: false, warnings: ['لا يمكن تحديد هوية المستخدم'] };
         }
+
+        // Handle file uploads
+        const warnings: string[] = [];
+        let commercialRegistrationUrl = company.commercialRegistrationFile || '';
+        let vatFileUrl = company.vatFile || '';
+        let nationalAddressFileUrl = company.nationalAddressFile || '';
+
+        // Process file uploads if they are provided as strings (from FileUpload component)
+        if (updates.commercialRegistrationFile && typeof updates.commercialRegistrationFile === 'string') {
+          commercialRegistrationUrl = updates.commercialRegistrationFile;
+        }
+        if (updates.vatFile && typeof updates.vatFile === 'string') {
+          vatFileUrl = updates.vatFile;
+        }
+        if (updates.nationalAddressFile && typeof updates.nationalAddressFile === 'string') {
+          nationalAddressFileUrl = updates.nationalAddressFile;
+        }
+
+        // Filter out file fields from updates since we handle them separately
+        const { commercialRegistrationFile, vatFile, nationalAddressFile, ...otherUpdates } = updates;
+        
         // Filter out undefined values to prevent Firebase errors
         const filteredUpdates = Object.fromEntries(
-          Object.entries(updates).filter(([_, value]) => value !== undefined)
+          Object.entries(otherUpdates).filter(([_, value]) => value !== undefined)
         );
         
         const updateData = {
           ...filteredUpdates,
+          commercialRegistrationFile: commercialRegistrationUrl,
+          vatFile: vatFileUrl,
+          nationalAddressFile: nationalAddressFileUrl,
           updatedAt: new Date().toISOString(),
           lastModifiedBy: userId,
         };
+        
         await updateDoc(doc(db, 'companies', company.id), updateData);
         console.log('✅ Company updated in Firebase');
         return { success: true };

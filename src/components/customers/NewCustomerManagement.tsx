@@ -1020,17 +1020,10 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                     console.log('Update result:', result);
                     if (result.success) {
                       setSuccessMessage('تم تحديث بيانات الشركة بنجاح');
-                      // If editing from detail view, keep the detail view open
-                      if (editingFromDetailView === 'company' && selectedCompany) {
-                        // The company data will be refreshed by the Firebase listener
-                        // Don't close the detail view, just clear the editing state
-                        setEditingFromDetailView(null);
-                      } else {
-                        // If not editing from detail view, close the form normally
-                        setShowCompanyForm(false);
-                        setEditingCompany(null);
-                        setEditingFromDetailView(null);
-                      }
+                      // Close the form immediately on success
+                      setShowCompanyForm(false);
+                      setEditingCompany(null);
+                      setEditingFromDetailView(null);
                     } else {
                       setSuccessMessage('فشل في تحديث الشركة: ' + (result.warnings?.join(', ') || 'خطأ غير معروف'));
                     }
@@ -1049,11 +1042,12 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                   setSuccessMessage('حدث خطأ أثناء حفظ البيانات');
                 } finally {
                   setFormLoading(false);
-                  // Only close form on success
+                  // Clear success message after 5 seconds
                   setTimeout(() => setSuccessMessage(''), 5000);
                 }
               }}
               onCancel={() => {
+                setFormLoading(false);
                 setShowCompanyForm(false);
                 setEditingCompany(null);
                 setEditingFromDetailView(null);

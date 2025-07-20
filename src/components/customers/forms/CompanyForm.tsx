@@ -34,34 +34,34 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
     nationalAddressFile: UploadedFile[];
   }>({
     commercialRegistrationFile: company?.commercialRegistrationFile && typeof company.commercialRegistrationFile === 'string' 
-      ? [{
-          name: 'Commercial Registration',
-          url: company.commercialRegistrationFile,
-          path: 'companies/commercial-registration/' + company.companyId,
+      ? company.commercialRegistrationFile.split('|').filter(url => url.trim()).map((url, index) => ({
+          name: `Commercial Registration ${index + 1}`,
+          url: url.trim(),
+          path: 'companies/commercial-registration/' + company.companyId + '_' + index,
           size: 0,
           type: 'application/pdf',
           uploadedAt: new Date().toISOString(),
-        }] 
+        }))
       : [],
     vatFile: company?.vatFile && typeof company.vatFile === 'string'
-      ? [{
-          name: 'VAT Certificate',
-          url: company.vatFile,
-          path: 'companies/vat/' + company.companyId,
+      ? company.vatFile.split('|').filter(url => url.trim()).map((url, index) => ({
+          name: `VAT Certificate ${index + 1}`,
+          url: url.trim(),
+          path: 'companies/vat/' + company.companyId + '_' + index,
           size: 0,
           type: 'application/pdf',
           uploadedAt: new Date().toISOString(),
-        }]
+        }))
       : [],
     nationalAddressFile: company?.nationalAddressFile && typeof company.nationalAddressFile === 'string'
-      ? [{
-          name: 'National Address',
-          url: company.nationalAddressFile,
-          path: 'companies/national-address/' + company.companyId,
+      ? company.nationalAddressFile.split('|').filter(url => url.trim()).map((url, index) => ({
+          name: `National Address ${index + 1}`,
+          url: url.trim(),
+          path: 'companies/national-address/' + company.companyId + '_' + index,
           size: 0,
           type: 'application/pdf',
           uploadedAt: new Date().toISOString(),
-        }]
+        }))
       : [],
   });
 
@@ -110,16 +110,13 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
     if (validateForm()) {
       const submitData = {
         ...formData,
-        ...(uploadedFiles.commercialRegistrationFile.length > 0 && { 
-          commercialRegistrationFile: uploadedFiles.commercialRegistrationFile[0].url 
-        }),
-        ...(uploadedFiles.vatFile.length > 0 && { 
-          vatFile: uploadedFiles.vatFile[0].url 
-        }),
-        ...(uploadedFiles.nationalAddressFile.length > 0 && { 
-          nationalAddressFile: uploadedFiles.nationalAddressFile[0].url 
-        }),
+        // Store all file URLs as arrays for multiple files
+        commercialRegistrationFile: uploadedFiles.commercialRegistrationFile.map(file => file.url).join('|'),
+        vatFile: uploadedFiles.vatFile.map(file => file.url).join('|'),
+        nationalAddressFile: uploadedFiles.nationalAddressFile.map(file => file.url).join('|'),
       };
+      
+      console.log('📤 Submitting company data:', submitData);
       onSubmit(submitData);
     }
   };
@@ -337,7 +334,8 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
                     onFilesUploaded={(files) => handleFilesUploaded('commercialRegistrationFile', files)}
                     onFileDeleted={(filePath) => handleFileDeleted('commercialRegistrationFile', filePath)}
                     existingFiles={uploadedFiles.commercialRegistrationFile}
-                    maxFiles={1}
+                    maxFiles={3}
+                    multiple={true}
                     allowedTypes={['pdf', 'jpg', 'jpeg', 'png']}
                     folder="companies/commercial-registration"
                     disabled={isLoading}
@@ -353,7 +351,8 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
                     onFilesUploaded={(files) => handleFilesUploaded('vatFile', files)}
                     onFileDeleted={(filePath) => handleFileDeleted('vatFile', filePath)}
                     existingFiles={uploadedFiles.vatFile}
-                    maxFiles={1}
+                    maxFiles={3}
+                    multiple={true}
                     allowedTypes={['pdf', 'jpg', 'jpeg', 'png']}
                     folder="companies/vat"
                     disabled={isLoading}
@@ -369,7 +368,8 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
                     onFilesUploaded={(files) => handleFilesUploaded('nationalAddressFile', files)}
                     onFileDeleted={(filePath) => handleFileDeleted('nationalAddressFile', filePath)}
                     existingFiles={uploadedFiles.nationalAddressFile}
-                    maxFiles={1}
+                    maxFiles={3}
+                    multiple={true}
                     allowedTypes={['pdf', 'jpg', 'jpeg', 'png']}
                     folder="companies/national-address"
                     disabled={isLoading}

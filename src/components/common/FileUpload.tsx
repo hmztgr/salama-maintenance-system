@@ -6,8 +6,9 @@ import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Upload, X, FileIcon, ImageIcon, FileTextIcon, Trash2 } from 'lucide-react';
+import { Upload, X, FileIcon, ImageIcon, FileTextIcon, Trash2, Eye } from 'lucide-react';
 import { useFirebaseStorage, UploadedFile, UploadOptions, FileUploadProgress } from '@/hooks/useFirebaseStorage';
+import { FileViewer } from '@/components/ui/file-viewer';
 
 export interface FileUploadProps {
   onFilesUploaded?: (files: UploadedFile[]) => void;
@@ -40,6 +41,7 @@ export function FileUpload({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(existingFiles);
   const [uploadProgress, setUploadProgress] = useState<{ [fileName: string]: number }>({});
+  const [viewingFile, setViewingFile] = useState<UploadedFile | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -203,6 +205,9 @@ export function FileUpload({
             الحد الأقصى: {maxFiles} ملفات، {maxSize}MB لكل ملف
           </p>
           <p className="text-xs text-gray-400 mt-1">
+            {multiple ? 'يمكن اختيار عدة ملفات مرة واحدة' : 'ملف واحد فقط'}
+          </p>
+          <p className="text-xs text-gray-400">
             الأنواع المدعومة: {allowedTypes.join(', ')}
           </p>
         </CardContent>
@@ -306,8 +311,9 @@ export function FileUpload({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => window.open(file.url, '_blank')}
+                    onClick={() => setViewingFile(file)}
                   >
+                    <Eye className="w-4 h-4" />
                     عرض
                   </Button>
                   <Button
@@ -323,6 +329,15 @@ export function FileUpload({
             ))}
           </div>
         </div>
+      )}
+
+      {/* File Viewer Modal */}
+      {viewingFile && (
+        <FileViewer
+          file={viewingFile}
+          isOpen={!!viewingFile}
+          onClose={() => setViewingFile(null)}
+        />
       )}
     </div>
   );

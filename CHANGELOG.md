@@ -5,6 +5,88 @@ All notable changes to the Salama Maintenance Scheduler project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Version 59] - 2025-01-20
+### 🔧 FIREBASE STORAGE & FILE UPLOAD FIXES: Complete File Upload System with CORS and Security Rules
+**STATUS: ✅ FILE UPLOADS WORKING + FIREBASE STORAGE RULES DEPLOYED**
+
+#### 🚀 Firebase Storage Integration
+- ✅ **FIXED CORS Configuration** - Applied proper CORS rules to Firebase Storage bucket
+- ✅ **FIXED Storage Security Rules** - Created comprehensive Firebase Storage security rules
+- ✅ **FIXED Permission Errors** - Resolved `storage/unauthorized` errors for authenticated users
+- ✅ **FIXED Build Errors** - Resolved TypeScript compilation errors in NewCustomerManagement
+
+#### 📁 File Upload System Enhancements
+- 🔄 **Firebase Storage Integration** - Replaced native file inputs with Firebase-backed upload component
+- 📤 **Progress Tracking** - Real-time upload progress with percentage display
+- 🎯 **File Validation** - File type, size, and count validation
+- 🔗 **URL Generation** - Automatic Firebase Storage URL generation for uploaded files
+- 📋 **Multiple File Support** - Support for uploading multiple files simultaneously
+
+#### 🔧 Technical Fixes
+- 🐛 **FIXED TypeScript Error** - Moved useEffect hooks after variable declarations in NewCustomerManagement
+- 🐛 **FIXED Form Submission** - Fixed form submission to send URLs instead of File objects
+- 🐛 **FIXED Contract Value Precision** - Fixed floating-point precision issues in contract forms
+- 🐛 **FIXED Date Conversion** - Fixed timezone offset issues in date handling
+- 🐛 **FIXED Detail View Refresh** - Fixed detail views not refreshing after edits
+
+#### 📊 Searchable Dropdown Improvements
+- 🔍 **Searchable Select Component** - Created reusable searchable dropdown component
+- 📝 **Real-time Search** - Instant search filtering in dropdown options
+- ⌨️ **Keyboard Navigation** - Full keyboard navigation support
+- 🌐 **RTL Support** - Proper right-to-left text support for Arabic
+- 📋 **Large Dataset Support** - Efficient handling of large option lists
+
+#### 🔐 Firebase Security Rules
+```javascript
+// Storage rules for authenticated users
+match /companies/{companyId}/{fileName} {
+  allow read: if canRead();
+  allow write: if canWrite();
+  allow delete: if canDelete();
+}
+
+// Role-based access control
+function canWrite() {
+  return isAdmin() || isSupervisor();
+}
+```
+
+#### 📁 File Upload Component Features
+- ✅ **Progress Tracking** - Real-time upload progress display
+- ✅ **Error Handling** - Comprehensive error messages in Arabic
+- ✅ **File Validation** - Type, size, and count limits
+- ✅ **Multiple File Selection** - Support for selecting multiple files
+- ✅ **Firebase Integration** - Direct upload to Firebase Storage
+- ✅ **URL Generation** - Automatic URL generation for form submission
+
+#### Files Added/Modified
+**New Files:**
+- `storage.rules` - Firebase Storage security rules
+- `firebase.json` - Firebase project configuration
+- `firestore.indexes.json` - Firestore indexes configuration
+- `src/components/ui/searchable-select.tsx` - Reusable searchable dropdown component
+
+**Updated Files:**
+- `src/components/customers/forms/CompanyForm.tsx` - Firebase Storage integration
+- `src/components/customers/forms/ContractForm.tsx` - Fixed contract value and date issues
+- `src/components/customers/forms/EnhancedContractForm.tsx` - Fixed form submission issues
+- `src/components/customers/NewCustomerManagement.tsx` - Fixed TypeScript errors and added searchable dropdowns
+- `src/components/customers/forms/BranchForm.tsx` - Added searchable dropdowns for company and city
+- `src/lib/date-handler.ts` - Fixed date conversion functions
+
+#### User Experience Improvements
+✅ **Working File Uploads** - Files upload successfully to Firebase Storage
+✅ **Real-time Progress** - Visual feedback during upload process
+✅ **Searchable Dropdowns** - Easy navigation through large option lists
+✅ **Persistent Data** - Files persist correctly after form submission
+✅ **Error Recovery** - Clear error messages and recovery options
+✅ **Responsive Design** - Works on all screen sizes
+
+#### Deployment Status
+✅ **Netlify Build Success** - All TypeScript errors resolved
+✅ **Firebase Storage Working** - CORS and security rules deployed
+✅ **File Uploads Functional** - Complete file upload system operational
+
 ## [Version 58] - 2025-01-19
 ### 🔧 MODAL SCROLLING & SORTING FIXES: Full-Screen Modal Scrolling + Default ID Sorting
 **STATUS: ✅ MODAL SCROLLING FIXED + DEFAULT SORT BY ID IMPLEMENTED**

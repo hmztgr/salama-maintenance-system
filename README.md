@@ -3,7 +3,7 @@
 **A comprehensive fire safety maintenance management system for Saudi Arabia**
 
 [![Deployment Status](https://img.shields.io/badge/Deployment-Ready-brightgreen?style=for-the-badge)](https://github.com/hmztgr/salama-maintenance-system)
-[![Version](https://img.shields.io/badge/Version-55-blue?style=for-the-badge)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-59-blue?style=for-the-badge)](./CHANGELOG.md)
 [![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15.3.2-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 
@@ -17,9 +17,19 @@
 - **Netlify Deployment**: ✅ Ready for production
 - **Testing Status**: All critical functionality verified
 
-## 🚀 Recent Major Updates (v55+)
+## 🚀 Recent Major Updates (v59+)
 
-### ✅ Complete Contract System Restructure (NEW)
+### ✅ Complete Firebase Storage & File Upload System (NEW)
+**Full file upload functionality with Firebase Storage integration**:
+
+- **Firebase Storage Integration**: Complete file upload system with progress tracking
+- **CORS Configuration**: Proper CORS rules applied to Firebase Storage bucket
+- **Security Rules**: Comprehensive Firebase Storage security rules for authenticated users
+- **File Validation**: File type, size, and count validation with Arabic error messages
+- **Multiple File Support**: Support for uploading multiple files simultaneously
+- **Searchable Dropdowns**: Enhanced dropdown components with real-time search functionality
+
+### ✅ Complete Contract System Restructure
 **Major architectural enhancement with full backward compatibility**:
 
 - **Service Batches**: Contracts now support multiple service batches per branch groups

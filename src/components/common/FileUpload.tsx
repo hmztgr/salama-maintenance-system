@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
@@ -40,6 +40,11 @@ export function FileUpload({
   const [dragActive, setDragActive] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(existingFiles);
+
+  // Update uploadedFiles when existingFiles prop changes
+  useEffect(() => {
+    setUploadedFiles(existingFiles);
+  }, [existingFiles]);
   const [uploadProgress, setUploadProgress] = useState<{ [fileName: string]: number }>({});
   const [viewingFile, setViewingFile] = useState<UploadedFile | null>(null);
   

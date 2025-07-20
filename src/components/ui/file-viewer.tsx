@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Download, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -19,7 +19,15 @@ export function FileViewer({ file, isOpen, onClose }: FileViewerProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  if (!isOpen) return null;
+  // Reset state when file changes
+  useEffect(() => {
+    if (isOpen && file) {
+      setIsLoading(true);
+      setError(null);
+    }
+  }, [isOpen, file]);
+
+  if (!isOpen || !file) return null;
 
   const isImage = file.type.startsWith('image/');
   const isPDF = file.type === 'application/pdf';
@@ -41,7 +49,7 @@ export function FileViewer({ file, isOpen, onClose }: FileViewerProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg max-w-7xl w-full mx-4 max-h-[95vh] overflow-hidden">
+      <div className="bg-white rounded-lg w-[95vw] h-[95vh] mx-4 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center gap-3">
@@ -87,9 +95,9 @@ export function FileViewer({ file, isOpen, onClose }: FileViewerProps) {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-hidden min-h-[70vh]">
+        <div className="flex-1 overflow-hidden">
           {isViewable ? (
-            <div className="w-full h-full flex items-center justify-center bg-gray-100 min-h-[70vh]">
+            <div className="w-full h-full flex items-center justify-center bg-gray-100">
               {isImage ? (
                 <img
                   src={file.url}
@@ -101,16 +109,17 @@ export function FileViewer({ file, isOpen, onClose }: FileViewerProps) {
                     setError('فشل في تحميل الصورة');
                   }}
                 />
-              ) : isPDF ? (
-                <iframe
-                  src={`${file.url}#toolbar=0&navpanes=0&scrollbar=0`}
-                  className="w-full h-full border-0"
-                  onLoad={() => setIsLoading(false)}
-                  onError={() => {
-                    setIsLoading(false);
-                    setError('فشل في تحميل ملف PDF');
-                  }}
-                />
+                             ) : isPDF ? (
+                 <iframe
+                   src={`${file.url}#toolbar=1&navpanes=1&scrollbar=1&view=FitH`}
+                   className="w-full h-full border-0"
+                   onLoad={() => setIsLoading(false)}
+                   onError={() => {
+                     setIsLoading(false);
+                     setError('فشل في تحميل ملف PDF');
+                   }}
+                   style={{ minHeight: '80vh' }}
+                 />
               ) : null}
               
               {isLoading && (

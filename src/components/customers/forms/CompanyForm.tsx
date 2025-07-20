@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Company } from '@/types/customer';
 import { FileUpload } from '@/components/common/FileUpload';
 import { UploadedFile } from '@/hooks/useFirebaseStorage';
@@ -66,6 +66,7 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -102,6 +103,11 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
     });
   };
 
+  // Add a useEffect to log state changes
+  useEffect(() => {
+    console.log('📁 uploadedFiles state changed:', uploadedFiles);
+  }, [uploadedFiles]);
+
   const handleFileDeleted = (field: keyof typeof uploadedFiles, filePath: string) => {
     setUploadedFiles(prev => ({
       ...prev,
@@ -112,7 +118,13 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (isSubmitting) {
+      console.log('🚫 Form submission already in progress');
+      return;
+    }
+
     if (validateForm()) {
+      setIsSubmitting(true);
       console.log('📁 Current uploadedFiles state before submission:', uploadedFiles);
       
       const submitData = {
@@ -124,6 +136,12 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
       };
       
       console.log('📤 Submitting company data:', submitData);
+      
+      // Reset submitting state after a delay to prevent double submission
+      setTimeout(() => {
+        setIsSubmitting(false);
+      }, 2000);
+      
       onSubmit(submitData);
     }
   };
@@ -413,9 +431,9 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
               <button
                 type="submit"
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-                disabled={isLoading}
+                disabled={isLoading || isSubmitting}
               >
-                {isLoading ? 'جاري الحفظ...' : (isEditing ? 'تحديث' : 'إضافة')}
+                {isLoading || isSubmitting ? 'جاري الحفظ...' : (isEditing ? 'تحديث' : 'إضافة')}
               </button>
             </div>
           </form>

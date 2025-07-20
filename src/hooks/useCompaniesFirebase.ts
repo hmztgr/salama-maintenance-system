@@ -64,7 +64,8 @@ export function useCompaniesFirebase() {
           const companiesData = snapshot.docs
             .map(doc => {
               const data = doc.data();
-              return {
+              console.log('📁 Raw Firebase data for company:', doc.id, data);
+              const mappedCompany = {
                 id: doc.id,
                 companyId: data.companyId,
                 companyName: data.companyName,
@@ -86,6 +87,12 @@ export function useCompaniesFirebase() {
                 createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : data.createdAt,
                 updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate().toISOString() : data.updatedAt,
               } as Company;
+              console.log('📁 Mapped company data:', mappedCompany.companyId, {
+                commercialRegistrationFile: mappedCompany.commercialRegistrationFile,
+                vatFile: mappedCompany.vatFile,
+                nationalAddressFile: mappedCompany.nationalAddressFile
+              });
+              return mappedCompany;
             })
             .filter(company => !company.isArchived);
           setCompanies(companiesData);
@@ -112,7 +119,8 @@ export function useCompaniesFirebase() {
                 const companiesData = snapshot.docs
                   .map(doc => {
                     const data = doc.data();
-                    return {
+                    console.log('📁 Raw Firebase data (fallback) for company:', doc.id, data);
+                    const mappedCompany = {
                       id: doc.id,
                       companyId: data.companyId,
                       companyName: data.companyName,
@@ -134,6 +142,12 @@ export function useCompaniesFirebase() {
                       createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : data.createdAt,
                       updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate().toISOString() : data.updatedAt,
                     } as Company;
+                    console.log('📁 Mapped company data (fallback):', mappedCompany.companyId, {
+                      commercialRegistrationFile: mappedCompany.commercialRegistrationFile,
+                      vatFile: mappedCompany.vatFile,
+                      nationalAddressFile: mappedCompany.nationalAddressFile
+                    });
+                    return mappedCompany;
                   })
                   .filter(company => !company.isArchived);
                 setCompanies(companiesData);

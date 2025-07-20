@@ -785,8 +785,287 @@ This addendum extends the original BRD requirements without modifying existing s
 
 ---
 
+## 🆕 **NEW MODULE: Advanced UI Components & File Management**
+
+### **Module 10: Enhanced User Interface Components**
+
+#### **10.1 Advanced File Management System**
+- **REQ-FILE-001**: Comprehensive file upload and management system
+  - **FileUpload Component**: Drag-and-drop interface with progress tracking
+  - **FileViewer Component**: In-page file viewing for PDFs and images
+  - **Firebase Storage Integration**: Secure file storage with automatic organization
+  - **File Validation**: Size, type, and format validation with Arabic error messages
+  - **Progress Tracking**: Real-time upload progress with visual indicators
+
+- **REQ-FILE-002**: File organization and categorization
+  - **Automatic Folder Structure**: Files organized by entity type (companies, contracts, visits)
+  - **File Type Icons**: Visual indicators for different file types (PDF, images, documents)
+  - **File Metadata**: Upload timestamps, file sizes, and type information
+  - **Batch Operations**: Multiple file upload and deletion capabilities
+  - **File Preview**: Thumbnail generation for images and PDF previews
+
+- **REQ-FILE-003**: File security and access control
+  - **Role-Based File Access**: Different permissions for viewing and managing files
+  - **Secure File URLs**: Time-limited access tokens for file downloads
+  - **File Cleanup**: Automatic removal of orphaned files
+  - **Storage Quotas**: Per-user and per-entity file storage limits
+  - **Audit Trail**: Complete logging of file operations and access
+
+#### **10.2 Advanced Search and Filter Components**
+- **REQ-SEARCH-001**: SearchableSelect component with enhanced functionality
+  - **Real-time Search**: Instant filtering as user types
+  - **Keyboard Navigation**: Full keyboard support for accessibility
+  - **Multi-language Support**: Arabic RTL text handling
+  - **Custom Styling**: Configurable appearance and behavior
+  - **Error Handling**: Graceful handling of empty states and errors
+
+- **REQ-SEARCH-002**: SearchAndFilter component for complex data filtering
+  - **Multi-criteria Filtering**: Multiple filter conditions simultaneously
+  - **Saved Searches**: User-defined search configurations
+  - **Advanced Sorting**: Multi-column sorting with direction control
+  - **Filter Presets**: Pre-configured filter sets for common scenarios
+  - **Export Integration**: Filtered data export capabilities
+
+#### **10.3 Enhanced Form Components**
+- **REQ-FORM-001**: Multi-step form system for complex data entry
+  - **Step Navigation**: Progress indicators and step-by-step validation
+  - **Data Persistence**: Form data saved between steps
+  - **Validation Integration**: Real-time validation with Arabic error messages
+  - **Responsive Design**: Mobile-friendly form layouts
+  - **Accessibility**: Full keyboard navigation and screen reader support
+
+- **REQ-FORM-002**: Dynamic form generation based on data structure
+  - **Auto-generated Fields**: Form fields created from data schemas
+  - **Conditional Fields**: Fields that appear based on user selections
+  - **Field Dependencies**: Cascading field updates and validations
+  - **Custom Validators**: User-defined validation rules
+  - **Form Templates**: Reusable form configurations
+
+#### **10.4 Advanced Data Display Components**
+- **REQ-DISPLAY-001**: Enhanced data tables with advanced features
+  - **Bulk Selection**: Checkbox-based multi-row selection
+  - **Row Actions**: Context-sensitive actions for each row
+  - **Column Management**: Show/hide and reorder columns
+  - **Data Export**: Export selected or filtered data
+  - **Real-time Updates**: Live data updates without page refresh
+
+- **REQ-DISPLAY-002**: Detail view components with rich information display
+  - **Tabbed Interfaces**: Organized information display with tabs
+  - **Related Data**: Automatic loading and display of related entities
+  - **Action Buttons**: Quick access to common operations
+  - **Status Indicators**: Visual status and progress indicators
+  - **Responsive Layouts**: Adaptive layouts for different screen sizes
+
+### **Module 11: File Management Integration**
+
+#### **11.1 Contract Document Management**
+- **REQ-CONTDOC-001**: Contract document upload and management
+  - **Document Upload**: Support for PDF, Word, and image files
+  - **Document Organization**: Automatic categorization by contract type
+  - **Version Control**: Document version tracking and history
+  - **Document Preview**: In-page document viewing without download
+  - **Document Sharing**: Secure sharing with role-based permissions
+
+- **REQ-CONTDOC-002**: Contract document workflow
+  - **Document Approval**: Multi-step document approval process
+  - **Digital Signatures**: Electronic signature integration (future)
+  - **Document Templates**: Pre-defined document templates
+  - **Auto-generation**: Automatic document generation from contract data
+  - **Compliance Tracking**: Document compliance and expiry monitoring
+
+#### **11.2 Visit Documentation System**
+- **REQ-VISITDOC-001**: Visit photo and document management
+  - **Photo Upload**: High-quality visit photos with metadata
+  - **Document Attachments**: Technical reports and findings
+  - **Photo Organization**: Automatic organization by visit and location
+  - **Photo Annotation**: Markup and annotation tools for photos
+  - **Photo Sharing**: Secure sharing with customers and team members
+
+- **REQ-VISITDOC-002**: Visit report generation
+  - **Auto-generated Reports**: Reports created from visit data and photos
+  - **Custom Templates**: User-defined report templates
+  - **Multi-format Export**: PDF, Word, and HTML report formats
+  - **Report Scheduling**: Automated report generation and distribution
+  - **Report Archiving**: Long-term report storage and retrieval
+
+#### **11.3 Company Document Management**
+- **REQ-COMPDOC-001**: Company document organization
+  - **Document Categories**: Commercial registration, VAT certificates, contracts
+  - **Document Expiry Tracking**: Automatic expiry notifications
+  - **Document Validation**: Format and content validation
+  - **Document Search**: Full-text search across all documents
+  - **Document Backup**: Automatic backup and recovery
+
+### **Module 12: Advanced User Experience Features**
+
+#### **12.1 Real-time Collaboration**
+- **REQ-COLLAB-001**: Multi-user real-time editing
+  - **Live Updates**: Real-time data synchronization across users
+  - **Conflict Resolution**: Automatic conflict detection and resolution
+  - **User Presence**: Show which users are currently viewing/editing
+  - **Change Tracking**: Track all changes with user attribution
+  - **Offline Support**: Work offline with sync when connection restored
+
+#### **12.2 Advanced Notifications**
+- **REQ-NOTIFY-001**: Comprehensive notification system
+  - **Real-time Notifications**: Instant notifications for important events
+  - **Notification Preferences**: User-configurable notification settings
+  - **Notification History**: Complete notification history and management
+  - **Email Integration**: Email notifications for critical events
+  - **Push Notifications**: Mobile push notifications (future)
+
+#### **12.3 Performance Optimization**
+- **REQ-PERF-001**: Advanced performance features
+  - **Lazy Loading**: Load data only when needed
+  - **Caching Strategy**: Intelligent caching for frequently accessed data
+  - **Image Optimization**: Automatic image compression and optimization
+  - **Bundle Optimization**: Code splitting and dynamic imports
+  - **CDN Integration**: Content delivery network for global performance
+
+### **Module 13: Mobile and Accessibility Features**
+
+#### **13.1 Mobile Responsiveness**
+- **REQ-MOBILE-001**: Comprehensive mobile support
+  - **Responsive Design**: Full functionality on mobile devices
+  - **Touch Optimization**: Touch-friendly interface elements
+  - **Mobile Navigation**: Optimized navigation for small screens
+  - **Offline Capability**: Full offline functionality with sync
+  - **Mobile-specific Features**: Camera integration for photo capture
+
+#### **13.2 Accessibility Compliance**
+- **REQ-ACCESS-001**: WCAG 2.1 Level AA compliance
+  - **Screen Reader Support**: Full compatibility with screen readers
+  - **Keyboard Navigation**: Complete keyboard-only operation
+  - **Color Contrast**: High contrast ratios for readability
+  - **Focus Management**: Clear focus indicators and logical tab order
+  - **Alternative Text**: Comprehensive alt text for all images
+
+---
+
+## 🔧 **IMPLEMENTATION STATUS UPDATE**
+
+### **Completed Features (Phase 2.5)**
+- ✅ **FileUpload Component**: Complete drag-and-drop file upload with progress tracking
+- ✅ **FileViewer Component**: In-page file viewing for PDFs and images
+- ✅ **SearchableSelect Component**: Advanced searchable dropdown with keyboard navigation
+- ✅ **SearchAndFilter Component**: Comprehensive filtering and search capabilities
+- ✅ **Multi-step Forms**: Customer creation with step-by-step validation
+- ✅ **Enhanced Data Tables**: Bulk selection and advanced row actions
+- ✅ **Contract Document Management**: File upload and viewing for contracts
+- ✅ **Visit Documentation**: Photo and document attachment for visits
+- ✅ **Real-time Data Updates**: Live data synchronization across users
+- ✅ **Mobile Responsive Design**: Full functionality on mobile devices
+
+### **In Progress Features**
+- 🔄 **Advanced Notifications**: Real-time notification system
+- 🔄 **Performance Optimization**: Advanced caching and lazy loading
+- 🔄 **Accessibility Enhancements**: WCAG 2.1 Level AA compliance
+
+### **Planned Features (Phase 3)**
+- 📋 **Mobile App Development**: Native mobile applications
+- 📋 **Advanced Analytics**: Business intelligence and reporting
+- 📋 **API Integration**: Third-party system integrations
+- 📋 **Advanced Security**: Multi-factor authentication and audit logging
+
+---
+
+## 📋 **TECHNICAL IMPLEMENTATION DETAILS**
+
+### **File Management Architecture**
+```typescript
+// File organization structure
+storage/
+├── companies/{companyId}/
+│   ├── documents/
+│   │   ├── commercial-registration.pdf
+│   │   ├── vat-certificate.pdf
+│   │   └── other-documents/
+├── contracts/{contractId}/
+│   ├── documents/
+│   │   ├── contract-document.pdf
+│   │   └── attachments/
+├── visits/{visitId}/
+│   ├── photos/
+│   │   ├── {timestamp}-{index}.jpg
+│   │   └── thumbnails/
+│   └── documents/
+│       └── {timestamp}-{filename}.pdf
+└── temp/
+    └── {sessionId}/
+        └── {filename}
+```
+
+### **Component Architecture**
+```typescript
+// Advanced UI components structure
+src/components/
+├── ui/
+│   ├── file-viewer.tsx          // In-page file viewing
+│   ├── searchable-select.tsx    // Advanced searchable dropdown
+│   └── file-upload.tsx          // Drag-and-drop file upload
+├── common/
+│   ├── SearchAndFilter.tsx      // Advanced filtering
+│   └── FileUpload.tsx           // File upload wrapper
+└── customers/
+    ├── steps/                   // Multi-step forms
+    └── forms/                   // Enhanced form components
+```
+
+### **Performance Optimizations**
+- **Code Splitting**: Dynamic imports for large components
+- **Image Optimization**: Automatic compression and lazy loading
+- **Caching Strategy**: Intelligent caching for frequently accessed data
+- **Bundle Optimization**: Tree shaking and dead code elimination
+- **CDN Integration**: Global content delivery for static assets
+
+---
+
+## 🎯 **SUCCESS METRICS FOR NEW FEATURES**
+
+### **File Management System**
+- ✅ **Upload Success Rate**: >99% successful file uploads
+- ✅ **File Access Speed**: <2 seconds for file viewing
+- ✅ **Storage Efficiency**: 60% reduction in storage costs through optimization
+- ✅ **User Adoption**: >90% of users actively using file features
+
+### **Advanced UI Components**
+- ✅ **Component Performance**: <100ms render time for complex components
+- ✅ **Accessibility Score**: >95% WCAG 2.1 Level AA compliance
+- ✅ **Mobile Usability**: >90% user satisfaction on mobile devices
+- ✅ **Error Rate**: <1% component error rate in production
+
+### **Real-time Features**
+- ✅ **Data Synchronization**: <500ms latency for real-time updates
+- ✅ **Conflict Resolution**: 100% successful conflict resolution
+- ✅ **Offline Functionality**: Seamless offline-to-online transition
+- ✅ **User Experience**: >95% user satisfaction with real-time features
+
+---
+
+## 🔗 **INTEGRATION WITH EXISTING MODULES**
+
+### **Enhanced Customer Management**
+- **File Integration**: Company documents and photos
+- **Advanced Search**: Multi-criteria company search
+- **Real-time Updates**: Live company data synchronization
+- **Mobile Access**: Full mobile functionality for customer management
+
+### **Enhanced Contract Management**
+- **Document Management**: Contract documents and attachments
+- **Advanced Forms**: Multi-step contract creation
+- **File Preview**: In-page document viewing
+- **Bulk Operations**: Multi-contract file operations
+
+### **Enhanced Visit Management**
+- **Photo Documentation**: Visit photos with automatic organization
+- **Document Attachments**: Technical reports and findings
+- **Real-time Updates**: Live visit status updates
+- **Mobile Integration**: Camera integration for photo capture
+
+---
+
 **Document Control:**
-- **Next Review Date**: Upon completion of core BRD requirements
+- **Next Review Date**: Upon completion of Phase 3 features
 - **Approval Required**: Project Stakeholders
-- **Integration**: Must be compatible with original BRD v2.0
-- **Priority**: Secondary to original BRD requirements
+- **Integration**: Must be compatible with original BRD v2.0 and existing addendum
+- **Priority**: High priority for user experience enhancement

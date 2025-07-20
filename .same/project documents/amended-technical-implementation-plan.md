@@ -713,6 +713,85 @@ Version 71: JSX syntax fixes → Deployment tool aborts
 
 > **Documentation Policy**: Every issue, error, or unexpected behavior must be documented here with full details, attempted solutions, and resolution status. This prevents future recurrence and provides learning reference.
 
+### 16. COMPANY FORM FILE PERSISTENCE ISSUE - STATUS: 🔴 UNFIXED (Version 91)
+
+#### **Issue Description**
+**FILE PERSISTENCE FAILURE**: Files are being uploaded successfully to Firebase Storage and URLs are being saved to Firebase, but when editing a company, the previously uploaded files are not being displayed in the form. The files exist in Firebase Storage and the URLs are stored in the company document, but the CompanyForm component is not loading them properly.
+
+#### **Symptoms**
+- ✅ **File Upload**: Files upload successfully to Firebase Storage (confirmed in logs)
+- ✅ **URL Storage**: File URLs are saved to Firebase company document (confirmed in logs)
+- ✅ **Form Submission**: Company data saves successfully with file URLs
+- ❌ **File Display**: When editing company, uploaded files are not shown in form
+- ❌ **File Persistence**: Files appear to be "lost" after initial save, even though they exist
+
+#### **Affected Areas**
+- **Location**: `src/components/customers/forms/CompanyForm.tsx` - File loading logic
+- **Location**: `src/hooks/useCompaniesFirebase.ts` - File handling in addCompany/updateCompany
+- **Location**: `src/components/customers/CompanyDetailView.tsx` - File display logic
+- **Components**: CompanyForm, CompanyDetailView, useCompaniesFirebase hook
+- **User Impact**: Critical - Users cannot see or manage previously uploaded files
+
+#### **Root Cause Analysis**
+**Evidence from Logs**:
+```
+✅ File uploaded successfully: {url: 'https://firebasestorage.googleapis.com/...'}
+✅ Company added to Firebase with files: {nationalAddressFile: 'https://firebasestorage.googleapis.com/...'}
+✅ Company added to Firebase with ID: BYGfls2ZXdoCxIz4vD1F
+```
+
+**Suspected Issues**:
+1. **CompanyForm useEffect**: The useEffect that loads existing files when editing might not be triggering properly
+2. **File URL Parsing**: The pipe-separated URL parsing logic might have issues
+3. **State Synchronization**: The uploadedFiles state might not be updating when company prop changes
+4. **Firebase Data Structure**: The file URLs might be stored in a format that doesn't match the parsing logic
+
+#### **Attempted Solutions** (Previous Versions)
+1. **Version 91**: Fixed addCompany function to handle pipe-separated URLs from CompanyForm
+2. **Version 91**: Added logging to track file processing in addCompany
+3. **Version 91**: Updated CompanyForm to use useEffect for loading existing files
+4. **Version 91**: Enhanced CompanyDetailView to handle multiple files
+
+#### **Current Investigation Status**
+- **File Upload**: ✅ Working - Files upload to Firebase Storage successfully
+- **URL Storage**: ✅ Working - URLs are saved to Firebase company documents
+- **File Loading**: ❌ Broken - CompanyForm not loading existing files when editing
+- **File Display**: ❌ Broken - CompanyDetailView not showing files properly
+
+#### **Next Investigation Steps**
+1. **Verify Firebase Data**: Check if file URLs are actually stored in company documents
+2. **Test CompanyForm useEffect**: Verify the useEffect triggers when editing companies
+3. **Debug File Parsing**: Test the pipe-separated URL parsing logic
+4. **Check State Updates**: Verify uploadedFiles state updates when company prop changes
+5. **Test CompanyDetailView**: Verify file display logic works with stored URLs
+
+#### **Technical Investigation Required**
+```typescript
+// Test 1: Verify Firebase data structure
+// Check if company document contains: nationalAddressFile: "url1|url2|url3"
+
+// Test 2: Verify CompanyForm useEffect
+// Check if useEffect triggers when editing company with files
+
+// Test 3: Verify URL parsing
+// Test: "url1|url2|url3".split('|').filter(url => url.trim())
+
+// Test 4: Verify state updates
+// Check if setUploadedFiles is called with correct data
+```
+
+#### **Lessons Learned**
+- **File Upload vs File Display**: These are separate systems that can work independently
+- **State Management**: File state in forms needs careful synchronization with prop changes
+- **Data Persistence**: Firebase storage and Firestore are separate systems
+- **URL Format**: Pipe-separated URLs require careful parsing and validation
+
+#### **Future Prevention**
+- **Testing Protocol**: Always test file upload AND file display in edit mode
+- **State Synchronization**: Verify useEffect dependencies for file loading
+- **Data Validation**: Add validation for file URL formats and parsing
+- **Logging Standards**: Comprehensive logging for file operations at all stages
+
 ### 13. ID GENERATION COLLISION ISSUE - STATUS: ✅ RESOLVED (Version 51)
 
 #### **Issue Description**
@@ -1293,217 +1372,4 @@ find src -name "*.ts" -o -name "*.tsx" | xargs grep -l "date-handler"
 
 #### **PHASE 4: SAFESTORAGE RESTORATION** *(Target: Version 88)*
 
-</initial_code>
-
-#### **PHASE 4-5 RESULTS - VERSION 88-89 - ✅ MAJOR PROGRESS**
-- **Phase 4 Status**: ✅ SUCCESS - SafeStorage import works perfectly
-- **Phase 5 Status**: ✅ SUCCESS - Simple date replacement works perfectly
-- **App Tab**: ✅ Working - Complete AuthContext functionality restored
-- **Development**: ✅ Working - All runtime issues resolved
-- **Deployment**: ❌ Still failing - Additional build-time sources remain
-
-#### **🎉 SYSTEMATIC INVESTIGATION: MAJOR BREAKTHROUGHS ACHIEVED**
-
-**✅ CONFIRMED ROOT CAUSES FIXED:**
-1. **AuthContext imports** (runtime infinite loops) → **COMPLETELY RESOLVED**
-2. **useCallback dependencies** (build-time loops) → **FIXED**
-3. **Date-handler import** (server crash) → **BYPASSED WITH REPLACEMENT**
-
-**✅ METHODOLOGY PROVEN EFFECTIVE:**
-- **Systematic elimination**: Phase-by-phase testing isolated specific issues
-- **Zero-import baseline**: Confirmed AuthContext as root cause
-- **Import testing**: Identified date-handler vs SafeStorage differences
-- **Simple replacements**: Bypassed problematic dependencies successfully
-
-#### **🔍 REMAINING BUILD-TIME INFINITE LOOP SOURCES**
-
-**Evidence:** Development works perfectly, but deployment still fails with React error #185
-
-**Likely Additional Sources:**
-1. **Import/Export components** - Heavy validation logic with complex useCallback chains
-2. **Planning components** - Annual scheduler with complex date calculations
-3. **Demo data generator** - Complex generation loops during static build
-4. **Remaining linter warnings** - `feedback` variable issue (line 293)
-5. **Other utility imports** - Components might import problematic utilities during build
-
-#### **NEXT INVESTIGATION STRATEGY**
-
-**Priority 1: Fix Remaining Linter Warning**
-```typescript
-// Find and fix the 'feedback' variable issue on line 293
-// This could be causing compilation loops
-```
-
-**Priority 2: Disable Complex Components During Build**
-```typescript
-// Temporarily disable import/export components from static generation
-// Test if build succeeds without these components
-```
-
-**Priority 3: Identify Build-Time Execution Components**
-```bash
-# Find components that might execute during `next build`
-grep -r "useEffect.*\[\]" src/components/
-grep -r "useState.*new Date" src/components/
-```
-
-**Priority 4: Check for Additional Circular Dependencies**
-```bash
-# Look for circular imports in component trees
-madge --circular --extensions ts,tsx src/
-```
-
-#### **SUCCESS METRICS ACHIEVED**
-
-**✅ Runtime Issues**: 100% resolved - App works perfectly in development
-**✅ AuthContext**: 100% functional with bypassed dependencies
-**✅ Investigation Methodology**: Proven effective for isolating issues
-**✅ Component-by-Component Testing**: Successfully identifies problematic imports
-
-**📊 Estimated Completion**: 2-3 more targeted investigations should resolve remaining build-time sources
-
-#### **RECOMMENDED IMMEDIATE ACTIONS**
-
-1. **Fix linter warning** (5 minutes) - might resolve compilation loops
-2. **Test build without import/export components** (10 minutes) - isolate heavy components
-3. **Implement build-time component detection** (15 minutes) - find static generation culprits
-
-**The systematic approach is working perfectly - we're very close to complete resolution!**
-
-</initial_code>
-
-#### **🎉 FINAL SUCCESS - DEPLOYMENT ACHIEVED** *(Version 89 + Static Export)*
-
-- **Status**: ✅ **COMPLETE SUCCESS**
-- **Deployed URL**: https://sparkling-beignet-8f54c9.netlify.app/
-- **App Status**: ✅ **100% WORKING** - Perfect login screen, no errors
-- **React Error #185**: ✅ **COMPLETELY RESOLVED**
-- **Investigation Result**: ✅ **SYSTEMATIC APPROACH PROVEN SUCCESSFUL**
-
-#### **🔍 ONGOING ISSUE: INVITATION SYSTEM INTERNAL SERVER ERROR** *(Version 91)*
-
-- **Status**: 🔴 **ACTIVE ISSUE**
-- **Problem**: Despite fixing React Error #185 and 502 Bad Gateway issues, invitation links still show "Internal Server Error"
-- **Context**: Version 91 successfully builds and deploys, invitation interface works, but clicking generated invitation links fails
-- **Error Pattern**: Created invitation → Copy link → Open in new tab → "Internal Server Error"
-- **Technical Analysis**: Issue likely related to static export limitations with complex client-side routing or remaining server-side code execution
-
-**Root Cause Hypothesis:**
-- Static export deployment cannot handle certain dynamic client-side operations
-- Invitation acceptance component may still have server-side dependencies
-- URL parameter parsing in static environment causing runtime errors
-- Possible conflict between Next.js static generation and client-side navigation
-
-**Current Workaround**: Postponed pending Firebase integration (see Firebase Implementation Plan)
-
-**Resolution Strategy**:
-- Migrate to Firebase backend for proper invitation handling
-- Implement server-side invitation validation and user creation
-- Use Firebase Auth for complete user management workflow
-
----
-
-#### **🎯 BREAKTHROUGH RESULTS SUMMARY**
-
-**CONFIRMED ROOT CAUSES FIXED:**
-1. ✅ **AuthContext imports** (runtime infinite loops) → **RESOLVED** with zero-import approach
-2. ✅ **useCallback dependencies** (build-time loops) → **RESOLVED** with proper dependency arrays
-3. ✅ **Date-handler import** (server crash) → **RESOLVED** with simple inline replacement
-4. ✅ **Deployment complexity** (static vs dynamic) → **RESOLVED** with static export
-
-**INVESTIGATION METHODOLOGY VALIDATION:**
-- ✅ **Systematic elimination**: Phase-by-phase testing successfully isolated each issue
-- ✅ **Zero-import baseline**: Definitively proved AuthContext was primary cause
-- ✅ **Import testing**: Identified specific problematic dependencies
-- ✅ **Static export solution**: Bypassed dynamic deployment complications
-
-#### **🎉 FINAL ACHIEVEMENT METRICS**
-
-**✅ Production Deployment**: Live at https://sparkling-beignet-8f54c9.netlify.app/
-**✅ Zero React Errors**: No Error #185 or infinite loops
-**✅ Complete Functionality**: Login, dashboard, Arabic RTL, role-based auth
-**✅ Professional Quality**: Enterprise-grade maintenance management system
-**✅ Investigation Success**: 100% systematic approach validation
-**✅ Problem Resolution**: All identified root causes successfully addressed
-
-#### **📊 TECHNICAL SOLUTION SUMMARY**
-
-**AuthContext Solution:**
-```typescript
-// ✅ WORKING: Zero-import AuthContext with SafeStorage
-import { UserRole } from '@/types/auth';
-import { SafeStorage } from '@/lib/storage';
-// ❌ REMOVED: import { getCurrentDate } from '@/lib/date-handler';
-
-// ✅ REPLACED WITH: Simple inline date function
-const getSimpleDate = (): string => {
-  const now = new Date();
-  const months = ['Jan', 'Feb', 'Mar', ...];
-  return `${day}-${month}-${year}`;
-};
-```
-
-**Deployment Solution:**
-```bash
-# ✅ WORKING: Static export configuration
-next.config.js: output: 'export', distDir: 'out'
-Build: bun run build → out/ folder
-Deploy: Static files to Netlify (404 KB vs 13.7 MB)
-```
-
-#### **🔄 LESSONS LEARNED & METHODOLOGY**
-
-**Successful Investigation Patterns:**
-1. **Systematic elimination** - Test one variable at a time
-2. **Zero-baseline testing** - Remove all complexity first
-3. **Import-by-import restoration** - Add back dependencies gradually
-4. **Static vs dynamic testing** - Try both deployment approaches
-5. **Comprehensive documentation** - Track every hypothesis and result
-
-**Critical Discovery Sequence:**
-1. **Runtime vs build-time separation** - Different error sources
-2. **Import dependency mapping** - Specific modules cause specific issues
-3. **Deployment tool vs code issues** - Manual deployment proved code was working
-4. **Static export reliability** - Simpler deployment = fewer failure points
-
-#### **🚀 PRODUCTION SYSTEM DELIVERED**
-
-**Enterprise Features Working:**
-- ✅ **Authentication System**: Role-based login (Admin/Supervisor/Viewer)
-- ✅ **Arabic Localization**: Complete RTL interface and proper text handling
-- ✅ **Customer Management**: Companies, contracts, branches system
-- ✅ **Planning System**: Visit scheduling and management
-- ✅ **User Management**: Profile system and role-based permissions
-- ✅ **Professional UI**: Clean, responsive design with Arabic branding
-
-**System Specifications:**
-- **Framework**: Next.js 15 with TypeScript
-- **Deployment**: Netlify static hosting
-- **Size**: 404 KB optimized bundle
-- **Performance**: Fast loading with static assets
-- **Compatibility**: Cross-browser, mobile-responsive
-- **Security**: Role-based access control, secure authentication
-
-#### **📋 OPTIONAL NEXT STEPS**
-
-**For Enhanced Functionality (if needed):**
-1. **Restore date-handler** - Re-implement with fixed circular dependencies
-2. **Add dynamic features** - Invitation system with generateStaticParams
-3. **Custom domain** - Connect business domain in Netlify settings
-4. **Performance optimization** - Further bundle size optimization
-5. **Additional features** - Complete remaining BRD modules
-
-**For Development Process:**
-1. **Document methodology** - Create standard debugging playbook
-2. **Error prevention** - Establish code review patterns
-3. **Testing protocols** - Implement systematic testing procedures
-4. **Deployment pipeline** - Automate static export and deployment
-
-#### **🎯 INVESTIGATION COMPLETE: TOTAL SUCCESS**
-
-**Problem**: React Error #185 infinite loops preventing deployment
-**Solution**: Systematic root cause elimination and static export deployment
-**Result**: Fully functional production maintenance management system
-**Status**: ✅ **MISSION ACCOMPLISHED**
-
-**The systematic investigation approach has been proven 100% effective for resolving complex React infinite loop issues in production applications.**
+</rewritten_file>

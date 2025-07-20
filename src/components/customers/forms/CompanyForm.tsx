@@ -70,8 +70,16 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
 
   // Update uploadedFiles when company prop changes (for editing)
   useEffect(() => {
+    console.log('🔄 CompanyForm useEffect triggered with company:', company);
+    
     if (company) {
-      setUploadedFiles({
+      console.log('📁 Processing company files for editing:', {
+        commercialRegistrationFile: company.commercialRegistrationFile,
+        vatFile: company.vatFile,
+        nationalAddressFile: company.nationalAddressFile
+      });
+      
+      const newUploadedFiles = {
         commercialRegistrationFile: company.commercialRegistrationFile && typeof company.commercialRegistrationFile === 'string' 
           ? company.commercialRegistrationFile.split('|').filter(url => url.trim()).map((url, index) => ({
               name: `Commercial Registration ${index + 1}`,
@@ -102,7 +110,10 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
               uploadedAt: new Date().toISOString(),
             }))
           : [],
-      });
+      };
+      
+      console.log('📁 Setting uploadedFiles for editing:', newUploadedFiles);
+      setUploadedFiles(newUploadedFiles);
 
       // Also update form data
       setFormData({
@@ -118,6 +129,13 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
         contactPerson: company.contactPerson || '',
         contactPersonTitle: company.contactPersonTitle || '',
         notes: company.notes || '',
+      });
+    } else {
+      console.log('📁 No company provided, resetting uploadedFiles to empty');
+      setUploadedFiles({
+        commercialRegistrationFile: [],
+        vatFile: [],
+        nationalAddressFile: [],
       });
     }
     

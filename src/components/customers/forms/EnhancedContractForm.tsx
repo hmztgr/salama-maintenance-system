@@ -46,7 +46,18 @@ export function EnhancedContractForm({
     contract?.serviceBatches || []
   );
 
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(
+    contract?.contractDocument && typeof contract.contractDocument === 'string'
+      ? [{
+          name: 'Contract Document',
+          url: contract.contractDocument,
+          path: 'contracts/' + contract.contractId,
+          size: 0,
+          type: 'application/pdf',
+          uploadedAt: new Date().toISOString(),
+        }]
+      : []
+  );
 
   const [currentBatch, setCurrentBatch] = useState<Partial<ContractServiceBatch>>({
     branchIds: [],

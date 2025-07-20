@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { Company } from '@/types/customer';
+import { FileUpload } from '@/components/common/FileUpload';
+import { UploadedFile } from '@/hooks/useFirebaseStorage';
 
 export interface CompanyFormProps {
   company?: Company;
@@ -24,17 +26,46 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
     contactPerson: company?.contactPerson || '',
     contactPersonTitle: company?.contactPersonTitle || '',
     notes: company?.notes || '',
-    commercialRegistrationFile: undefined as File | undefined,
-    vatFile: undefined as File | undefined,
-    nationalAddressFile: undefined as File | undefined,
+  });
+
+  const [uploadedFiles, setUploadedFiles] = useState<{
+    commercialRegistrationFile: UploadedFile[];
+    vatFile: UploadedFile[];
+    nationalAddressFile: UploadedFile[];
+  }>({
+    commercialRegistrationFile: company?.commercialRegistrationFile && typeof company.commercialRegistrationFile === 'string' 
+      ? [{
+          name: 'Commercial Registration',
+          url: company.commercialRegistrationFile,
+          path: 'companies/commercial-registration/' + company.companyId,
+          size: 0,
+          type: 'application/pdf',
+          uploadedAt: new Date().toISOString(),
+        }] 
+      : [],
+    vatFile: company?.vatFile && typeof company.vatFile === 'string'
+      ? [{
+          name: 'VAT Certificate',
+          url: company.vatFile,
+          path: 'companies/vat/' + company.companyId,
+          size: 0,
+          type: 'application/pdf',
+          uploadedAt: new Date().toISOString(),
+        }]
+      : [],
+    nationalAddressFile: company?.nationalAddressFile && typeof company.nationalAddressFile === 'string'
+      ? [{
+          name: 'National Address',
+          url: company.nationalAddressFile,
+          path: 'companies/national-address/' + company.companyId,
+          size: 0,
+          type: 'application/pdf',
+          uploadedAt: new Date().toISOString(),
+        }]
+      : [],
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  // File input refs
-  const commercialRegFileRef = useRef<HTMLInputElement>(null);
-  const vatFileRef = useRef<HTMLInputElement>(null);
-  const nationalAddressFileRef = useRef<HTMLInputElement>(null);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -62,15 +93,34 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
     }
   };
 
-  const handleFileChange = (field: string, file: File | null) => {
-    setFormData(prev => ({ ...prev, [field]: file }));
+  const handleFilesUploaded = (field: keyof typeof uploadedFiles, files: UploadedFile[]) => {
+    setUploadedFiles(prev => ({ ...prev, [field]: files }));
+  };
+
+  const handleFileDeleted = (field: keyof typeof uploadedFiles, filePath: string) => {
+    setUploadedFiles(prev => ({
+      ...prev,
+      [field]: prev[field].filter(file => file.path !== filePath)
+    }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (validateForm()) {
-      onSubmit(formData);
+      const submitData = {
+        ...formData,
+        commercialRegistrationFile: uploadedFiles.commercialRegistrationFile.length > 0 
+          ? uploadedFiles.commercialRegistrationFile[0].url 
+          : undefined as string | undefined,
+        vatFile: uploadedFiles.vatFile.length > 0 
+          ? uploadedFiles.vatFile[0].url 
+          : undefined as string | undefined,
+        nationalAddressFile: uploadedFiles.nationalAddressFile.length > 0 
+          ? uploadedFiles.nationalAddressFile[0].url 
+          : undefined as string | undefined,
+      };
+      onSubmit(submitData);
     }
   };
 
@@ -283,29 +333,15 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     السجل التجاري
                   </label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-md p-4 text-center">
-                    <input
-                      ref={commercialRegFileRef}
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      onChange={(e) => handleFileChange('commercialRegistrationFile', e.target.files?.[0] || null)}
-                      className="hidden"
-                      disabled={isLoading}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => commercialRegFileRef.current?.click()}
-                      className="text-blue-600 hover:text-blue-800 text-sm"
-                      disabled={isLoading}
-                    >
-                      📎 رفع ملف السجل التجاري
-                    </button>
-                    {formData.commercialRegistrationFile && (
-                      <p className="text-xs text-green-600 mt-1">
-                        {formData.commercialRegistrationFile.name}
-                      </p>
-                    )}
-                  </div>
+                  <FileUpload
+                    onFilesUploaded={(files) => handleFilesUploaded('commercialRegistrationFile', files)}
+                    onFileDeleted={(filePath) => handleFileDeleted('commercialRegistrationFile', filePath)}
+                    existingFiles={uploadedFiles.commercialRegistrationFile}
+                    maxFiles={1}
+                    allowedTypes={['pdf', 'jpg', 'jpeg', 'png']}
+                    folder="companies/commercial-registration"
+                    disabled={isLoading}
+                  />
                 </div>
 
                 {/* VAT Upload */}
@@ -313,29 +349,15 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     شهادة ضريبة القيمة المضافة
                   </label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-md p-4 text-center">
-                    <input
-                      ref={vatFileRef}
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      onChange={(e) => handleFileChange('vatFile', e.target.files?.[0] || null)}
-                      className="hidden"
-                      disabled={isLoading}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => vatFileRef.current?.click()}
-                      className="text-blue-600 hover:text-blue-800 text-sm"
-                      disabled={isLoading}
-                    >
-                      📎 رفع شهادة الضريبة
-                    </button>
-                    {formData.vatFile && (
-                      <p className="text-xs text-green-600 mt-1">
-                        {formData.vatFile.name}
-                      </p>
-                    )}
-                  </div>
+                  <FileUpload
+                    onFilesUploaded={(files) => handleFilesUploaded('vatFile', files)}
+                    onFileDeleted={(filePath) => handleFileDeleted('vatFile', filePath)}
+                    existingFiles={uploadedFiles.vatFile}
+                    maxFiles={1}
+                    allowedTypes={['pdf', 'jpg', 'jpeg', 'png']}
+                    folder="companies/vat"
+                    disabled={isLoading}
+                  />
                 </div>
 
                 {/* National Address Upload */}
@@ -343,29 +365,15 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     العنوان الوطني
                   </label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-md p-4 text-center">
-                    <input
-                      ref={nationalAddressFileRef}
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      onChange={(e) => handleFileChange('nationalAddressFile', e.target.files?.[0] || null)}
-                      className="hidden"
-                      disabled={isLoading}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => nationalAddressFileRef.current?.click()}
-                      className="text-blue-600 hover:text-blue-800 text-sm"
-                      disabled={isLoading}
-                    >
-                      📎 رفع العنوان الوطني
-                    </button>
-                    {formData.nationalAddressFile && (
-                      <p className="text-xs text-green-600 mt-1">
-                        {formData.nationalAddressFile.name}
-                      </p>
-                    )}
-                  </div>
+                  <FileUpload
+                    onFilesUploaded={(files) => handleFilesUploaded('nationalAddressFile', files)}
+                    onFileDeleted={(filePath) => handleFileDeleted('nationalAddressFile', filePath)}
+                    existingFiles={uploadedFiles.nationalAddressFile}
+                    maxFiles={1}
+                    allowedTypes={['pdf', 'jpg', 'jpeg', 'png']}
+                    folder="companies/national-address"
+                    disabled={isLoading}
+                  />
                 </div>
               </div>
             </div>

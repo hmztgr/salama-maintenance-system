@@ -36,7 +36,18 @@ export function ContractForm({ contract, companies, onSubmit, onCancel, isLoadin
     foamFireSuppression: firstBatch?.services?.foamFireSuppression || false,
   });
 
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(
+    contract?.contractDocument && typeof contract.contractDocument === 'string'
+      ? [{
+          name: 'Contract Document',
+          url: contract.contractDocument,
+          path: 'contracts/' + contract.contractId,
+          size: 0,
+          type: 'application/pdf',
+          uploadedAt: new Date().toISOString(),
+        }]
+      : []
+  );
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [usePeriod, setUsePeriod] = useState(false);

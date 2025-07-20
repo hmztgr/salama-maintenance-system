@@ -999,18 +999,24 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                     }
                   } else {
                     const result = await addCompany(data);
-                                      if (result.success) {
-                    setSuccessMessage('تمت إضافة الشركة بنجاح');
-                    setShowCompanyForm(false);
-                    setEditingCompany(null);
-                    // If editing from detail view, refresh the company data
+                    if (result.success) {
+                      setSuccessMessage('تمت إضافة الشركة بنجاح');
+                      setShowCompanyForm(false);
+                      setEditingCompany(null);
+                    // If editing from detail view, keep the detail view open
                     if (editingFromDetailView === 'company' && selectedCompany) {
                       // The company data will be refreshed by the Firebase listener
+                      // Don't close the detail view, just clear the editing state
+                      setEditingFromDetailView(null);
+                    } else {
+                      // If not editing from detail view, close the form normally
+                      setShowCompanyForm(false);
+                      setEditingCompany(null);
+                      setEditingFromDetailView(null);
                     }
-                    setEditingFromDetailView(null);
-                  } else {
-                    setSuccessMessage('فشل في إضافة الشركة: ' + (result.warnings?.join(', ') || 'خطأ غير معروف'));
-                  }
+                    } else {
+                      setSuccessMessage('فشل في إضافة الشركة: ' + (result.warnings?.join(', ') || 'خطأ غير معروف'));
+                    }
                   }
                 } catch (e) {
                   console.error('Form submission error:', e);
@@ -1101,11 +1107,15 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                   setFormLoading(false);
                   setShowEnhancedContractForm(false);
                   setEditingContract(null);
-                  // If editing from detail view, refresh the contract data
+                  // If editing from detail view, keep the detail view open
                   if (editingFromDetailView === 'contract' && selectedContract) {
                     // The contract data will be refreshed by the Firebase listener
+                    // Don't close the detail view, just clear the editing state
+                    setEditingFromDetailView(null);
+                  } else {
+                    // If not editing from detail view, close the form normally
+                    setEditingFromDetailView(null);
                   }
-                  setEditingFromDetailView(null);
                   setTimeout(() => setSuccessMessage(''), 5000);
                   
                   return { success: true, warnings: result.warnings };
@@ -1134,11 +1144,15 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
               onSuccess={() => {
                 setShowBranchForm(false);
                 setEditingBranch(null);
-                // If editing from detail view, refresh the branch data
+                // If editing from detail view, keep the detail view open
                 if (editingFromDetailView === 'branch' && selectedBranch) {
                   // The branch data will be refreshed by the Firebase listener
+                  // Don't close the detail view, just clear the editing state
+                  setEditingFromDetailView(null);
+                } else {
+                  // If not editing from detail view, close the form normally
+                  setEditingFromDetailView(null);
                 }
-                setEditingFromDetailView(null);
                 if (editingBranch) {
                   setSuccessMessage('تم تحديث بيانات الفرع بنجاح');
                 } else {
@@ -1185,12 +1199,9 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
 
       {/* Detail View Modals */}
       {selectedCompany && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-hidden"
-          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
-        >
-          <div className="bg-white rounded-lg w-full max-w-7xl h-[95vh] flex flex-col overflow-hidden">
-            <div className="flex-1 overflow-y-auto p-6" style={{ overflowY: 'auto' }}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-7xl max-h-[95vh] flex flex-col">
+            <div className="flex-1 overflow-y-auto p-6">
               <CompanyDetailView
                 company={selectedCompany}
                 onBack={() => setSelectedCompany(null)}
@@ -1219,8 +1230,8 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
       )}
 
       {selectedContract && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-hidden">
-          <div className="bg-white rounded-lg w-full max-w-7xl h-[95vh] flex flex-col overflow-hidden">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-7xl max-h-[95vh] flex flex-col">
             <div className="flex-1 overflow-y-auto p-6">
               <ContractDetailView
                 contract={selectedContract}
@@ -1252,8 +1263,8 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
       )}
 
       {selectedBranch && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-hidden">
-          <div className="bg-white rounded-lg w-full max-w-7xl h-[95vh] flex flex-col overflow-hidden">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-7xl max-h-[95vh] flex flex-col">
             <div className="flex-1 overflow-y-auto p-6">
               <BranchDetailView
                 branch={selectedBranch}

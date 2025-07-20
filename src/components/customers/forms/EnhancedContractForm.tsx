@@ -482,7 +482,7 @@ export function EnhancedContractForm({
                     existingFiles={uploadedFiles}
                     maxFiles={1}
                     allowedTypes={['pdf', 'doc', 'docx']}
-                    folder="contracts"
+                    folder={contract ? `contracts/${contract.contractId}/documents` : 'contracts/temp'}
                     disabled={isLoading}
                   />
                 </div>

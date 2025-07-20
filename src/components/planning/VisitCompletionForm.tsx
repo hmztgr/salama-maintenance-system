@@ -13,6 +13,8 @@ import { CheckCircle, AlertCircle, Save, X, Upload, FileText } from 'lucide-reac
 import { Visit } from '@/types/customer';
 import { useVisits } from '@/hooks/useVisits';
 import { formatDateForDisplay, formatDateForInput, convertInputDateToStandard, getCurrentDate } from '@/lib/date-handler';
+import { FileUpload } from '@/components/common/FileUpload';
+import { UploadedFile } from '@/hooks/useFirebaseStorage';
 
 interface VisitCompletionFormProps {
   visit: Visit;
@@ -42,10 +44,10 @@ export function VisitCompletionForm({ visit, onSuccess, onCancel }: VisitComplet
     newRecommendation: '',
   });
 
-  const [attachments, setAttachments] = useState<File[]>([]);
-  const [existingAttachments, setExistingAttachments] = useState<string[]>(
+  const [attachments, setAttachments] = useState<UploadedFile[]>([]);
+  const [existingAttachments, setExistingAttachments] = useState<UploadedFile[]>(
     Array.isArray(visit.attachments) 
-      ? visit.attachments.map(att => typeof att === 'string' ? att : att.url || att.name || att.path || '') 
+      ? visit.attachments
       : []
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,9 +65,10 @@ export function VisitCompletionForm({ visit, onSuccess, onCancel }: VisitComplet
       newIssue: '',
       newRecommendation: '',
     });
+    // Update existing attachments when visit changes
     setExistingAttachments(
       Array.isArray(visit.attachments) 
-        ? visit.attachments.map(att => typeof att === 'string' ? att : att.url || att.name || att.path || '') 
+        ? visit.attachments
         : []
     );
   }, [visit, convertToInputDate]);
@@ -77,33 +80,15 @@ export function VisitCompletionForm({ visit, onSuccess, onCancel }: VisitComplet
     setSuccessMessage('');
 
     try {
+      // Combine existing and new attachments
+      const allAttachments = [...existingAttachments, ...attachments];
+      
       const results: Visit['results'] = {
         overallStatus: formData.overallStatus,
         issues: formData.issues.length > 0 ? formData.issues : undefined,
         recommendations: formData.recommendations.length > 0 ? formData.recommendations : undefined,
         nextVisitDate: formData.nextVisitDate ? convertFromInputDate(formData.nextVisitDate) : undefined,
       };
-
-      // Convert existing attachments (strings) and new attachments (Files) to proper format
-      const existingAttachmentObjects = existingAttachments.map(name => ({
-        name,
-        url: name, // In demo mode, use name as URL
-        path: name,
-        size: 0,
-        type: 'unknown',
-        uploadedAt: getCurrentDate()
-      }));
-      
-      const newAttachmentObjects = attachments.map(file => ({
-        name: file.name,
-        url: file.name, // In production, this would be the uploaded file URL
-        path: file.name,
-        size: file.size,
-        type: file.type,
-        uploadedAt: getCurrentDate()
-      }));
-      
-      const allAttachments = [...existingAttachmentObjects, ...newAttachmentObjects];
 
       console.log('🚀 Starting visit completion:', { visitId: visit.id, results });
 
@@ -174,18 +159,12 @@ export function VisitCompletionForm({ visit, onSuccess, onCancel }: VisitComplet
     }));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      // Add new files to existing attachments instead of replacing
-      const newFiles = Array.from(e.target.files);
-      setAttachments(prev => [...prev, ...newFiles]);
-      // Clear the input so same file can be selected again if needed
-      e.target.value = '';
-    }
+  const handleFilesUploaded = (files: UploadedFile[]) => {
+    setAttachments(files);
   };
 
-  const removeAttachment = (index: number) => {
-    setAttachments(prev => prev.filter((_, i) => i !== index));
+  const handleFileDeleted = (filePath: string) => {
+    setAttachments(prev => prev.filter(file => file.path !== filePath));
   };
 
   return (
@@ -354,44 +333,17 @@ export function VisitCompletionForm({ visit, onSuccess, onCancel }: VisitComplet
                 المرفقات (صور، تقارير، مستندات)
               </Label>
 
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*,.pdf,.doc,.docx"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  id="file-upload"
-                />
-                <label htmlFor="file-upload" className="cursor-pointer block text-center">
-                  <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                  <p className="text-sm text-gray-600">انقر لإضافة ملفات أو اسحب وأفلت هنا</p>
-                  <p className="text-xs text-gray-400">الصور والمستندات مدعومة</p>
-                </label>
-              </div>
-
-              {attachments.length > 0 && (
-                <div className="space-y-2">
-                  {attachments.map((file, index) => (
-                    <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                      <Button
-                        type="button"
-                        onClick={() => removeAttachment(index)}
-                        size="sm"
-                        variant="ghost"
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                      <div className="flex items-center gap-2 flex-1 mr-2">
-                        <FileText className="w-4 h-4 text-gray-500" />
-                        <span className="text-sm">{file.name}</span>
-                        <span className="text-xs text-gray-500">({(file.size / 1024).toFixed(1)} KB)</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <FileUpload
+                onFilesUploaded={handleFilesUploaded}
+                onFileDeleted={handleFileDeleted}
+                existingFiles={existingAttachments}
+                folder={`visits/${visit.id}/completion`}
+                maxFiles={10}
+                maxSize={25}
+                allowedTypes={['image', 'pdf', 'doc', 'docx']}
+                accept="image/*,.pdf,.doc,.docx"
+                multiple={true}
+              />
             </div>
 
             {/* Success Message */}

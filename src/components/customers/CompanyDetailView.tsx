@@ -4,19 +4,21 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import { FileViewer } from '@/components/ui/file-viewer';
 import { 
-  Building, 
+  Building2, 
   Mail, 
   Phone, 
   MapPin, 
+  Globe, 
+  User, 
   FileText, 
-  Calendar, 
-  Users, 
-  ArrowLeft,
+  Eye, 
   Download,
-  Eye,
-  ExternalLink
+  ArrowRight,
+  Calendar,
+  Users,
+  ClipboardList
 } from 'lucide-react';
 import { Company } from '@/types/customer';
 import { formatDateForDisplay } from '@/lib/date-handler';
@@ -43,6 +45,12 @@ export function CompanyDetailView({
   hasPermission 
 }: CompanyDetailViewProps) {
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
+  const [viewingFile, setViewingFile] = useState<{
+    name: string;
+    url: string;
+    type: string;
+    size?: number;
+  } | null>(null);
 
   // Add debugging for file data
   console.log('🏢 CompanyDetailView received company:', {
@@ -53,17 +61,20 @@ export function CompanyDetailView({
     nationalAddressFile: company.nationalAddressFile
   });
 
-  const handleDocumentView = (documentUrl: string) => {
-    setSelectedDocument(documentUrl);
+  const handleDocumentView = (documentUrl: string, fileName: string, fileType: string = 'application/pdf') => {
+    setViewingFile({
+      name: fileName,
+      url: documentUrl,
+      type: fileType,
+      size: 0
+    });
   };
 
   const handleDocumentDownload = (documentUrl: string, fileName: string) => {
     const link = document.createElement('a');
     link.href = documentUrl;
     link.download = fileName;
-    document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
   };
 
   return (
@@ -77,7 +88,7 @@ export function CompanyDetailView({
             onClick={onBack}
             className="gap-2"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowRight className="w-4 h-4" />
             العودة
           </Button>
           <div>
@@ -106,7 +117,7 @@ export function CompanyDetailView({
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Building className="w-5 h-5" />
+                <Building2 className="w-5 h-5" />
                 معلومات الشركة الأساسية
               </CardTitle>
             </CardHeader>
@@ -217,7 +228,7 @@ export function CompanyDetailView({
                             variant="outline"
                             size="sm"
                             className="gap-1"
-                            onClick={() => window.open(fileUrl, '_blank')}
+                            onClick={() => handleDocumentView(fileUrl, `commercial_registration_${index + 1}.pdf`)}
                           >
                             <Eye className="w-4 h-4" />
                             عرض
@@ -226,12 +237,7 @@ export function CompanyDetailView({
                             variant="outline"
                             size="sm"
                             className="gap-1"
-                            onClick={() => {
-                              const link = document.createElement('a');
-                              link.href = fileUrl;
-                              link.download = `commercial_registration_${index + 1}.pdf`;
-                              link.click();
-                            }}
+                            onClick={() => handleDocumentDownload(fileUrl, `commercial_registration_${index + 1}.pdf`)}
                           >
                             <Download className="w-4 h-4" />
                             تحميل
@@ -255,7 +261,7 @@ export function CompanyDetailView({
                             variant="outline"
                             size="sm"
                             className="gap-1"
-                            onClick={() => window.open(fileUrl, '_blank')}
+                            onClick={() => handleDocumentView(fileUrl, `vat_certificate_${index + 1}.pdf`)}
                           >
                             <Eye className="w-4 h-4" />
                             عرض
@@ -264,12 +270,7 @@ export function CompanyDetailView({
                             variant="outline"
                             size="sm"
                             className="gap-1"
-                            onClick={() => {
-                              const link = document.createElement('a');
-                              link.href = fileUrl;
-                              link.download = `vat_certificate_${index + 1}.pdf`;
-                              link.click();
-                            }}
+                            onClick={() => handleDocumentDownload(fileUrl, `vat_certificate_${index + 1}.pdf`)}
                           >
                             <Download className="w-4 h-4" />
                             تحميل
@@ -293,7 +294,7 @@ export function CompanyDetailView({
                             variant="outline"
                             size="sm"
                             className="gap-1"
-                            onClick={() => window.open(fileUrl, '_blank')}
+                            onClick={() => handleDocumentView(fileUrl, `national_address_${index + 1}.pdf`)}
                           >
                             <Eye className="w-4 h-4" />
                             عرض
@@ -302,12 +303,7 @@ export function CompanyDetailView({
                             variant="outline"
                             size="sm"
                             className="gap-1"
-                            onClick={() => {
-                              const link = document.createElement('a');
-                              link.href = fileUrl;
-                              link.download = `national_address_${index + 1}.pdf`;
-                              link.click();
-                            }}
+                            onClick={() => handleDocumentDownload(fileUrl, `national_address_${index + 1}.pdf`)}
                           >
                             <Download className="w-4 h-4" />
                             تحميل
@@ -400,51 +396,12 @@ export function CompanyDetailView({
       </div>
 
       {/* Document Viewer Modal */}
-      {selectedDocument && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">عرض المستند</h3>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setSelectedDocument(null)}
-              >
-                إغلاق
-              </Button>
-            </div>
-            <div className="h-[70vh] overflow-auto">
-              {selectedDocument.endsWith('.pdf') ? (
-                <iframe
-                  src={selectedDocument}
-                  className="w-full h-full border-0"
-                  title="Document Viewer"
-                />
-              ) : selectedDocument.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
-                <img
-                  src={selectedDocument}
-                  alt="Document"
-                  className="w-full h-auto max-h-full object-contain"
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600">لا يمكن عرض هذا النوع من الملفات</p>
-                    <Button
-                      variant="outline"
-                      className="mt-4"
-                      onClick={() => window.open(selectedDocument, '_blank')}
-                    >
-                      <ExternalLink className="w-4 h-4 ml-2" />
-                      فتح في نافذة جديدة
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+      {viewingFile && (
+        <FileViewer
+          file={viewingFile}
+          isOpen={!!viewingFile}
+          onClose={() => setViewingFile(null)}
+        />
       )}
     </div>
   );

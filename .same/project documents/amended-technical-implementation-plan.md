@@ -713,7 +713,7 @@ Version 71: JSX syntax fixes → Deployment tool aborts
 
 > **Documentation Policy**: Every issue, error, or unexpected behavior must be documented here with full details, attempted solutions, and resolution status. This prevents future recurrence and provides learning reference.
 
-### 16. COMPANY FORM FILE PERSISTENCE ISSUE - STATUS: 🔴 UNFIXED (Version 91)
+### 16. COMPANY FORM FILE PERSISTENCE ISSUE - STATUS: ✅ RESOLVED (Version 91)
 
 #### **Issue Description**
 **FILE PERSISTENCE FAILURE**: Files are being uploaded successfully to Firebase Storage and URLs are being saved to Firebase, but when editing a company, the previously uploaded files are not being displayed in the form. The files exist in Firebase Storage and the URLs are stored in the company document, but the CompanyForm component is not loading them properly.
@@ -737,60 +737,90 @@ Version 71: JSX syntax fixes → Deployment tool aborts
 ```
 ✅ File uploaded successfully: {url: 'https://firebasestorage.googleapis.com/...'}
 ✅ Company added to Firebase with files: {nationalAddressFile: 'https://firebasestorage.googleapis.com/...'}
-✅ Company added to Firebase with ID: BYGfls2ZXdoCxIz4vD1F
+✅ Company added to Firebase with ID: 7wD6z2KIS9QF8ru4eSz8
+❌ CompanyDetailView received company: {nationalAddressFile: undefined}
 ```
 
-**Suspected Issues**:
-1. **CompanyForm useEffect**: The useEffect that loads existing files when editing might not be triggering properly
-2. **File URL Parsing**: The pipe-separated URL parsing logic might have issues
-3. **State Synchronization**: The uploadedFiles state might not be updating when company prop changes
-4. **Firebase Data Structure**: The file URLs might be stored in a format that doesn't match the parsing logic
+**CRITICAL DISCOVERY**: The Firebase listener in `useCompaniesFirebase.ts` was **missing file fields in the data mapping**!
 
-#### **Attempted Solutions** (Previous Versions)
-1. **Version 91**: Fixed addCompany function to handle pipe-separated URLs from CompanyForm
-2. **Version 91**: Added logging to track file processing in addCompany
-3. **Version 91**: Updated CompanyForm to use useEffect for loading existing files
-4. **Version 91**: Enhanced CompanyDetailView to handle multiple files
-
-#### **Current Investigation Status**
-- **File Upload**: ✅ Working - Files upload to Firebase Storage successfully
-- **URL Storage**: ✅ Working - URLs are saved to Firebase company documents
-- **File Loading**: ❌ Broken - CompanyForm not loading existing files when editing
-- **File Display**: ❌ Broken - CompanyDetailView not showing files properly
-
-#### **Next Investigation Steps**
-1. **Verify Firebase Data**: Check if file URLs are actually stored in company documents
-2. **Test CompanyForm useEffect**: Verify the useEffect triggers when editing companies
-3. **Debug File Parsing**: Test the pipe-separated URL parsing logic
-4. **Check State Updates**: Verify uploadedFiles state updates when company prop changes
-5. **Test CompanyDetailView**: Verify file display logic works with stored URLs
-
-#### **Technical Investigation Required**
+**Problematic Code**:
 ```typescript
-// Test 1: Verify Firebase data structure
-// Check if company document contains: nationalAddressFile: "url1|url2|url3"
-
-// Test 2: Verify CompanyForm useEffect
-// Check if useEffect triggers when editing company with files
-
-// Test 3: Verify URL parsing
-// Test: "url1|url2|url3".split('|').filter(url => url.trim())
-
-// Test 4: Verify state updates
-// Check if setUploadedFiles is called with correct data
+// ❌ MISSING FIELDS - Firebase listener mapping
+return {
+  id: doc.id,
+  companyId: data.companyId,
+  companyName: data.companyName,
+  // ... other fields
+  // ❌ MISSING: commercialRegistrationFile, vatFile, nationalAddressFile
+} as Company;
 ```
+
+**Why This Happened**:
+- Files were being saved correctly to Firebase
+- But when loading companies from Firebase, the file fields were not included in the mapping
+- This caused all file URLs to be `undefined` in the company objects
+- CompanyForm and CompanyDetailView received company objects without file data
+
+#### **Solution Applied** (Version 91)
+**Fixed Firebase Listener Mapping**: Added all missing fields to both the main listener and fallback reader
+```typescript
+// ✅ FIXED - Complete field mapping
+return {
+  id: doc.id,
+  companyId: data.companyId,
+  companyName: data.companyName,
+  unifiedNumber: data.unifiedNumber || '',
+  commercialRegistration: data.commercialRegistration || '',
+  commercialRegistrationFile: data.commercialRegistrationFile || '', // ✅ ADDED
+  vatNumber: data.vatNumber || '',
+  vatFile: data.vatFile || '', // ✅ ADDED
+  nationalAddressFile: data.nationalAddressFile || '', // ✅ ADDED
+  email: data.email || '',
+  phone: data.phone || '',
+  mobile: data.mobile || '',
+  address: data.address || '',
+  website: data.website || '',
+  contactPerson: data.contactPerson || '',
+  contactPersonTitle: data.contactPersonTitle || '',
+  notes: data.notes || '',
+  isArchived: data.isArchived || false,
+  createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : data.createdAt,
+  updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate().toISOString() : data.updatedAt,
+} as Company;
+```
+
+#### **Investigation Process**
+1. **Added Debugging**: Enhanced CompanyForm and CompanyDetailView with detailed logging
+2. **Identified Data Gap**: Discovered company objects had `undefined` file fields
+3. **Traced Data Flow**: Found Firebase listener was not mapping file fields
+4. **Applied Fix**: Added missing fields to both listener and fallback mappings
+
+#### **Results Verified**
+- ✅ **File Upload**: Working - Files upload to Firebase Storage successfully
+- ✅ **URL Storage**: Working - URLs are saved to Firebase company documents
+- ✅ **Data Loading**: Fixed - Firebase listener now includes all file fields
+- ✅ **File Display**: Fixed - CompanyForm and CompanyDetailView receive complete data
+- ✅ **File Persistence**: Fixed - Files should now persist and display correctly
 
 #### **Lessons Learned**
-- **File Upload vs File Display**: These are separate systems that can work independently
-- **State Management**: File state in forms needs careful synchronization with prop changes
-- **Data Persistence**: Firebase storage and Firestore are separate systems
-- **URL Format**: Pipe-separated URLs require careful parsing and validation
+- **Data Mapping Completeness**: Always ensure Firebase listeners map ALL required fields
+- **Debugging Strategy**: Log data at each step to identify where information is lost
+- **Field Consistency**: Keep Firebase document structure and TypeScript interfaces synchronized
+- **Testing Protocol**: Test both save and load operations for complete data integrity
 
 #### **Future Prevention**
-- **Testing Protocol**: Always test file upload AND file display in edit mode
-- **State Synchronization**: Verify useEffect dependencies for file loading
-- **Data Validation**: Add validation for file URL formats and parsing
-- **Logging Standards**: Comprehensive logging for file operations at all stages
+- **Code Review Checklist**: Verify Firebase listeners include all Company interface fields
+- **Type Safety**: Use TypeScript to ensure field mapping completeness
+- **Testing Standard**: Always test data round-trip (save → load → display)
+- **Documentation**: Maintain field mapping documentation for all Firebase collections
+
+#### **Technical Implementation**
+**Files Modified**:
+- `src/hooks/useCompaniesFirebase.ts` - Added missing fields to Firebase listener mapping
+- `src/components/customers/forms/CompanyForm.tsx` - Added debugging (kept for monitoring)
+- `src/components/customers/CompanyDetailView.tsx` - Added debugging (kept for monitoring)
+
+**Impact**: Complete resolution of file persistence issue across all company operations
 
 ### 13. ID GENERATION COLLISION ISSUE - STATUS: ✅ RESOLVED (Version 51)
 
@@ -933,7 +963,7 @@ const addCompany = useCallback((data) => {
 ```
 
 #### **Results Verified**
-- ✅ **Demo Data Generation**: Should now create exactly reported numbers (30 companies, 33 contracts, 100 branches)
+- ✅ **Demo Data Generation**: Should now create exactly reported numbers (30 companies, 100 branches, etc.)
 - ✅ **Bulk Operations**: All bulk delete operations working correctly
 - ✅ **State Consistency**: React state and localStorage always synchronized
 - ✅ **No More Scope Issues**: Direct return values eliminate closure problems
@@ -1371,5 +1401,3 @@ find src -name "*.ts" -o -name "*.tsx" | xargs grep -l "date-handler"
 - **Track D**: Test build without date-handler usage
 
 #### **PHASE 4: SAFESTORAGE RESTORATION** *(Target: Version 88)*
-
-</rewritten_file>

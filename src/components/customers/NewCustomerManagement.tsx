@@ -72,6 +72,33 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
     deleteCompany
   } = useCompaniesFirebase();
 
+  // Firebase hook doesn't have clearError, so create a dummy function
+  const clearCompaniesError = () => {};
+
+  const {
+    contracts,
+    loading: contractsLoading,
+    error: contractsError,
+    addContract,
+    updateContract,
+    archiveContract,
+    unarchiveContract,
+    deleteContract,
+    clearError: clearContractsError
+  } = useContractsFirebase();
+
+  const {
+    branches,
+    loading: branchesLoading,
+    error: branchesError,
+    addBranch,
+    updateBranch,
+    archiveBranch,
+    unarchiveBranch,
+    deleteBranch,
+    clearError: clearBranchesError
+  } = useBranchesFirebase();
+
   // Update selected items when data changes
   useEffect(() => {
     if (selectedCompany) {
@@ -99,33 +126,6 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
       }
     }
   }, [branches, selectedBranch]);
-
-  // Firebase hook doesn't have clearError, so create a dummy function
-  const clearCompaniesError = () => {};
-
-  const {
-    contracts,
-    loading: contractsLoading,
-    error: contractsError,
-    addContract,
-    updateContract,
-    archiveContract,
-    unarchiveContract,
-    deleteContract,
-    clearError: clearContractsError
-  } = useContractsFirebase();
-
-  const {
-    branches,
-    loading: branchesLoading,
-    error: branchesError,
-    addBranch,
-    updateBranch,
-    archiveBranch,
-    unarchiveBranch,
-    deleteBranch,
-    clearError: clearBranchesError
-  } = useBranchesFirebase();
 
   const { visits, deleteVisit } = useVisits();
 

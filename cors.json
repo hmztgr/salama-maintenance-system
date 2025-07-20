@@ -1,0 +1,20 @@
+[
+  {
+    "origin": [
+      "https://salama-restructured-contract-system.netlify.app",
+      "https://salama-maintenance-system.netlify.app",
+      "https://salama-maintenance-prod.netlify.app",
+      "http://localhost:3000",
+      "http://localhost:3001"
+    ],
+    "method": ["GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"],
+    "maxAgeSeconds": 3600,
+    "responseHeader": [
+      "Content-Type",
+      "Access-Control-Allow-Origin",
+      "Access-Control-Allow-Methods",
+      "Access-Control-Allow-Headers",
+      "Access-Control-Allow-Credentials"
+    ]
+  }
+]

@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { Contract, Company, Branch } from '@/types/customer';
 import { formatDateForDisplay } from '@/lib/date-handler';
+import { FileViewer } from '@/components/ui/file-viewer';
 
 interface ContractDetailViewProps {
   contract: Contract;
@@ -42,18 +43,19 @@ export function ContractDetailView({
   hasPermission 
 }: ContractDetailViewProps) {
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
+  const [isFileViewerOpen, setIsFileViewerOpen] = useState(false);
+  const [currentFile, setCurrentFile] = useState<{ url: string; name: string } | null>(null);
 
-  const handleDocumentView = (documentUrl: string) => {
-    setSelectedDocument(documentUrl);
+  const handleDocumentView = (documentUrl: string, fileName: string = 'Document') => {
+    setCurrentFile({ url: documentUrl, name: fileName });
+    setIsFileViewerOpen(true);
   };
 
   const handleDocumentDownload = (documentUrl: string, fileName: string) => {
     const link = document.createElement('a');
     link.href = documentUrl;
     link.download = fileName;
-    document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
   };
 
   // Calculate contract statistics
@@ -299,7 +301,7 @@ export function ContractDetailView({
                         variant="outline"
                         size="sm"
                         className="gap-1"
-                        onClick={() => window.open(contract.contractDocument as string, '_blank')}
+                        onClick={() => handleDocumentView(contract.contractDocument as string, 'contract_document.pdf')}
                       >
                         <Eye className="w-4 h-4" />
                         عرض
@@ -308,12 +310,7 @@ export function ContractDetailView({
                         variant="outline"
                         size="sm"
                         className="gap-1"
-                        onClick={() => {
-                          const link = document.createElement('a');
-                          link.href = contract.contractDocument as string;
-                          link.download = 'contract_document.pdf';
-                          link.click();
-                        }}
+                        onClick={() => handleDocumentDownload(contract.contractDocument as string, 'contract_document.pdf')}
                       >
                         <Download className="w-4 h-4" />
                         تحميل
@@ -439,51 +436,16 @@ export function ContractDetailView({
       </div>
 
       {/* Document Viewer Modal */}
-      {selectedDocument && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">عرض المستند</h3>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setSelectedDocument(null)}
-              >
-                إغلاق
-              </Button>
-            </div>
-            <div className="h-[70vh] overflow-auto">
-              {selectedDocument.endsWith('.pdf') ? (
-                <iframe
-                  src={selectedDocument}
-                  className="w-full h-full border-0"
-                  title="Document Viewer"
-                />
-              ) : selectedDocument.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
-                <img
-                  src={selectedDocument}
-                  alt="Document"
-                  className="w-full h-auto max-h-full object-contain"
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600">لا يمكن عرض هذا النوع من الملفات</p>
-                    <Button
-                      variant="outline"
-                      className="mt-4"
-                      onClick={() => window.open(selectedDocument, '_blank')}
-                    >
-                      <ExternalLink className="w-4 h-4 ml-2" />
-                      فتح في نافذة جديدة
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+      {isFileViewerOpen && currentFile && (
+        <FileViewer
+          file={{
+            name: currentFile.name,
+            url: currentFile.url,
+            type: currentFile.name.endsWith('.pdf') ? 'application/pdf' : 'application/octet-stream'
+          }}
+          isOpen={isFileViewerOpen}
+          onClose={() => setIsFileViewerOpen(false)}
+        />
       )}
     </div>
   );

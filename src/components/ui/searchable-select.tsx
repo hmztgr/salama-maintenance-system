@@ -54,6 +54,11 @@ export function SearchableSelect({
   const [filteredOptions, setFilteredOptions] = useState(options);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Debug logging
+  useEffect(() => {
+    console.log('🔍 SearchableSelect - Options:', options.length, 'Open:', open, 'Value:', value);
+  }, [options, open, value]);
+
   // Filter options based on search
   useEffect(() => {
     if (!searchValue) {
@@ -85,8 +90,19 @@ export function SearchableSelect({
 
   const selectedOption = options.find(option => option.value === value);
 
+  const handleOpenChange = (newOpen: boolean) => {
+    console.log('🔍 SearchableSelect - Open change:', newOpen);
+    setOpen(newOpen);
+  };
+
+  const handleValueChange = (newValue: string) => {
+    console.log('🔍 SearchableSelect - Value change:', newValue);
+    onValueChange(newValue);
+    setOpen(false);
+  };
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -99,12 +115,16 @@ export function SearchableSelect({
           )}
           disabled={disabled}
           dir={dir}
+          onClick={() => {
+            console.log('🔍 SearchableSelect - Button clicked');
+            setOpen(!open);
+          }}
         >
           {selectedOption ? selectedOption.label : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0" align="start">
+      <PopoverContent className="w-full p-0 z-50" align="start">
         <Command>
           <div className="flex items-center border-b px-3">
             <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
@@ -112,7 +132,10 @@ export function SearchableSelect({
               ref={inputRef}
               placeholder={searchPlaceholder}
               value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
+              onChange={(e) => {
+                console.log('🔍 SearchableSelect - Search input:', e.target.value);
+                setSearchValue(e.target.value);
+              }}
               className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
               dir={dir}
             />
@@ -124,10 +147,7 @@ export function SearchableSelect({
                 <CommandItem
                   key={option.value}
                   value={option.value}
-                  onSelect={() => {
-                    onValueChange(option.value);
-                    setOpen(false);
-                  }}
+                  onSelect={() => handleValueChange(option.value)}
                   disabled={option.disabled}
                   className="cursor-pointer"
                 >

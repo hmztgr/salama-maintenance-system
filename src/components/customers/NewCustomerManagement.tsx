@@ -443,6 +443,7 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                           <Checkbox
                             checked={selectedCompanies.has(company.companyId)}
                             onCheckedChange={(checked) => handleCompanySelect(company.companyId, checked === true)}
+                            onClick={(e) => e.stopPropagation()}
                           />
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
@@ -708,6 +709,7 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                             <Checkbox
                               checked={selectedContracts.has(contract.contractId)}
                               onCheckedChange={(checked) => handleContractSelect(contract.contractId, checked === true)}
+                              onClick={(e) => e.stopPropagation()}
                             />
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
@@ -954,6 +956,7 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                           <Checkbox
                             checked={selectedBranches.has(branch.branchId)}
                             onCheckedChange={(checked) => handleBranchSelect(branch.branchId, checked === true)}
+                            onClick={(e) => e.stopPropagation()}
                           />
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">

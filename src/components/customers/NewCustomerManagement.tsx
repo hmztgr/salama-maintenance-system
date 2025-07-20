@@ -1222,7 +1222,7 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
               entityType={importExportType}
               data={
                 importExportType === 'companies' ? companies :
-                importExportType === 'contracts' ? contracts :
+                importExportType === 'contracts' || importExportType === 'contractsAdvanced' ? contracts :
                 branches
               }
               onClose={() => setShowExportTemplate(false)}

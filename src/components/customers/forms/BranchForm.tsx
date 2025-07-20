@@ -29,6 +29,13 @@ export function BranchForm({ branch, onSuccess, onCancel }: BranchFormProps) {
   const { addBranch, updateBranch } = useBranchesFirebase();
   const { companies } = useCompaniesFirebase();
 
+  // Add debugging for companies data
+  console.log('🏢 BranchForm - Companies data:', {
+    companiesCount: companies.length,
+    nonArchivedCount: companies.filter(c => !c.isArchived).length,
+    companies: companies.filter(c => !c.isArchived).slice(0, 3) // Show first 3 for debugging
+  });
+
   const [formData, setFormData] = useState({
     companyId: branch?.companyId || '',
     contractIds: [], // Empty by default - contracts will be linked from contract creation

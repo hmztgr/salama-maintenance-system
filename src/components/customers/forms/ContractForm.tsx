@@ -520,7 +520,7 @@ export function ContractForm({ contract, companies, onSubmit, onCancel, isLoadin
                     existingFiles={uploadedFiles}
                     maxFiles={1}
                     allowedTypes={['pdf', 'doc', 'docx']}
-                    folder="contracts"
+                    folder={contract ? `contracts/${contract.contractId}/documents` : 'contracts/temp'}
                     disabled={isLoading}
                   />
                 </div>

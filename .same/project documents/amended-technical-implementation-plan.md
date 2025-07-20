@@ -198,47 +198,124 @@ const login = async (credentials: {username: string, password: string}) => {
 - ✅ **No Console Errors**: Clean browser console
 
 **Failure Criteria:**
-- ❌ **App Tab Broken**: White screen or "didn't send any data"
-- ❌ **Deployment Fails**: React error #185 persists
-- ❌ **Console Errors**: JavaScript errors in browser
+- ❌ **React Error #185**: "Maximum update depth exceeded"
+- ❌ **Infinite Loop**: App crashes or hangs
+- ❌ **Build Failure**: Deployment fails
+- ❌ **Console Errors**: Any React-related errors
 
-**Documentation per Phase:**
-```markdown
-### Phase X Results - Version XX
-- **Status**: ✅ SUCCESS / ❌ FAILED
-- **App Tab**: Working/Broken
-- **Deployment**: Working/Broken
-- **Identified Issue**: [Specific import that broke it]
-- **Next Action**: [Continue to next phase / Fix specific issue]
+---
+
+## 🔧 **ISSUE RESOLUTION: File Persistence Problem - FIXED** ✅
+
+### **Root Cause Analysis**
+The file persistence issue was caused by **missing file URL fields** in the Firebase companies listener mapping. While files were being uploaded successfully to Firebase Storage and URLs were being saved correctly in Firestore, the app's Firebase listener was not including the file URL fields (`commercialRegistrationFile`, `vatFile`, `nationalAddressFile`) when mapping Firestore documents to Company objects.
+
+### **Technical Details**
+- **File Upload**: ✅ Working correctly - Files upload to Firebase Storage successfully
+- **URL Saving**: ✅ Working correctly - File URLs saved to Firestore documents
+- **Data Loading**: ❌ **BROKEN** - Firebase listener missing file URL fields in mapping
+- **File Display**: ❌ **BROKEN** - CompanyDetailView received undefined file URLs
+
+### **Fix Implementation**
+**File**: `src/hooks/useCompaniesFirebase.ts`
+- Added missing file URL fields to Firebase listener mapping
+- Added debugging logs to track data flow
+- Fixed both main listener and fallback one-time reader
+
+### **Code Changes**
+```typescript
+// BEFORE (Missing file fields)
+const mappedCompany = {
+  id: doc.id,
+  companyId: data.companyId,
+  companyName: data.companyName,
+  // ... other fields but NO file URL fields
+} as Company;
+
+// AFTER (With file fields)
+const mappedCompany = {
+  id: doc.id,
+  companyId: data.companyId,
+  companyName: data.companyName,
+  commercialRegistrationFile: data.commercialRegistrationFile || '',
+  vatFile: data.vatFile || '',
+  nationalAddressFile: data.nationalAddressFile || '',
+  // ... other fields
+} as Company;
 ```
 
-##### **🛡️ ROLLBACK STRATEGY**
-- Each phase is a separate version
-- If any phase fails, immediately revert to previous working version
-- Document exactly which import caused the failure
-- Fix the problematic import before continuing
+### **Testing Results**
+- ✅ Files upload successfully to Firebase Storage
+- ✅ File URLs saved correctly in Firestore
+- ✅ Firebase listener now includes file URL fields
+- ✅ CompanyDetailView displays uploaded files correctly
+- ✅ File persistence works when editing companies
 
-##### **🎯 EXPECTED OUTCOMES**
+### **Lessons Learned**
+1. **Firebase Listener Mapping**: Always ensure all required fields are included in the mapping
+2. **Debugging Strategy**: Use console logs to trace data flow from upload to display
+3. **Data Consistency**: Verify that the same data structure is used across upload, storage, and retrieval
 
-**Best Case**: One specific import will break the app, giving us the exact culprit
-**Worst Case**: Issue is in AuthContext logic itself, which we'll then fix
-**Timeline**: 30-45 minutes for complete diagnosis
+---
 
-**Ready to implement Phase 1?** This will give us definitive answers.
+## 🔧 **ADDITIONAL FIXES: File Upload System Improvements** ✅
 
-#### **Technical Methodology Applied**
-1. **Systematic Elimination**: Removed complexity layer by layer
-2. **Version Control**: Each hypothesis tested as separate version
-3. **Definitive Testing**: Minimal reproduction cases
-4. **Documentation**: Complete audit trail of investigation
-5. **Scientific Approach**: Controlled variables, isolated testing
+### **1. File Viewer Enhancement**
+**Issue**: Files were opening in new tabs instead of same page
+**Fix**: Updated CompanyDetailView to use the existing FileViewer component
+**Files Modified**: `src/components/customers/CompanyDetailView.tsx`
+- Replaced `window.open()` with FileViewer modal
+- Added proper file viewing with download and external view options
+- Improved user experience with in-page file viewing
 
-#### **Versions Summary**
-- **V74-75**: AuthContext simplification attempts
-- **V76-78**: Dependency and circular dependency fixes
-- **V79**: Type mismatch fixes
-- **V80**: Ultra-minimal page test
-- **V81**: AuthProvider removal test ✅ SUCCESS
+### **2. Contract File Upload Security Fix**
+**Issue**: Contract file uploads failing with Firebase Storage permission errors
+**Root Cause**: File paths didn't match Firebase Storage security rules
+**Fix**: Updated folder paths and security rules
+**Files Modified**: 
+- `src/components/customers/forms/EnhancedContractForm.tsx`
+- `storage.rules`
+
+**Changes**:
+```typescript
+// BEFORE
+folder="contracts"
+
+// AFTER  
+folder={contract ? `contracts/${contract.contractId}/documents` : 'contracts/temp'}
+```
+
+**Security Rules Added**:
+```javascript
+// Allow access to temporary contract files (for new contracts)
+match /contracts/temp/{fileName} {
+  allow read: if canRead();
+  allow write: if canWrite();
+  allow delete: if canDelete();
+}
+```
+
+### **3. Visit Completion Form Enhancement**
+**Issue**: VisitCompletionForm using basic file input instead of Firebase Storage system
+**Fix**: Replaced basic file input with FileUpload component
+**Files Modified**: `src/components/planning/VisitCompletionForm.tsx`
+- Integrated FileUpload component for consistent file handling
+- Added proper folder structure: `visits/${visit.id}/completion`
+- Improved file management with upload progress and error handling
+
+### **Testing Results**
+- ✅ Contract file uploads now work with proper security permissions
+- ✅ Visit completion forms use consistent file upload system
+- ✅ File viewer displays files in same page with proper controls
+- ✅ All file upload systems now use the same Firebase Storage infrastructure
+
+### **System Consistency Achieved**
+All file upload systems now use:
+- ✅ Firebase Storage for file storage
+- ✅ FileUpload component for UI consistency
+- ✅ Proper folder structures matching security rules
+- ✅ FileViewer component for file display
+- ✅ Consistent error handling and progress tracking
 
 ---
 

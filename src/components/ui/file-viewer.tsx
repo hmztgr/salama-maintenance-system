@@ -22,10 +22,18 @@ export function FileViewer({ file, isOpen, onClose }: FileViewerProps) {
   // Reset state when file changes
   useEffect(() => {
     if (isOpen && file) {
+      console.log('📄 FileViewer - Opening file:', file);
       setIsLoading(true);
       setError(null);
     }
   }, [isOpen, file]);
+
+  // Add error boundary
+  const handleError = (error: Error) => {
+    console.error('📄 FileViewer - Error:', error);
+    setError('حدث خطأ في عرض الملف');
+    setIsLoading(false);
+  };
 
   if (!isOpen || !file) return null;
 
@@ -110,16 +118,17 @@ export function FileViewer({ file, isOpen, onClose }: FileViewerProps) {
                   }}
                 />
                              ) : isPDF ? (
-                 <iframe
-                   src={`${file.url}#toolbar=1&navpanes=1&scrollbar=1&view=FitH`}
-                   className="w-full h-full border-0"
-                   onLoad={() => setIsLoading(false)}
-                   onError={() => {
-                     setIsLoading(false);
-                     setError('فشل في تحميل ملف PDF');
-                   }}
-                   style={{ minHeight: '80vh' }}
-                 />
+                <iframe
+                  src={`${file.url}#toolbar=1&navpanes=1&scrollbar=1&view=FitH`}
+                  className="w-full h-full border-0"
+                  onLoad={() => setIsLoading(false)}
+                  onError={() => {
+                    console.error('📄 FileViewer - PDF load error');
+                    setIsLoading(false);
+                    setError('فشل في تحميل ملف PDF');
+                  }}
+                  style={{ minHeight: '80vh' }}
+                />
               ) : null}
               
               {isLoading && (

@@ -50,6 +50,13 @@ service firebase.storage {
       allow delete: if canDelete();
     }
     
+    // Allow access to contract documents subfolder
+    match /contracts/{contractId}/documents/{fileName} {
+      allow read: if canRead();
+      allow write: if canWrite();
+      allow delete: if canDelete();
+    }
+    
     // Allow access to temporary contract files (for new contracts)
     match /contracts/temp/{fileName} {
       allow read: if canRead();

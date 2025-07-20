@@ -156,23 +156,56 @@ export function BranchForm({ branch, onSuccess, onCancel }: BranchFormProps) {
             <Label htmlFor="companyId" className="text-right block">
               الشركة *
             </Label>
-            <SearchableSelect
-              options={companies
-                .filter(c => !c.isArchived)
-                .sort((a, b) => a.companyId.localeCompare(b.companyId))
-                .map((company): SearchableSelectOption => ({
-                  value: company.companyId,
-                  label: `${company.companyId} - ${company.companyName}`
-                }))}
-              value={formData.companyId}
-              onValueChange={(value) => handleInputChange('companyId', value)}
-              placeholder="اختر الشركة"
-              searchPlaceholder="ابحث بالاسم أو الرقم..."
-              emptyMessage="لا توجد شركات"
-              className={errors.companyId ? 'border-red-500' : ''}
-              maxHeight="300px"
-              dir="rtl"
-            />
+            <div className="relative">
+              <SearchableSelect
+                options={companies
+                  .filter(c => !c.isArchived)
+                  .sort((a, b) => a.companyId.localeCompare(b.companyId))
+                  .map((company): SearchableSelectOption => ({
+                    value: company.companyId,
+                    label: `${company.companyId} - ${company.companyName}`
+                  }))}
+                value={formData.companyId}
+                onValueChange={(value) => {
+                  console.log('🏢 BranchForm - Company selected:', value);
+                  handleInputChange('companyId', value);
+                }}
+                placeholder="اختر الشركة"
+                searchPlaceholder="ابحث بالاسم أو الرقم..."
+                emptyMessage="لا توجد شركات"
+                className={errors.companyId ? 'border-red-500' : ''}
+                maxHeight="300px"
+                dir="rtl"
+              />
+              {/* Debug info */}
+              <div className="text-xs text-gray-500 mt-1">
+                Debug: {companies.filter(c => !c.isArchived).length} companies available
+              </div>
+              
+              {/* Fallback regular select for testing */}
+              <details className="mt-2">
+                <summary className="text-xs text-blue-600 cursor-pointer">اختبار: استخدم قائمة عادية</summary>
+                <select
+                  value={formData.companyId}
+                  onChange={(e) => {
+                    console.log('🏢 BranchForm - Fallback select changed:', e.target.value);
+                    handleInputChange('companyId', e.target.value);
+                  }}
+                  className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md"
+                  dir="rtl"
+                >
+                  <option value="">اختر الشركة</option>
+                  {companies
+                    .filter(c => !c.isArchived)
+                    .sort((a, b) => a.companyId.localeCompare(b.companyId))
+                    .map((company) => (
+                      <option key={company.companyId} value={company.companyId}>
+                        {company.companyId} - {company.companyName}
+                      </option>
+                    ))}
+                </select>
+              </details>
+            </div>
             {errors.companyId && (
               <p className="text-sm text-red-500 text-right">{errors.companyId}</p>
             )}

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect, SearchableSelectOption } from '@/components/ui/searchable-select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertCircle, CheckCircle, Save, X } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -149,22 +149,23 @@ export function BranchForm({ branch, onSuccess, onCancel }: BranchFormProps) {
             <Label htmlFor="companyId" className="text-right block">
               الشركة *
             </Label>
-            <Select
+            <SearchableSelect
+              options={companies
+                .filter(c => !c.isArchived)
+                .sort((a, b) => a.companyId.localeCompare(b.companyId))
+                .map((company): SearchableSelectOption => ({
+                  value: company.companyId,
+                  label: `${company.companyId} - ${company.companyName}`
+                }))}
               value={formData.companyId}
               onValueChange={(value) => handleInputChange('companyId', value)}
+              placeholder="اختر الشركة"
+              searchPlaceholder="ابحث بالاسم أو الرقم..."
+              emptyMessage="لا توجد شركات"
+              className={errors.companyId ? 'border-red-500' : ''}
+              maxHeight="300px"
               dir="rtl"
-            >
-              <SelectTrigger className={errors.companyId ? 'border-red-500' : ''}>
-                <SelectValue placeholder="اختر الشركة" />
-              </SelectTrigger>
-              <SelectContent className="z-[10000]">
-                {companies.filter(c => !c.isArchived).map((company) => (
-                  <SelectItem key={company.companyId} value={company.companyId}>
-                    {company.companyName} ({company.companyId})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
             {errors.companyId && (
               <p className="text-sm text-red-500 text-right">{errors.companyId}</p>
             )}
@@ -177,22 +178,20 @@ export function BranchForm({ branch, onSuccess, onCancel }: BranchFormProps) {
             <Label htmlFor="city" className="text-right block">
               المدينة *
             </Label>
-            <Select
+            <SearchableSelect
+              options={SAUDI_CITIES.map((city): SearchableSelectOption => ({
+                value: city,
+                label: city
+              }))}
               value={formData.city}
               onValueChange={(value) => handleInputChange('city', value)}
+              placeholder="اختر المدينة"
+              searchPlaceholder="ابحث بالمدينة..."
+              emptyMessage="لا توجد مدن"
+              className={errors.city ? 'border-red-500' : ''}
+              maxHeight="300px"
               dir="rtl"
-            >
-              <SelectTrigger className={errors.city ? 'border-red-500' : ''}>
-                <SelectValue placeholder="اختر المدينة" />
-              </SelectTrigger>
-              <SelectContent className="z-[10000]">
-                {SAUDI_CITIES.map((city) => (
-                  <SelectItem key={city} value={city}>
-                    {city}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
             {errors.city && (
               <p className="text-sm text-red-500 text-right">{errors.city}</p>
             )}

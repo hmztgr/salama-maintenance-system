@@ -72,6 +72,34 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
     deleteCompany
   } = useCompaniesFirebase();
 
+  // Update selected items when data changes
+  useEffect(() => {
+    if (selectedCompany) {
+      const updatedCompany = companies.find(c => c.companyId === selectedCompany.companyId);
+      if (updatedCompany) {
+        setSelectedCompany(updatedCompany);
+      }
+    }
+  }, [companies, selectedCompany]);
+
+  useEffect(() => {
+    if (selectedContract) {
+      const updatedContract = contracts.find(c => c.id === selectedContract.id);
+      if (updatedContract) {
+        setSelectedContract(updatedContract);
+      }
+    }
+  }, [contracts, selectedContract]);
+
+  useEffect(() => {
+    if (selectedBranch) {
+      const updatedBranch = branches.find(b => b.id === selectedBranch.id);
+      if (updatedBranch) {
+        setSelectedBranch(updatedBranch);
+      }
+    }
+  }, [branches, selectedBranch]);
+
   // Firebase hook doesn't have clearError, so create a dummy function
   const clearCompaniesError = () => {};
 

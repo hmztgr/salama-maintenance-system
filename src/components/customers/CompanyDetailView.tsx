@@ -26,6 +26,9 @@ interface CompanyDetailViewProps {
   onBack: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onAddBranch?: () => void;
+  onAddContract?: () => void;
+  onViewVisits?: () => void;
   hasPermission: (permission: 'admin' | 'supervisor' | 'viewer') => boolean;
 }
 
@@ -34,6 +37,9 @@ export function CompanyDetailView({
   onBack, 
   onEdit, 
   onDelete, 
+  onAddBranch,
+  onAddContract,
+  onViewVisits,
   hasPermission 
 }: CompanyDetailViewProps) {
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
@@ -158,9 +164,11 @@ export function CompanyDetailView({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {company.commercialRegistrationFile || company.vatFile || company.nationalAddressFile ? (
+              {(typeof company.commercialRegistrationFile === 'string' && company.commercialRegistrationFile) || 
+               (typeof company.vatFile === 'string' && company.vatFile) || 
+               (typeof company.nationalAddressFile === 'string' && company.nationalAddressFile) ? (
                 <div className="space-y-3">
-                  {company.commercialRegistrationFile && (
+                  {typeof company.commercialRegistrationFile === 'string' && company.commercialRegistrationFile && (
                     <div className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex items-center gap-3">
                         <FileText className="w-5 h-5 text-blue-500" />
@@ -174,6 +182,7 @@ export function CompanyDetailView({
                           variant="outline"
                           size="sm"
                           className="gap-1"
+                          onClick={() => window.open(company.commercialRegistrationFile as string, '_blank')}
                         >
                           <Eye className="w-4 h-4" />
                           عرض
@@ -182,6 +191,12 @@ export function CompanyDetailView({
                           variant="outline"
                           size="sm"
                           className="gap-1"
+                          onClick={() => {
+                            const link = document.createElement('a');
+                            link.href = company.commercialRegistrationFile as string;
+                            link.download = 'commercial_registration.pdf';
+                            link.click();
+                          }}
                         >
                           <Download className="w-4 h-4" />
                           تحميل
@@ -189,7 +204,7 @@ export function CompanyDetailView({
                       </div>
                     </div>
                   )}
-                  {company.vatFile && (
+                  {typeof company.vatFile === 'string' && company.vatFile && (
                     <div className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex items-center gap-3">
                         <FileText className="w-5 h-5 text-blue-500" />
@@ -203,6 +218,7 @@ export function CompanyDetailView({
                           variant="outline"
                           size="sm"
                           className="gap-1"
+                          onClick={() => window.open(company.vatFile as string, '_blank')}
                         >
                           <Eye className="w-4 h-4" />
                           عرض
@@ -211,6 +227,12 @@ export function CompanyDetailView({
                           variant="outline"
                           size="sm"
                           className="gap-1"
+                          onClick={() => {
+                            const link = document.createElement('a');
+                            link.href = company.vatFile as string;
+                            link.download = 'vat_certificate.pdf';
+                            link.click();
+                          }}
                         >
                           <Download className="w-4 h-4" />
                           تحميل
@@ -218,7 +240,7 @@ export function CompanyDetailView({
                       </div>
                     </div>
                   )}
-                  {company.nationalAddressFile && (
+                  {typeof company.nationalAddressFile === 'string' && company.nationalAddressFile && (
                     <div className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex items-center gap-3">
                         <FileText className="w-5 h-5 text-blue-500" />
@@ -232,6 +254,7 @@ export function CompanyDetailView({
                           variant="outline"
                           size="sm"
                           className="gap-1"
+                          onClick={() => window.open(company.nationalAddressFile as string, '_blank')}
                         >
                           <Eye className="w-4 h-4" />
                           عرض
@@ -240,6 +263,12 @@ export function CompanyDetailView({
                           variant="outline"
                           size="sm"
                           className="gap-1"
+                          onClick={() => {
+                            const link = document.createElement('a');
+                            link.href = company.nationalAddressFile as string;
+                            link.download = 'national_address.pdf';
+                            link.click();
+                          }}
                         >
                           <Download className="w-4 h-4" />
                           تحميل
@@ -297,11 +326,10 @@ export function CompanyDetailView({
               <Button 
                 className="w-full" 
                 variant="outline"
-                onClick={() => {
+                onClick={onAddBranch || (() => {
                   console.log('Add branch for company:', company.companyId);
-                  // This would open the branch form with company pre-selected
-                  // You can implement this by passing a callback prop
-                }}
+                  alert('سيتم إضافة هذه الميزة قريباً');
+                })}
               >
                 <Users className="w-4 h-4 ml-2" />
                 إضافة فرع جديد
@@ -309,11 +337,10 @@ export function CompanyDetailView({
               <Button 
                 className="w-full" 
                 variant="outline"
-                onClick={() => {
+                onClick={onAddContract || (() => {
                   console.log('Add contract for company:', company.companyId);
-                  // This would open the contract form with company pre-selected
-                  // You can implement this by passing a callback prop
-                }}
+                  alert('سيتم إضافة هذه الميزة قريباً');
+                })}
               >
                 <FileText className="w-4 h-4 ml-2" />
                 إضافة عقد جديد
@@ -321,11 +348,10 @@ export function CompanyDetailView({
               <Button 
                 className="w-full" 
                 variant="outline"
-                onClick={() => {
+                onClick={onViewVisits || (() => {
                   console.log('View visits for company:', company.companyId);
-                  // This would navigate to visits page filtered by company
-                  // You can implement this by passing a callback prop
-                }}
+                  alert('سيتم إضافة هذه الميزة قريباً');
+                })}
               >
                 <Calendar className="w-4 h-4 ml-2" />
                 عرض الزيارات

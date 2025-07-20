@@ -19,11 +19,13 @@ import { db } from '@/lib/firebase/config';
 import { useAuth } from '@/contexts/AuthContextFirebase';
 import { Company } from '@/types/customer';
 import { generateCompanyId } from '@/lib/id-generator';
+import { useFirebaseStorage } from './useFirebaseStorage';
 export function useCompaniesFirebase() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { authState } = useAuth();
+  const { uploadFile } = useFirebaseStorage();
   const unsubscribeRef = useRef<Unsubscribe | null>(null);
   const isListenerActiveRef = useRef(false);
   const componentMountedRef = useRef(true);
@@ -169,15 +171,70 @@ export function useCompaniesFirebase() {
             warnings: ['لا يمكن تحديد هوية المستخدم - تأكد من تسجيل الدخول']
           };
         }
+
+        // Handle file uploads
+        const warnings: string[] = [];
+        let commercialRegistrationUrl = '';
+        let vatFileUrl = '';
+        let nationalAddressFileUrl = '';
+
+        try {
+          if (companyData.commercialRegistrationFile) {
+            console.log('📤 Uploading commercial registration file...');
+            const uploadedFile = await uploadFile(companyData.commercialRegistrationFile, {
+              folder: `companies/${companyId}/documents`,
+              customName: 'commercial_registration'
+            });
+            commercialRegistrationUrl = uploadedFile.url;
+          }
+        } catch (error) {
+          warnings.push(`فشل في رفع السجل التجاري: ${error}`);
+        }
+
+        try {
+          if (companyData.vatFile) {
+            console.log('📤 Uploading VAT file...');
+            const uploadedFile = await uploadFile(companyData.vatFile, {
+              folder: `companies/${companyId}/documents`,
+              customName: 'vat_certificate'
+            });
+            vatFileUrl = uploadedFile.url;
+          }
+        } catch (error) {
+          warnings.push(`فشل في رفع شهادة الضريبة: ${error}`);
+        }
+
+        try {
+          if (companyData.nationalAddressFile) {
+            console.log('📤 Uploading national address file...');
+            const uploadedFile = await uploadFile(companyData.nationalAddressFile, {
+              folder: `companies/${companyId}/documents`,
+              customName: 'national_address'
+            });
+            nationalAddressFileUrl = uploadedFile.url;
+          }
+        } catch (error) {
+          warnings.push(`فشل في رفع العنوان الوطني: ${error}`);
+        }
+
         const now = new Date().toISOString();
         const newCompanyData = {
           companyId,
           companyName: companyData.companyName,
           unifiedNumber: companyData.unifiedNumber || '',
+          commercialRegistration: companyData.commercialRegistration || '',
+          commercialRegistrationFile: commercialRegistrationUrl,
+          vatNumber: companyData.vatNumber || '',
+          vatFile: vatFileUrl,
+          nationalAddressFile: nationalAddressFileUrl,
           email: companyData.email || '',
           phone: companyData.phone || '',
+          mobile: companyData.mobile || '',
           address: companyData.address || '',
+          website: companyData.website || '',
           contactPerson: companyData.contactPerson || '',
+          contactPersonTitle: companyData.contactPersonTitle || '',
+          notes: companyData.notes || '',
           isArchived: false,
           createdAt: now,
           updatedAt: now,
@@ -193,7 +250,8 @@ export function useCompaniesFirebase() {
         };
         return {
           success: true,
-          company: newCompany
+          company: newCompany,
+          warnings: warnings.length > 0 ? warnings : undefined
         };
       } catch (error) {
         console.error('❌ Error adding company to Firebase:', error);
@@ -203,7 +261,7 @@ export function useCompaniesFirebase() {
         };
       }
     },
-    [companies, authState.user]
+    [companies, authState.user, uploadFile]
   );
   const updateCompany = useCallback(
     async (

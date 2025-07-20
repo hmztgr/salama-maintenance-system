@@ -34,10 +34,10 @@ export interface Company {
   companyName: string;
   unifiedNumber?: string;
   commercialRegistration?: string;
-  commercialRegistrationFile?: File;
+  commercialRegistrationFile?: File | string; // File for uploads, string URL for storage
   vatNumber?: string;
-  vatFile?: File;
-  nationalAddressFile?: File;
+  vatFile?: File | string; // File for uploads, string URL for storage
+  nationalAddressFile?: File | string; // File for uploads, string URL for storage
   email?: string;
   phone?: string;
   mobile?: string;

@@ -240,8 +240,8 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
       required: ['companyId', 'contractStartDate', 'contractEndDate', 'regularVisitsPerYear', 'emergencyVisitsPerYear'],
       validations: {
         companyId: { pattern: /^\d{4}$/ },
-        contractStartDate: { pattern: /^\d{2}-[A-Za-z]{3}-\d{4}$/ },
-        contractEndDate: { pattern: /^\d{2}-[A-Za-z]{3}-\d{4}$/ },
+        contractStartDate: { pattern: /^\d{2}-[A-Za-z]{3}-\d{2,4}$/ },
+        contractEndDate: { pattern: /^\d{2}-[A-Za-z]{3}-\d{2,4}$/ },
         regularVisitsPerYear: { min: 0, max: 365, type: 'number' },
         emergencyVisitsPerYear: { min: 0, max: 365, type: 'number' },
         contractValue: { min: 0, type: 'number' },
@@ -257,8 +257,8 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
       required: ['companyId', 'contractStartDate', 'branchIds', 'regularVisitsPerYear'],
       validations: {
         companyId: { pattern: /^\d{4}$/ },
-        contractStartDate: { pattern: /^\d{2}-[A-Za-z]{3}-\d{4}$/ },
-        contractEndDate: { pattern: /^\d{2}-[A-Za-z]{3}-\d{4}$/ },
+        contractStartDate: { pattern: /^\d{2}-[A-Za-z]{3}-\d{2,4}$/ },
+        contractEndDate: { pattern: /^\d{2}-[A-Za-z]{3}-\d{2,4}$/ },
         contractPeriodMonths: { min: 1, max: 120, type: 'number' },
         contractValue: { min: 0, type: 'number' },
         branchIds: { maxLength: 500 },
@@ -357,7 +357,7 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
     if (config.pattern && !config.pattern.test(value)) {
       let suggestion = '';
       if (fieldName.includes('Date')) {
-        suggestion = 'استخدم تنسيق dd-mmm-yyyy (مثال: 15-Jan-2024)';
+        suggestion = 'استخدم تنسيق dd-mmm-yyyy أو dd-mmm-yy (مثال: 15-Jan-2024 أو 15-Jan-24)';
       } else if (fieldName.includes('Time')) {
         suggestion = 'استخدم تنسيق HH:mm (مثال: 09:30)';
       } else if (fieldName === 'branchId') {

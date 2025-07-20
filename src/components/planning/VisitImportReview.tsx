@@ -63,9 +63,9 @@ export function VisitImportReview({ file, onClose, onImportComplete }: VisitImpo
       branchId: { pattern: /^[A-Z0-9\-]+$/ },
       contractId: { pattern: /^[A-Z0-9\-]+$/ },
       visitType: { enum: ['regular', 'emergency', 'followup'] },
-      scheduledDate: { pattern: /^\d{2}-[A-Za-z]{3}-\d{4}$/ },
+      scheduledDate: { pattern: /^\d{2}-[A-Za-z]{3}-\d{2,4}$/ },
       scheduledTime: { pattern: /^\d{2}:\d{2}$/ },
-      completedDate: { pattern: /^\d{2}-[A-Za-z]{3}-\d{4}$/ },
+      completedDate: { pattern: /^\d{2}-[A-Za-z]{3}-\d{2,4}$/ },
       completedTime: { pattern: /^\d{2}:\d{2}$/ },
       status: { enum: ['scheduled', 'completed', 'cancelled', 'in_progress', 'rescheduled'] },
       assignedTeam: { maxLength: 100 },
@@ -78,7 +78,7 @@ export function VisitImportReview({ file, onClose, onImportComplete }: VisitImpo
       overallStatus: { enum: ['passed', 'failed', 'partial'] },
       issues: { maxLength: 1000 },
       recommendations: { maxLength: 1000 },
-      nextVisitDate: { pattern: /^\d{2}-[A-Za-z]{3}-\d{4}$/ },
+      nextVisitDate: { pattern: /^\d{2}-[A-Za-z]{3}-\d{2,4}$/ },
       notes: { maxLength: 500 }
     }
   }), []);
@@ -147,7 +147,7 @@ export function VisitImportReview({ file, onClose, onImportComplete }: VisitImpo
     if ('pattern' in config && config.pattern && !(config.pattern as RegExp).test(value)) {
       let suggestion = '';
       if (fieldName.includes('Date')) {
-        suggestion = 'استخدم تنسيق dd-mmm-yyyy (مثال: 15-Jan-2024)';
+        suggestion = 'استخدم تنسيق dd-mmm-yyyy أو dd-mmm-yy (مثال: 15-Jan-2024 أو 15-Jan-24)';
       } else if (fieldName.includes('Time')) {
         suggestion = 'استخدم تنسيق HH:mm (مثال: 09:30)';
       } else if (fieldName === 'branchId') {

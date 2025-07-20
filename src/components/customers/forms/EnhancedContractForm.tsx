@@ -313,7 +313,7 @@ export function EnhancedContractForm({
     const contractData = {
       ...formData,
       serviceBatches,
-      contractDocument: uploadedFiles.length > 0 ? uploadedFiles[0].url : undefined as string | undefined,
+      ...(uploadedFiles.length > 0 && { contractDocument: uploadedFiles[0].url }),
     };
 
     console.log('🚀 EnhancedContractForm - Submitting contract data:', {

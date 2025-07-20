@@ -110,15 +110,15 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
     if (validateForm()) {
       const submitData = {
         ...formData,
-        commercialRegistrationFile: uploadedFiles.commercialRegistrationFile.length > 0 
-          ? uploadedFiles.commercialRegistrationFile[0].url 
-          : undefined as string | undefined,
-        vatFile: uploadedFiles.vatFile.length > 0 
-          ? uploadedFiles.vatFile[0].url 
-          : undefined as string | undefined,
-        nationalAddressFile: uploadedFiles.nationalAddressFile.length > 0 
-          ? uploadedFiles.nationalAddressFile[0].url 
-          : undefined as string | undefined,
+        ...(uploadedFiles.commercialRegistrationFile.length > 0 && { 
+          commercialRegistrationFile: uploadedFiles.commercialRegistrationFile[0].url 
+        }),
+        ...(uploadedFiles.vatFile.length > 0 && { 
+          vatFile: uploadedFiles.vatFile[0].url 
+        }),
+        ...(uploadedFiles.nationalAddressFile.length > 0 && { 
+          nationalAddressFile: uploadedFiles.nationalAddressFile[0].url 
+        }),
       };
       onSubmit(submitData);
     }

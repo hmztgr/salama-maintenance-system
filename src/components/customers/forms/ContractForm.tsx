@@ -182,7 +182,7 @@ export function ContractForm({ contract, companies, onSubmit, onCancel, isLoadin
         contractValue: formData.contractValue,
         notes: formData.notes,
         serviceBatches,
-        contractDocument: uploadedFiles.length > 0 ? uploadedFiles[0].url : undefined as string | undefined,
+        ...(uploadedFiles.length > 0 && { contractDocument: uploadedFiles[0].url }),
       };
 
       onSubmit(contractData);

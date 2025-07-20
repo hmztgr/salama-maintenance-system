@@ -222,7 +222,17 @@ export function FileUpload({
       {/* Error Display */}
       {error && (
         <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>
+            {error}
+            {error.includes('CORS') && (
+              <div className="mt-2 text-sm">
+                <p>🔧 <strong>CORS Configuration Required:</strong></p>
+                <p>Firebase Storage needs CORS configuration for your domain.</p>
+                <p>Please follow the instructions in FIREBASE_CORS_SETUP.md</p>
+                <p>For now, you can test file uploads locally (localhost:3000)</p>
+              </div>
+            )}
+          </AlertDescription>
         </Alert>
       )}
 

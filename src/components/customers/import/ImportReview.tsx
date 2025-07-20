@@ -129,8 +129,8 @@ const COLUMN_MAPPINGS = {
     contractNotes: ['contractNotes', 'contract_notes', 'ملاحظات العقد*', 'ملاحظات العقد', 'Contract Notes', 'ملاحظات العقد', 'ملاحظات عقد']
   },
   branches: {
-    companyId: ['companyId', 'company_id', 'معرف الشركة*', 'معرف الشركة', 'Company ID', 'معرف', 'رقم الشركة'],
-    contractIds: ['contractIds', 'contract_ids', 'معرفات العقود*', 'معرفات العقود', 'Contract IDs', 'عقود', 'معرفات عقود'],
+    companyId: ['companyId', 'company_id', 'معرف الشركة***', 'معرف الشركة', 'Company ID', 'معرف', 'رقم الشركة'],
+    companyName: ['companyName', 'company_name', 'اسم الشركة**', 'اسم الشركة', 'Company Name', 'الشركة', 'اسم', 'شركة', 'الاسم'],
     city: ['city', 'City', 'المدينة*', 'المدينة', 'مدينة'],
     location: ['location', 'Location', 'الموقع*', 'الموقع', 'موقع', 'منطقة'],
     branchName: ['branchName', 'branch_name', 'اسم الفرع*', 'اسم الفرع', 'Branch Name', 'فرع', 'اسم فرع'],

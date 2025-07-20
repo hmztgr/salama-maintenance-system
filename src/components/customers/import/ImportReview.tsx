@@ -8,10 +8,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, AlertTriangle, XCircle, FileText, Download, Upload } from 'lucide-react';
 import { standardizeDate } from '@/lib/date-handler';
+import { useCompaniesFirebase } from '@/hooks/useCompaniesFirebase';
+import { useContractsFirebase } from '@/hooks/useContractsFirebase';
+import { useBranchesFirebase } from '@/hooks/useBranchesFirebase';
 
 interface ImportReviewProps {
   file: File;
-  entityType: 'companies' | 'contracts' | 'branches';
+  entityType: 'companies' | 'contracts' | 'contractsAdvanced' | 'branches';
   onClose: () => void;
   onImportComplete: (results: ImportResults) => void;
 }
@@ -107,6 +110,24 @@ const COLUMN_MAPPINGS = {
     foamFireSuppression: ['foamFireSuppression', 'foam_suppression', 'نظام الإطفاء بالفوم*', 'إطفاء الفوم', 'Foam Suppression', 'فوم', 'إطفاء فوم'],
     notes: ['notes', 'Notes', 'ملاحظات', 'التعليقات', 'تعليق', 'ملحوظات']
   },
+  contractsAdvanced: {
+    companyId: ['companyId', 'company_id', 'معرف الشركة*', 'معرف الشركة', 'Company ID', 'معرف', 'رقم الشركة'],
+    contractStartDate: ['contractStartDate', 'contract_start_date', 'تاريخ بداية العقد*', 'تاريخ البداية', 'Start Date', 'بداية العقد', 'تاريخ بدء'],
+    contractEndDate: ['contractEndDate', 'contract_end_date', 'تاريخ انتهاء العقد*', 'تاريخ الانتهاء', 'End Date', 'انتهاء العقد', 'تاريخ انتهاء'],
+    contractPeriodMonths: ['contractPeriodMonths', 'contract_period_months', 'مدة العقد بالشهور*', 'مدة العقد', 'Contract Period', 'مدة العقد', 'مدة عقد'],
+    contractValue: ['contractValue', 'contract_value', 'قيمة العقد', 'Contract Value', 'القيمة', 'قيمة', 'سعر'],
+    branchIds: ['branchIds', 'branch_ids', 'معرفات الفروع*', 'معرفات الفروع', 'Branch IDs', 'فروع', 'معرفات فروع'],
+    fireExtinguisherMaintenance: ['fireExtinguisherMaintenance', 'fire_extinguisher', 'صيانة الطفايات*', 'صيانة الطفايات', 'Fire Extinguisher', 'طفايات', 'صيانة طفايات'],
+    alarmSystemMaintenance: ['alarmSystemMaintenance', 'alarm_system', 'صيانة نظام الإنذار*', 'نظام الإنذار', 'Alarm System', 'إنذار', 'صيانة إنذار'],
+    fireSuppressionMaintenance: ['fireSuppressionMaintenance', 'fire_suppression', 'صيانة نظام الإطفاء*', 'نظام الإطفاء', 'Fire Suppression', 'إطفاء', 'صيانة إطفاء'],
+    gasFireSuppression: ['gasFireSuppression', 'gas_suppression', 'نظام الإطفاء بالغاز*', 'إطفاء الغاز', 'Gas Suppression', 'غاز', 'إطفاء غاز'],
+    foamFireSuppression: ['foamFireSuppression', 'foam_suppression', 'نظام الإطفاء بالفوم*', 'إطفاء الفوم', 'Foam Suppression', 'فوم', 'إطفاء فوم'],
+    regularVisitsPerYear: ['regularVisitsPerYear', 'regular_visits', 'عدد الزيارات العادية سنوياً*', 'الزيارات العادية', 'Regular Visits', 'زيارات عادية', 'زيارات'],
+    emergencyVisitsPerYear: ['emergencyVisitsPerYear', 'emergency_visits', 'عدد الزيارات الطارئة سنوياً*', 'الزيارات الطارئة', 'Emergency Visits', 'زيارات طارئة', 'طوارئ'],
+    emergencyVisitCost: ['emergencyVisitCost', 'emergency_visit_cost', 'تكلفة الزيارة الطارئة*', 'تكلفة الزيارة الطارئة', 'Emergency Visit Cost', 'تكلفة زيارة طارئة', 'تكلفة طوارئ'],
+    batchNotes: ['batchNotes', 'batch_notes', 'ملاحظات الدفعة*', 'ملاحظات الدفعة', 'Batch Notes', 'ملاحظات الدفعة', 'ملاحظات دفعة'],
+    contractNotes: ['contractNotes', 'contract_notes', 'ملاحظات العقد*', 'ملاحظات العقد', 'Contract Notes', 'ملاحظات العقد', 'ملاحظات عقد']
+  },
   branches: {
     companyId: ['companyId', 'company_id', 'معرف الشركة*', 'معرف الشركة', 'Company ID', 'معرف', 'رقم الشركة'],
     contractIds: ['contractIds', 'contract_ids', 'معرفات العقود*', 'معرفات العقود', 'Contract IDs', 'عقود', 'معرفات عقود'],
@@ -122,7 +143,7 @@ const COLUMN_MAPPINGS = {
 };
 
 // Enhanced helper function with better fuzzy matching for Arabic text
-const mapHeaderToField = (header: string, entityType: 'companies' | 'contracts' | 'branches'): string | null => {
+const mapHeaderToField = (header: string, entityType: 'companies' | 'contracts' | 'contractsAdvanced' | 'branches'): string | null => {
   const mappings = COLUMN_MAPPINGS[entityType];
   const cleanHeader = header.trim();
 
@@ -183,6 +204,11 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
   const [selectAll, setSelectAll] = useState(false);
   const [processingComplete, setProcessingComplete] = useState(false);
 
+  // Get data for validation
+  const { companies } = useCompaniesFirebase();
+  const { contracts } = useContractsFirebase();
+  const { branches } = useBranchesFirebase();
+
   // Field validation configurations
   const validationConfigs = useMemo(() => ({
     companies: {
@@ -214,11 +240,32 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
         notes: { maxLength: 500 }
       }
     },
-    branches: {
-      required: ['companyId', 'contractIds', 'city', 'location', 'branchName'],
+    contractsAdvanced: {
+      required: ['companyId', 'contractStartDate', 'branchIds', 'regularVisitsPerYear'],
       validations: {
         companyId: { pattern: /^\d{4}$/ },
-        contractIds: { pattern: /^[A-Z\-\d,\s]+$/ },
+        contractStartDate: { pattern: /^\d{2}-[A-Za-z]{3}-\d{4}$/ },
+        contractEndDate: { pattern: /^\d{2}-[A-Za-z]{3}-\d{4}$/ },
+        contractPeriodMonths: { min: 1, max: 120, type: 'number' },
+        contractValue: { min: 0, type: 'number' },
+        branchIds: { maxLength: 500 },
+        fireExtinguisherMaintenance: { enum: ['نعم', 'لا', 'yes', 'no', 'true', 'false'] },
+        alarmSystemMaintenance: { enum: ['نعم', 'لا', 'yes', 'no', 'true', 'false'] },
+        fireSuppressionMaintenance: { enum: ['نعم', 'لا', 'yes', 'no', 'true', 'false'] },
+        gasFireSuppression: { enum: ['نعم', 'لا', 'yes', 'no', 'true', 'false'] },
+        foamFireSuppression: { enum: ['نعم', 'لا', 'yes', 'no', 'true', 'false'] },
+        regularVisitsPerYear: { min: 0, max: 365, type: 'number' },
+        emergencyVisitsPerYear: { min: 0, max: 365, type: 'number' },
+        emergencyVisitCost: { min: 0, type: 'number' },
+        batchNotes: { maxLength: 500 },
+        contractNotes: { maxLength: 500 }
+      }
+    },
+    branches: {
+      required: ['city', 'location', 'branchName'],
+      validations: {
+        companyId: { pattern: /^\d{4}$/ },
+        companyName: { maxLength: 100 },
         city: { enum: SAUDI_CITIES },
         location: { maxLength: 100 },
         branchName: { maxLength: 100 },
@@ -270,16 +317,12 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
     return result.filter(row => row.some(cell => cell.length > 0));
   };
 
-  // Validate individual field with enhanced error handling
-  const validateField = useCallback((fieldName: string, value: string, rowNumber: number): ValidationError[] => {
+  // Validate individual field
+  const validateField = useCallback((fieldName: string, value: string, rowNumber: number, rowData: Record<string, string>): ValidationError[] => {
     const errors: ValidationError[] = [];
-    const config = currentConfig.validations[fieldName as keyof typeof currentConfig.validations];
+    const config = currentConfig.validations[fieldName as keyof typeof currentConfig.validations] as any;
 
-    // Skip validation for fields not in our configuration
-    if (!config) {
-      console.warn(`⚠️ No validation config found for field: ${fieldName}`);
-      return errors;
-    }
+    if (!config) return errors;
 
     // Required field validation
     if (currentConfig.required.includes(fieldName) && (!value || value.trim() === '')) {
@@ -297,67 +340,48 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
     // Skip validation for empty optional fields
     if (!value || value.trim() === '') return errors;
 
-    // Type validation
-    if ('type' in config && config.type === 'number' && isNaN(Number(value))) {
+    // Pattern validation
+    if (config.pattern && !config.pattern.test(value)) {
+      let suggestion = '';
+      if (fieldName.includes('Date')) {
+        suggestion = 'استخدم تنسيق dd-mmm-yyyy (مثال: 15-Jan-2024)';
+      } else if (fieldName.includes('Time')) {
+        suggestion = 'استخدم تنسيق HH:mm (مثال: 09:30)';
+      } else if (fieldName === 'branchId') {
+        suggestion = 'استخدم تنسيق معرف الفرع (مثال: 0001-RIY-001-0001)';
+      } else if (fieldName === 'contractId') {
+        suggestion = 'استخدم تنسيق معرف العقد (مثال: CON-0001-001)';
+      } else if (fieldName === 'companyId') {
+        suggestion = 'استخدم تنسيق معرف الشركة (مثال: 0001)';
+      }
+
       errors.push({
         row: rowNumber,
         field: fieldName,
         value,
-        error: 'يجب أن تكون القيمة رقم',
-        suggestion: `مثال: 12`,
+        error: 'تنسيق القيمة غير صحيح',
+        suggestion,
         severity: 'error'
       });
-      return errors;
     }
 
-    // Enhanced pattern validation with date format flexibility
-    if ('pattern' in config && config.pattern) {
-      let isValid = false;
-      let suggestion = '';
-
-      if (fieldName.includes('Date')) {
-        // Use the enhanced date parser from date-handler.ts
-        try {
-          // Import standardizeDate function for validation
-          const dateValidation = standardizeDate(value);
-          isValid = dateValidation.isValid;
-          
-          if (!isValid) {
-            suggestion = 'استخدم تنسيق dd-mmm-yyyy (مثال: 15-Jan-2024) أو dd/mm/yyyy أو mm/dd/yyyy أو yyyy-mm-dd';
-          }
-        } catch (error) {
-          isValid = false;
-          suggestion = 'تنسيق التاريخ غير مدعوم. استخدم: dd-mmm-yyyy (مثال: 06-Aug-2023)';
-        }
-      } else {
-        // For non-date fields, use the original pattern
-        isValid = (config.pattern as RegExp).test(value);
-
-        if (fieldName === 'email') {
-          suggestion = 'استخدم تنسيق email صحيح (مثال: user@company.com)';
-        } else if (fieldName.includes('phone') || fieldName === 'phone') {
-          suggestion = 'استخدم أرقام ورموز فقط (مثال: 0501234567)';
-        } else if (fieldName === 'companyId') {
-          suggestion = 'استخدم 4 أرقام (مثال: 0001)';
-        } else {
-          suggestion = 'تحقق من تنسيق القيمة المدخلة';
-        }
-      }
-
-      if (!isValid) {
-        errors.push({
-          row: rowNumber,
-          field: fieldName,
-          value,
-          error: 'تنسيق القيمة غير صحيح',
-          suggestion,
-          severity: 'error'
-        });
-      }
+    // Enum validation
+    if (config.enum && !config.enum.some((option: string) =>
+      option.toLowerCase() === value.toLowerCase() ||
+      option === value
+    )) {
+      errors.push({
+        row: rowNumber,
+        field: fieldName,
+        value,
+        error: 'القيمة غير صحيحة',
+        suggestion: 'استخدم: ' + config.enum.join(' أو '),
+        severity: 'error'
+      });
     }
 
     // Length validation
-    if ('maxLength' in config && config.maxLength && value.length > config.maxLength) {
+    if (config.maxLength && value.length > config.maxLength) {
       errors.push({
         row: rowNumber,
         field: fieldName,
@@ -368,103 +392,97 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
       });
     }
 
-    // Enhanced enum validation with flexible matching
-    if ('enum' in config && config.enum) {
-      const enumValues = config.enum as string[];
-      const isValid = enumValues.some((option: string) => {
-        // Exact match
-        if (option === value) return true;
-
-        // Case-insensitive match
-        if (option.toLowerCase() === value.toLowerCase()) return true;
-
-        // Boolean value flexibility for service fields
-        if (fieldName.includes('Maintenance') || fieldName.includes('Suppression')) {
-          const valueLower = value.toLowerCase();
-          const optionLower = option.toLowerCase();
-
-          // Map various boolean representations
-          const trueValues = ['yes', 'true', '1', 'نعم', 'صحيح'];
-          const falseValues = ['no', 'false', '0', 'لا', 'خطأ'];
-
-          if (trueValues.includes(optionLower) && trueValues.includes(valueLower)) return true;
-          if (falseValues.includes(optionLower) && falseValues.includes(valueLower)) return true;
-        }
-
-        return false;
-      });
-
-      if (!isValid) {
-        if (fieldName === 'city') {
-          // Enhanced city suggestion with fuzzy matching for both Arabic and English
-          const suggestion = SAUDI_CITIES.find(city => {
-            const cityLower = city.toLowerCase();
-            const valueLower = value.toLowerCase();
-            
-            // Exact or partial match
-            return cityLower.includes(valueLower) || 
-                   valueLower.includes(cityLower) ||
-                   // Handle common English variations
-                   (cityLower === 'jeddah' && valueLower === 'jidda') ||
-                   (cityLower === 'riyadh' && valueLower === 'riyad') ||
-                   (cityLower === 'makkah' && valueLower === 'mecca');
-          });
-
+    // Business logic validation for branches
+    if (entityType === 'branches') {
+      // Company validation - either companyId OR companyName must be valid
+      if (fieldName === 'companyId' || fieldName === 'companyName') {
+        const companyId = rowData.companyId;
+        const companyName = rowData.companyName;
+        
+        // If both are empty, that's an error
+        if ((!companyId || companyId.trim() === '') && (!companyName || companyName.trim() === '')) {
           errors.push({
             row: rowNumber,
             field: fieldName,
             value,
-            error: 'المدينة غير معترف بها',
-            suggestion: suggestion ? `هل تقصد "${suggestion}"؟` : 'استخدم اسم مدينة سعودية بالعربية أو الإنجليزية (مثال: الرياض، Riyadh، جدة، Jeddah)',
-            severity: 'error'
-          });
-        } else if (fieldName.includes('Maintenance') || fieldName.includes('Suppression')) {
-          errors.push({
-            row: rowNumber,
-            field: fieldName,
-            value,
-            error: 'قيمة الخدمة غير صحيحة',
-            suggestion: 'استخدم: نعم، لا، yes، no، true، false',
+            error: 'يجب إدخال معرف الشركة أو اسم الشركة',
+            suggestion: 'أدخل معرف الشركة (مثال: 0001) أو اسم الشركة',
             severity: 'error'
           });
         } else {
+          // Check if the provided values match existing companies
+          let companyFound = false;
+          
+          if (companyId && companyId.trim() !== '') {
+            const companyById = companies.find(c => c.companyId === companyId.trim());
+            if (companyById) {
+              // If companyName is also provided, check if it matches
+              if (companyName && companyName.trim() !== '') {
+                if (companyById.companyName.toLowerCase() === companyName.trim().toLowerCase()) {
+                  companyFound = true;
+                } else {
+                  errors.push({
+                    row: rowNumber,
+                    field: fieldName,
+                    value,
+                    error: 'اسم الشركة لا يتطابق مع معرف الشركة',
+                    suggestion: `اسم الشركة يجب أن يكون: ${companyById.companyName}`,
+                    severity: 'error'
+                  });
+                }
+              } else {
+                companyFound = true;
+              }
+            } else {
+              errors.push({
+                row: rowNumber,
+                field: fieldName,
+                value,
+                error: 'معرف الشركة غير موجود في النظام',
+                suggestion: 'تأكد من إضافة الشركة أولاً أو استخدم اسم الشركة',
+                severity: 'error'
+              });
+            }
+          } else if (companyName && companyName.trim() !== '') {
+            const companyByName = companies.find(c => 
+              c.companyName.toLowerCase() === companyName.trim().toLowerCase()
+            );
+            if (companyByName) {
+              companyFound = true;
+            } else {
+              errors.push({
+                row: rowNumber,
+                field: fieldName,
+                value,
+                error: 'اسم الشركة غير موجود في النظام',
+                suggestion: 'تأكد من إضافة الشركة أولاً أو استخدم معرف الشركة',
+                severity: 'error'
+              });
+            }
+          }
+        }
+      }
+    }
+
+    // Business logic validation for contracts
+    if (entityType === 'contracts' || entityType === 'contractsAdvanced') {
+      if (fieldName === 'companyId') {
+        const company = companies.find(c => c.companyId === value);
+        if (!company) {
           errors.push({
             row: rowNumber,
             field: fieldName,
             value,
-            error: 'القيمة غير صحيحة',
-            suggestion: 'استخدم: ' + enumValues.join(' أو '),
+            error: 'معرف الشركة غير موجود في النظام',
+            suggestion: 'تأكد من إضافة الشركة أولاً في إدارة العملاء',
             severity: 'error'
           });
         }
       }
     }
 
-    // Range validation
-    if ('min' in config && config.min !== undefined && Number(value) < (config.min as number)) {
-      errors.push({
-        row: rowNumber,
-        field: fieldName,
-        value,
-        error: `القيمة صغيرة جداً (الحد الأدنى ${config.min})`,
-        suggestion: `استخدم قيمة ${config.min} أو أكبر`,
-        severity: 'error'
-      });
-    }
-
-    if ('max' in config && config.max !== undefined && Number(value) > (config.max as number)) {
-      errors.push({
-        row: rowNumber,
-        field: fieldName,
-        value,
-        error: `القيمة كبيرة جداً (الحد الأقصى ${config.max})`,
-        suggestion: `استخدم قيمة ${config.max} أو أقل`,
-        severity: 'error'
-      });
-    }
-
     return errors;
-  }, [currentConfig]);
+  }, [companies, contracts, branches, entityType, currentConfig]);
 
   // Process uploaded file
   const processFile = useCallback(async () => {
@@ -588,7 +606,7 @@ ${suggestions}
         Object.entries(rowData).forEach(([fieldName, value]) => {
           // All fields in rowData should now be standard field names
           if (fieldName in currentConfig.validations) {
-            const fieldErrors = validateField(fieldName, value, rowNumber);
+            const fieldErrors = validateField(fieldName, value, rowNumber, rowData);
             allErrors.push(...fieldErrors);
           }
         });

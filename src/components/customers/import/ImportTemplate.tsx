@@ -14,8 +14,8 @@ import { useContractsFirebase } from '@/hooks/useContractsFirebase';
 import { useBranchesFirebase } from '@/hooks/useBranchesFirebase';
 
 interface ImportTemplateProps {
-  entityType: 'companies' | 'contracts' | 'branches';
-  onClose?: () => void;
+  entityType: 'companies' | 'contracts' | 'contractsAdvanced' | 'branches';
+  onClose: () => void;
 }
 
 interface ImportResults {
@@ -35,7 +35,7 @@ export function ImportTemplate({ entityType, onClose }: ImportTemplateProps) {
   const [importResults, setImportResults] = useState<ImportResults | null>(null);
 
   // Firebase hooks for saving imported data
-  const { addCompany } = useCompaniesFirebase();
+  const { addCompany, companies: existingCompanies } = useCompaniesFirebase();
   const { addContract } = useContractsFirebase(); 
   const { addBranch } = useBranchesFirebase();
 
@@ -82,8 +82,8 @@ export function ImportTemplate({ entityType, onClose }: ImportTemplateProps) {
       ]
     },
     contracts: {
-      title: 'استيراد بيانات العقود',
-      description: 'قالب لاستيراد بيانات العقود مع تواريخ وخدمات السلامة',
+      title: 'استيراد بيانات العقود (بسيط)',
+      description: 'قالب لاستيراد بيانات العقود البسيطة مع تواريخ وخدمات السلامة',
       headers: [
         'companyId',
         'contractStartDate',
@@ -137,12 +137,82 @@ export function ImportTemplate({ entityType, onClose }: ImportTemplateProps) {
         'ملاحظات: اختياري، أقل من 500 حرف'
       ]
     },
+    contractsAdvanced: {
+      title: 'استيراد بيانات العقود (متقدم)',
+      description: 'قالب لاستيراد بيانات العقود المتقدمة مع مجموعات الخدمات والفروع',
+      headers: [
+        'companyId',
+        'contractStartDate',
+        'contractEndDate',
+        'contractPeriodMonths',
+        'contractValue',
+        'branchIds',
+        'fireExtinguisherMaintenance',
+        'alarmSystemMaintenance',
+        'fireSuppressionMaintenance',
+        'gasFireSuppression',
+        'foamFireSuppression',
+        'regularVisitsPerYear',
+        'emergencyVisitsPerYear',
+        'emergencyVisitCost',
+        'batchNotes',
+        'contractNotes'
+      ],
+      headerLabels: [
+        'معرف الشركة*',
+        'تاريخ بداية العقد*',
+        'تاريخ انتهاء العقد',
+        'مدة العقد بالأشهر',
+        'قيمة العقد',
+        'معرفات الفروع*',
+        'صيانة الطفايات',
+        'صيانة نظام الإنذار',
+        'صيانة نظام الإطفاء',
+        'نظام الإطفاء بالغاز',
+        'نظام الإطفاء بالفوم',
+        'عدد الزيارات العادية سنوياً*',
+        'عدد الزيارات الطارئة سنوياً',
+        'تكلفة الزيارة الطارئة',
+        'ملاحظات المجموعة',
+        'ملاحظات العقد'
+      ],
+      sampleData: [
+        '0001',
+        '01-Jan-2024',
+        '31-Dec-2024',
+        '12',
+        '50000',
+        '0001-JED-001-0001,0001-JED-001-0002',
+        'نعم',
+        'نعم',
+        'لا',
+        'لا',
+        'لا',
+        '12',
+        '4',
+        '500',
+        'مجموعة خدمات الفروع الرئيسية',
+        'عقد صيانة سنوي شامل للفروع الرئيسية'
+      ],
+      validationRules: [
+        'معرف الشركة: مطلوب، يجب أن يكون موجود في النظام',
+        'تاريخ بداية العقد: مطلوب، تنسيق dd-mmm-yyyy (مثال: 15-Jan-2024)',
+        'تاريخ انتهاء العقد أو مدة العقد: أحدهما مطلوب',
+        'معرفات الفروع: مطلوب، مفصولة بفاصلة، يجب أن تكون موجودة',
+        'خدمات السلامة: يجب اختيار خدمة واحدة على الأقل',
+        'عدد الزيارات العادية: مطلوب، رقم من 0 إلى 365',
+        'عدد الزيارات الطارئة: اختياري، رقم من 0 إلى 365',
+        'تكلفة الزيارة الطارئة: اختياري، رقم موجب',
+        'ملاحظات المجموعة: اختياري، أقل من 500 حرف',
+        'ملاحظات العقد: اختياري، أقل من 500 حرف'
+      ]
+    },
     branches: {
       title: 'استيراد بيانات الفروع',
       description: 'قالب لاستيراد بيانات الفروع مع المواقع وتفاصيل التواصل',
       headers: [
         'companyId',
-        'contractIds',
+        'companyName',
         'city',
         'location',
         'branchName',
@@ -153,8 +223,8 @@ export function ImportTemplate({ entityType, onClose }: ImportTemplateProps) {
         'notes'
       ],
       headerLabels: [
-        'معرف الشركة*',
-        'معرفات العقود*',
+        'معرف الشركة***',
+        'اسم الشركة**',
         'المدينة*',
         'الموقع*',
         'اسم الفرع*',
@@ -166,7 +236,7 @@ export function ImportTemplate({ entityType, onClose }: ImportTemplateProps) {
       ],
       sampleData: [
         '0001',
-        'CON-0001-001,CON-0001-002',
+        'شركة سلامة السعودية',
         'الرياض',
         'حي الملز',
         'الفرع الرئيسي',
@@ -177,8 +247,7 @@ export function ImportTemplate({ entityType, onClose }: ImportTemplateProps) {
         'الفرع الرئيسي للشركة'
       ],
       validationRules: [
-        'معرف الشركة: مطلوب، يجب أن يكون موجود في النظام',
-        'معرفات العقود: مطلوب، مفصولة بفاصلة، يجب أن تكون موجودة',
+        'معرف الشركة أو اسم الشركة: مطلوب أحدهما على الأقل، يجب أن يكون موجود في النظام',
         'المدينة: مطلوب، يجب أن تكون من المدن السعودية',
         'الموقع: مطلوب، أقل من 100 حرف',
         'اسم الفرع: مطلوب، أقل من 100 حرف',
@@ -396,18 +465,86 @@ export function ImportTemplate({ entityType, onClose }: ImportTemplateProps) {
           }
         }
 
+      } else if (entityType === 'contractsAdvanced') {
+        console.log('💾 Saving contractsAdvanced to Firebase...');
+        
+        for (const importedItem of results.importedData) {
+          try {
+            // Convert imported service flags to serviceBatches structure
+            const serviceBatches = [{
+              batchId: `import-batch-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              branchIds: importedItem.branchIds ? importedItem.branchIds.split(',').map(id => id.trim()) : [],
+              services: {
+                fireExtinguisherMaintenance: ['نعم', 'yes', 'true', '1'].includes(importedItem.fireExtinguisherMaintenance?.toLowerCase() || ''),
+                alarmSystemMaintenance: ['نعم', 'yes', 'true', '1'].includes(importedItem.alarmSystemMaintenance?.toLowerCase() || ''),
+                fireSuppressionMaintenance: ['نعم', 'yes', 'true', '1'].includes(importedItem.fireSuppressionMaintenance?.toLowerCase() || ''),
+                gasFireSuppression: ['نعم', 'yes', 'true', '1'].includes(importedItem.gasFireSuppression?.toLowerCase() || ''),
+                foamFireSuppression: ['نعم', 'yes', 'true', '1'].includes(importedItem.foamFireSuppression?.toLowerCase() || ''),
+              },
+              regularVisitsPerYear: parseInt(importedItem.regularVisitsPerYear || '0', 10),
+              emergencyVisitsPerYear: parseInt(importedItem.emergencyVisitsPerYear || '0', 10),
+              emergencyVisitCost: parseFloat(importedItem.emergencyVisitCost || '0'),
+              notes: importedItem.batchNotes || '',
+            }];
+
+            // Map import data to new Contract format with serviceBatches
+            const contractData = {
+              companyId: importedItem.companyId || '',
+              contractStartDate: importedItem.contractStartDate || '',
+              contractEndDate: importedItem.contractEndDate || '',
+              contractPeriodMonths: parseInt(importedItem.contractPeriodMonths || '0', 10),
+              contractValue: parseFloat(importedItem.contractValue || '0'),
+              serviceBatches,
+              notes: importedItem.contractNotes || ''
+            };
+
+            const result = await addContract(contractData);
+            if (result.success) {
+              console.log('✅ ContractAdvanced saved successfully:', result.contract?.contractId);
+              successCount++;
+            } else {
+              const errorMsg = result.warnings?.join(', ') || 'فشل في حفظ العقد المتقدم';
+              console.error('❌ Failed to save contractAdvanced:', errorMsg);
+              errors.push(`عقد متقدم الشركة "${contractData.companyId}": ${errorMsg}`);
+              errorCount++;
+            }
+
+          } catch (error) {
+            console.error('❌ Error saving contractAdvanced to Firebase:', error);
+            errors.push(`خطأ في حفظ العقد المتقدم: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
+            errorCount++;
+          }
+        }
+
       } else if (entityType === 'branches') {
         console.log('💾 Saving branches to Firebase...');
         
         for (const importedItem of results.importedData) {
           try {
-            // Split contract IDs if comma-separated
-            const contractIds = importedItem.contractIds?.split(',').map(id => id.trim()) || [];
+            // Determine company ID from either companyId or companyName
+            let companyId = importedItem.companyId;
+            
+            if (!companyId && importedItem.companyName) {
+              // Find company by name
+              const company = existingCompanies.find(c => 
+                c.companyName.toLowerCase() === importedItem.companyName.toLowerCase()
+              );
+              if (company) {
+                companyId = company.companyId;
+              }
+            }
+            
+            if (!companyId) {
+              const errorMsg = 'لم يتم العثور على الشركة';
+              console.error('❌ Failed to find company for branch:', errorMsg);
+              errors.push(`فرع "${importedItem.branchName}": ${errorMsg}`);
+              errorCount++;
+              continue;
+            }
             
             // Map import data to Branch format
             const branchData = {
-              companyId: importedItem.companyId || '',
-              contractIds: contractIds,
+              companyId: companyId,
               city: importedItem.city || '',
               location: importedItem.location || '',
               branchName: importedItem.branchName || '',

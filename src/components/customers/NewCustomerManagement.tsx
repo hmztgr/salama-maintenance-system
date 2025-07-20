@@ -52,7 +52,7 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
   // Import/Export state
   const [showImportTemplate, setShowImportTemplate] = useState(false);
   const [showExportTemplate, setShowExportTemplate] = useState(false);
-  const [importExportType, setImportExportType] = useState<'companies' | 'contracts' | 'branches'>('companies');
+  const [importExportType, setImportExportType] = useState<'companies' | 'contracts' | 'contractsAdvanced' | 'branches'>('companies');
 
   // Detail view state
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
@@ -509,15 +509,26 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
               </div>
               <div className="flex items-center gap-3">
                 {hasPermission('supervisor') && (
-                  <button
-                    onClick={() => {
-                      setImportExportType('contracts');
-                      setShowImportTemplate(true);
-                    }}
-                    className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center"
-                  >
-                    📥 استيراد
-                  </button>
+                  <div className="flex space-x-2 space-x-reverse">
+                    <button
+                      onClick={() => {
+                        setImportExportType('contractsAdvanced');
+                        setShowImportTemplate(true);
+                      }}
+                      className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 flex items-center"
+                    >
+                      📥 استيراد متقدم
+                    </button>
+                    <button
+                      onClick={() => {
+                        setImportExportType('contracts');
+                        setShowImportTemplate(true);
+                      }}
+                      className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center"
+                    >
+                      📥 استيراد بسيط
+                    </button>
+                  </div>
                 )}
                 {hasPermission('supervisor') && (
                   <button

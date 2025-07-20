@@ -44,6 +44,15 @@ export function CompanyDetailView({
 }: CompanyDetailViewProps) {
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
 
+  // Add debugging for file data
+  console.log('🏢 CompanyDetailView received company:', {
+    companyId: company.companyId,
+    companyName: company.companyName,
+    commercialRegistrationFile: company.commercialRegistrationFile,
+    vatFile: company.vatFile,
+    nationalAddressFile: company.nationalAddressFile
+  });
+
   const handleDocumentView = (documentUrl: string) => {
     setSelectedDocument(documentUrl);
   };
@@ -176,12 +185,21 @@ export function CompanyDetailView({
                   ? company.nationalAddressFile.split('|').filter(url => url.trim())
                   : [];
                 
+                console.log('📁 CompanyDetailView processing files:', {
+                  commercialRegFiles,
+                  vatFiles,
+                  nationalAddressFiles,
+                  allFiles: [...commercialRegFiles, ...vatFiles, ...nationalAddressFiles]
+                });
+                
                 const allFiles = [...commercialRegFiles, ...vatFiles, ...nationalAddressFiles];
                 
                 if (allFiles.length === 0) {
+                  console.log('📁 No files found in CompanyDetailView');
                   return <p className="text-gray-500 text-center py-4">لا توجد مستندات مرفقة</p>;
                 }
                 
+                console.log('📁 Found files in CompanyDetailView:', allFiles.length);
                 return (
                   <div className="space-y-3">
                     {/* Commercial Registration Files */}

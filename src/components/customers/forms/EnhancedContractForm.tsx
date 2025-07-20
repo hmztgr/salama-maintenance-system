@@ -462,9 +462,12 @@ export function EnhancedContractForm({
                   <Label htmlFor="contractValue">قيمة العقد (ريال سعودي)</Label>
                   <Input
                     id="contractValue"
-                    type="number"
-                    value={formData.contractValue}
-                    onChange={(e) => handleInputChange('contractValue', parseFloat(e.target.value) || 0)}
+                    type="text"
+                    value={formData.contractValue || ''}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9]/g, '');
+                      handleInputChange('contractValue', value ? parseInt(value, 10) : 0);
+                    }}
                     placeholder="0"
                     disabled={isLoading}
                   />

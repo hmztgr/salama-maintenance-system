@@ -208,8 +208,24 @@ export function formatDateForInput(dateString: string): string {
 export function convertInputDateToStandard(inputDate: string): string {
   if (!inputDate) return '';
 
-  const validation = standardizeDate(inputDate);
-  return validation.standardizedDate || '';
+  try {
+    // Parse the yyyy-mm-dd format directly to avoid timezone issues
+    const [year, month, day] = inputDate.split('-').map(Number);
+    if (!year || !month || !day) return '';
+
+    // Create date in local timezone (not UTC)
+    const date = new Date(year, month - 1, day);
+    
+    // Format as dd-mmm-yyyy
+    const dayStr = date.getDate().toString().padStart(2, '0');
+    const monthName = MONTH_NAMES[date.getMonth() + 1 as keyof typeof MONTH_NAMES];
+    const yearStr = date.getFullYear().toString();
+
+    return `${dayStr}-${monthName}-${yearStr}`;
+  } catch (error) {
+    console.error('Error converting input date:', error);
+    return '';
+  }
 }
 
 /**

@@ -44,7 +44,7 @@ export interface UserInvitation {
 export interface InvitationFormData {
   type: InvitationType;
   email?: string;
-  role: UserRole;
+  role?: UserRole; // Made optional since we're using permission groups
   permissionGroups?: string[];
   customMessage?: string;
   expirationDays: number;

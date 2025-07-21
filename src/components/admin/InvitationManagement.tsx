@@ -477,7 +477,6 @@ function CreateInvitationForm({ onClose, onSuccess, actions }: CreateInvitationF
   const [formData, setFormData] = useState<InvitationFormData>({
     type: 'email',
     email: '',
-    role: 'viewer',
     permissionGroups: [],
     customMessage: '',
     expirationDays: 7,
@@ -500,8 +499,8 @@ function CreateInvitationForm({ onClose, onSuccess, actions }: CreateInvitationF
       }
     }
 
-    if (!formData.role) {
-      newErrors.role = 'الصلاحية مطلوبة';
+    if (!formData.permissionGroups || formData.permissionGroups.length === 0) {
+      newErrors.permissionGroups = 'يجب تحديد مجموعة صلاحيات واحدة على الأقل';
     }
 
     if (formData.expirationDays < 1 || formData.expirationDays > 365) {
@@ -628,24 +627,12 @@ function CreateInvitationForm({ onClose, onSuccess, actions }: CreateInvitationF
               </div>
             )}
 
-            {/* Role Selection */}
+            {/* Role Selection - Simplified */}
             <div className="space-y-2">
-              <Label className="text-right block">الدور الأساسي *</Label>
-              <Select value={formData.role} onValueChange={(value) => handleInputChange('role', value)}>
-                <SelectTrigger className={errors.role ? 'border-red-500' : ''}>
-                  <SelectValue placeholder="اختر الدور الأساسي" />
-                </SelectTrigger>
-                <SelectContent>
-                  {roleDefinitions.map((roleDef) => (
-                    <SelectItem key={roleDef.role} value={roleDef.role}>
-                      {roleDef.name} - {roleDef.description}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.role && (
-                <p className="text-sm text-red-500 text-right">{errors.role}</p>
-              )}
+              <Label className="text-right block">الدور الأساسي</Label>
+              <div className="p-3 bg-gray-50 rounded border text-sm text-gray-600 text-right">
+                سيتم تعيين الدور تلقائياً بناءً على مجموعات الصلاحيات المحددة
+              </div>
             </div>
 
             {/* Permission Groups Selection */}

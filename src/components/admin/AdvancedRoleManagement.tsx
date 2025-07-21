@@ -65,7 +65,7 @@ export function AdvancedRoleManagement() {
   console.log('🔍 AdvancedRoleManagement - loading:', loading);
   console.log('🔍 AdvancedRoleManagement - error:', error);
 
-  const [activeTab, setActiveTab] = useState<'users' | 'groups' | 'history' | 'statistics'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'groups' | 'history' | 'statistics'>('groups');
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<UserRole | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');

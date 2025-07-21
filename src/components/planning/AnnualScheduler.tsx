@@ -185,7 +185,8 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
   // Debug rendering
   useEffect(() => {
     console.log('🔍 AnnualScheduler rendering branches:', filteredBranches.length, filteredBranches.map(b => ({ id: b.branchId, name: b.branchName, company: b.companyName })));
-  }, [filteredBranches]);
+    console.log('🔍 AnnualScheduler table key:', `table-${filteredBranches.length}-${branchSearch.filters.searchTerm}`);
+  }, [filteredBranches, branchSearch.filters.searchTerm]);
 
   // Generate 52-week planning grid
   const weeklyData = useMemo(() => {
@@ -822,7 +823,7 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
             </div>
           ) : (
             <div className="overflow-x-hidden">
-              <table className="w-full table-fixed text-xs">
+              <table className="w-full table-fixed text-xs" key={`table-${filteredBranches.length}-${branchSearch.filters.searchTerm}`}>
                 <thead className="bg-gray-50 sticky top-0">
                   {/* Bulk Planning Row */}
                   {hasPermission('supervisor') && (

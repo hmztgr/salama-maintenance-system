@@ -584,7 +584,7 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
 
                   {/* Branches List */}
                   <div className="max-h-96 overflow-y-auto border rounded-lg">
-                    <table className="w-full">
+                    <table className="w-full" key={`table-${filteredBranches.length}-${searchTerm}`}>
                       <thead className="bg-gray-50 sticky top-0">
                         <tr>
                           <th className="px-4 py-2 text-right">تحديد</th>

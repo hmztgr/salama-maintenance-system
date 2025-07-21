@@ -563,6 +563,14 @@ function CreateUserModal({ permissionGroups, roleDefinitions, onClose, onSuccess
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Check Firebase Auth initialization
+  useEffect(() => {
+    console.log('🔍 Checking Firebase Auth initialization...');
+    console.log('🔍 Auth object:', auth);
+    console.log('🔍 Auth current user:', auth?.currentUser);
+    console.log('🔍 Firebase config API key:', process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? 'Present' : 'Missing');
+  }, []);
+
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -619,6 +627,13 @@ function CreateUserModal({ permissionGroups, roleDefinitions, onClose, onSuccess
 
       // Create Firebase Auth account first
       console.log('🔥 Creating Firebase Auth account...');
+      console.log('📧 Email:', formData.email);
+      console.log('🔑 Password length:', formData.password.length);
+      
+      if (!auth) {
+        throw new Error('Firebase Auth not initialized');
+      }
+      
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         formData.email,
@@ -626,6 +641,7 @@ function CreateUserModal({ permissionGroups, roleDefinitions, onClose, onSuccess
       );
       
       console.log('✅ Firebase Auth account created:', userCredential.user.uid);
+      console.log('👤 User email verified:', userCredential.user.emailVerified);
 
       // Create Firestore document using Firebase Auth UID as document ID
       const newUser = {
@@ -651,6 +667,8 @@ function CreateUserModal({ permissionGroups, roleDefinitions, onClose, onSuccess
       onSuccess();
     } catch (err: any) {
       console.error('❌ Failed to create user:', err);
+      console.error('❌ Error code:', err.code);
+      console.error('❌ Error message:', err.message);
       
       // Handle specific Firebase Auth errors
       if (err.code === 'auth/email-already-in-use') {
@@ -659,8 +677,12 @@ function CreateUserModal({ permissionGroups, roleDefinitions, onClose, onSuccess
         setErrors({ password: 'كلمة المرور ضعيفة جداً' });
       } else if (err.code === 'auth/invalid-email') {
         setErrors({ email: 'البريد الإلكتروني غير صحيح' });
+      } else if (err.code === 'auth/operation-not-allowed') {
+        setErrors({ submit: 'إنشاء الحسابات غير مسموح به في إعدادات Firebase' });
+      } else if (err.code === 'auth/network-request-failed') {
+        setErrors({ submit: 'فشل في الاتصال بالشبكة' });
       } else {
-        setErrors({ submit: 'فشل في إنشاء المستخدم: ' + (err.message || 'خطأ غير معروف') });
+        setErrors({ submit: `فشل في إنشاء المستخدم: ${err.code || 'خطأ غير معروف'} - ${err.message || ''}` });
       }
     } finally {
       setIsSubmitting(false);

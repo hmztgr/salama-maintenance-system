@@ -550,6 +550,8 @@ interface CreateUserModalProps {
 }
 
 function CreateUserModal({ permissionGroups, roleDefinitions, onClose, onSuccess }: CreateUserModalProps) {
+  const { authState } = useAuth(); // Get current admin user info
+  
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -657,13 +659,19 @@ function CreateUserModal({ permissionGroups, roleDefinitions, onClose, onSuccess
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         lastLoginAt: new Date().toISOString(),
-        createdBy: 'current-user', // Should come from auth context
+        createdBy: authState.user?.displayName || authState.user?.email || 'admin',
         firebaseUid: userCredential.user.uid // Link to Firebase Auth
       };
+
+      console.log('👤 New user role assigned:', formData.role);
+      console.log('👤 New user permission groups:', formData.permissionGroups);
 
       await setDoc(doc(db, 'users', userCredential.user.uid), newUser);
       console.log('✅ Firestore user document created successfully');
 
+      // Don't automatically sign in as the new user - stay as admin
+      console.log('🔒 Staying logged in as admin user');
+      
       onSuccess();
     } catch (err: any) {
       console.error('❌ Failed to create user:', err);

@@ -411,7 +411,8 @@ export function UserManagement() {
                           <div className="flex items-center gap-2 mb-1">
                             <h3 className="font-medium text-gray-900">{user.fullName}</h3>
                             <Badge className={roleDisplay.color}>
-                              {roleDisplay.icon} {roleDisplay.name}
+                              <roleDisplay.icon className="w-3 h-3 ml-1" />
+                              {roleDisplay.name}
                             </Badge>
                             {user.isActive ? (
                               <Badge className="bg-green-100 text-green-800">

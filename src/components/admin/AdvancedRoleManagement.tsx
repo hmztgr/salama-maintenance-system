@@ -562,23 +562,7 @@ export function AdvancedRoleManagement() {
         />
       )}
 
-      {/* Group Details Modal */}
-      {showGroupDetails && selectedGroup && (
-        <GroupDetailsModal
-          group={selectedGroup}
-          permissions={permissions}
-          actions={actions}
-          onClose={() => {
-            setShowGroupDetails(false);
-            setSelectedGroup(null);
-          }}
-          onSuccess={() => {
-            refreshData();
-            setShowGroupDetails(false);
-            setSelectedGroup(null);
-          }}
-        />
-      )}
+
     </div>
   );
 }
@@ -690,6 +674,24 @@ function PermissionGroupsTab({ permissionGroups, permissions, actions, onRefresh
           )}
         </CardContent>
       </Card>
+
+      {/* Group Details Modal */}
+      {showGroupDetails && selectedGroup && (
+        <GroupDetailsModal
+          group={selectedGroup}
+          permissions={permissions}
+          actions={actions}
+          onClose={() => {
+            setShowGroupDetails(false);
+            setSelectedGroup(null);
+          }}
+          onSuccess={() => {
+            onRefresh();
+            setShowGroupDetails(false);
+            setSelectedGroup(null);
+          }}
+        />
+      )}
     </div>
   );
 }

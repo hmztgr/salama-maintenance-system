@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Mail,
   Link,
@@ -29,12 +30,14 @@ import {
 } from 'lucide-react';
 import { useInvitationsFirebase } from '@/hooks/useInvitationsFirebase';
 import { useAuth } from '@/contexts/AuthContextFirebase';
+import { useRoleManagement } from '@/hooks/useRoleManagement';
 import { InvitationFormData, InvitationType, UserRole, InvitationStatus } from '@/types/invitation';
 import { formatDateForDisplay } from '@/lib/date-handler';
 
 export function InvitationManagement() {
   const { hasPermission } = useAuth();
   const { invitations, loading, error, stats, actions, refreshInvitations } = useInvitationsFirebase();
+  const { permissionGroups } = useRoleManagement();
 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -306,7 +309,8 @@ export function InvitationManagement() {
                   <tr>
                     <th className="px-4 py-3 text-right border-b">النوع</th>
                     <th className="px-4 py-3 text-right border-b">البريد/الرابط</th>
-                    <th className="px-4 py-3 text-right border-b">الصلاحية</th>
+                    <th className="px-4 py-3 text-right border-b">الدور الأساسي</th>
+                    <th className="px-4 py-3 text-right border-b">مجموعات الصلاحيات</th>
                     <th className="px-4 py-3 text-right border-b">الحالة</th>
                     <th className="px-4 py-3 text-right border-b">أرسل بواسطة</th>
                     <th className="px-4 py-3 text-right border-b">تاريخ الإنشاء</th>
@@ -352,6 +356,23 @@ export function InvitationManagement() {
                           <Badge variant="outline">
                             {getRoleDisplayName(invitation.role)}
                           </Badge>
+                        </td>
+
+                        <td className="px-4 py-3">
+                          {invitation.permissionGroups && invitation.permissionGroups.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {invitation.permissionGroups.map((groupId) => {
+                                const group = permissionGroups.find(g => g.id === groupId);
+                                return group ? (
+                                  <Badge key={groupId} variant="secondary" className="text-xs">
+                                    {group.name}
+                                  </Badge>
+                                ) : null;
+                              })}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-500">لا توجد</span>
+                          )}
                         </td>
 
                         <td className="px-4 py-3">
@@ -451,10 +472,13 @@ interface CreateInvitationFormProps {
 }
 
 function CreateInvitationForm({ onClose, onSuccess, actions }: CreateInvitationFormProps) {
+  const { permissionGroups, roleDefinitions } = useRoleManagement();
+  
   const [formData, setFormData] = useState<InvitationFormData>({
     type: 'email',
     email: '',
     role: 'viewer',
+    permissionGroups: [],
     customMessage: '',
     expirationDays: 7,
     usageLimit: 1,
@@ -606,20 +630,139 @@ function CreateInvitationForm({ onClose, onSuccess, actions }: CreateInvitationF
 
             {/* Role Selection */}
             <div className="space-y-2">
-              <Label className="text-right block">الصلاحية *</Label>
+              <Label className="text-right block">الدور الأساسي *</Label>
               <Select value={formData.role} onValueChange={(value) => handleInputChange('role', value)}>
                 <SelectTrigger className={errors.role ? 'border-red-500' : ''}>
-                  <SelectValue placeholder="اختر الصلاحية" />
+                  <SelectValue placeholder="اختر الدور الأساسي" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="viewer">مستخدم (عرض فقط)</SelectItem>
-                  <SelectItem value="supervisor">مشرف (إدارة العمليات)</SelectItem>
-                  <SelectItem value="admin">مدير النظام (صلاحيات كاملة)</SelectItem>
+                  {roleDefinitions.map((roleDef) => (
+                    <SelectItem key={roleDef.role} value={roleDef.role}>
+                      {roleDef.name} - {roleDef.description}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               {errors.role && (
                 <p className="text-sm text-red-500 text-right">{errors.role}</p>
               )}
+            </div>
+
+            {/* Permission Groups Selection */}
+            <div className="space-y-2">
+              <Label className="text-right block">مجموعات الصلاحيات الإضافية</Label>
+              
+              {/* Bulk Selection Controls for Permission Groups */}
+              {permissionGroups.length > 0 && (
+                <div className="flex items-center justify-between mb-3 p-2 bg-gray-50 rounded border">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={permissionGroups.length > 0 && (formData.permissionGroups?.length || 0) === permissionGroups.length}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setFormData(prev => ({
+                            ...prev,
+                            permissionGroups: permissionGroups.map(g => g.id)
+                          }));
+                        } else {
+                          setFormData(prev => ({
+                            ...prev,
+                            permissionGroups: []
+                          }));
+                        }
+                      }}
+                    />
+                    <span className="text-sm font-medium">تحديد الكل</span>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const readGroups = permissionGroups.filter(g => 
+                          g.permissions.some(p => p.endsWith('.read'))
+                        );
+                        setFormData(prev => ({
+                          ...prev,
+                          permissionGroups: [...new Set([...(prev.permissionGroups || []), ...readGroups.map(g => g.id)])]
+                        }));
+                      }}
+                      className="text-xs"
+                    >
+                      تحديد مجموعات القراءة
+                    </Button>
+                    
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const writeGroups = permissionGroups.filter(g => 
+                          g.permissions.some(p => ['create', 'update', 'delete'].some(action => p.endsWith(`.${action}`)))
+                        );
+                        setFormData(prev => ({
+                          ...prev,
+                          permissionGroups: [...new Set([...(prev.permissionGroups || []), ...writeGroups.map(g => g.id)])]
+                        }));
+                      }}
+                      className="text-xs"
+                    >
+                      تحديد مجموعات الكتابة
+                    </Button>
+                    
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setFormData(prev => ({
+                          ...prev,
+                          permissionGroups: []
+                        }));
+                      }}
+                      className="text-xs text-red-600 hover:text-red-700"
+                    >
+                      إلغاء التحديد
+                    </Button>
+                  </div>
+                </div>
+              )}
+              
+              <div className="space-y-2 max-h-48 overflow-y-auto border rounded p-3">
+                {permissionGroups.length === 0 ? (
+                  <p className="text-sm text-gray-500 text-center">لا توجد مجموعات صلاحيات متاحة</p>
+                ) : (
+                  permissionGroups.map((group) => (
+                    <div key={group.id} className="flex items-center gap-2 justify-end">
+                      <div className="text-right">
+                        <div className="font-medium text-sm">{group.name}</div>
+                        <div className="text-xs text-gray-600">{group.description}</div>
+                      </div>
+                      <Checkbox
+                        checked={formData.permissionGroups?.includes(group.id) || false}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setFormData(prev => ({
+                              ...prev,
+                              permissionGroups: [...(prev.permissionGroups || []), group.id]
+                            }));
+                          } else {
+                            setFormData(prev => ({
+                              ...prev,
+                              permissionGroups: (prev.permissionGroups || []).filter(id => id !== group.id)
+                            }));
+                          }
+                        }}
+                      />
+                    </div>
+                  ))
+                )}
+              </div>
+              <p className="text-xs text-gray-600 text-right">
+                محدد {formData.permissionGroups?.length || 0} مجموعة صلاحيات
+              </p>
             </div>
 
             {/* Expiration Days */}

@@ -237,7 +237,7 @@ export function useCompaniesFirebase() {
           vatFileUrl = companyData.vatFile;
           console.log('📁 Using VAT file URL:', vatFileUrl);
         } else if (companyData.vatFile && companyData.vatFile instanceof File) {
-          try {
+        try {
             console.log('📤 Uploading VAT file...');
             const uploadedFile = await uploadFile(companyData.vatFile, {
               folder: `companies/${companyId}/documents`,
@@ -253,7 +253,7 @@ export function useCompaniesFirebase() {
           nationalAddressFileUrl = companyData.nationalAddressFile;
           console.log('📁 Using national address file URL:', nationalAddressFileUrl);
         } else if (companyData.nationalAddressFile && companyData.nationalAddressFile instanceof File) {
-          try {
+        try {
             console.log('📤 Uploading national address file...');
             const uploadedFile = await uploadFile(companyData.nationalAddressFile, {
               folder: `companies/${companyId}/documents`,

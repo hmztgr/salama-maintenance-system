@@ -164,6 +164,7 @@ export function useInvitationsFirebase() {
           type: 'email' as InvitationType,
           email: data.email,
           role: data.role,
+          permissionGroups: data.permissionGroups || [],
           invitedBy: 'current-user', // Should come from auth context
           invitedByName: 'النظام', // Should come from auth context
           customMessage: data.customMessage || '',
@@ -248,6 +249,7 @@ export function useInvitationsFirebase() {
         const invitationData = {
           type: 'link' as InvitationType,
           role: data.role,
+          permissionGroups: data.permissionGroups || [],
           invitedBy: 'current-user', // Should come from auth context
           invitedByName: 'النظام', // Should come from auth context
           customMessage: data.customMessage || '',

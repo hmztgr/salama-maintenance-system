@@ -341,7 +341,7 @@ export function VisitCompletionForm({ visit, onSuccess, onCancel }: VisitComplet
                 maxFiles={10}
                 maxSize={25}
                 allowedTypes={['image', 'pdf', 'doc', 'docx']}
-                accept="image/*,.pdf,.doc,.docx"
+                  accept="image/*,.pdf,.doc,.docx"
                 multiple={true}
               />
             </div>

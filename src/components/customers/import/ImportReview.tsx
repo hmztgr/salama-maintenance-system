@@ -383,14 +383,14 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
       option.toLowerCase() === value.toLowerCase() ||
       option === value
     )) {
-      errors.push({
-        row: rowNumber,
-        field: fieldName,
-        value,
+        errors.push({
+          row: rowNumber,
+          field: fieldName,
+          value,
         error: 'القيمة غير صحيحة',
         suggestion: 'استخدم: ' + config.enum.join(' أو '),
-        severity: 'error'
-      });
+          severity: 'error'
+        });
     }
 
     // Length validation
@@ -434,28 +434,28 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
                 if (companyById.companyName.toLowerCase() === companyName.trim().toLowerCase()) {
                   companyFound = true;
                 } else {
-                  errors.push({
-                    row: rowNumber,
-                    field: fieldName,
-                    value,
+          errors.push({
+            row: rowNumber,
+            field: fieldName,
+            value,
                     error: 'اسم الشركة لا يتطابق مع معرف الشركة',
                     suggestion: `اسم الشركة يجب أن يكون: ${companyById.companyName}`,
-                    severity: 'error'
-                  });
+            severity: 'error'
+          });
                 }
               } else {
                 companyFound = true;
               }
-            } else {
-              errors.push({
-                row: rowNumber,
-                field: fieldName,
-                value,
+        } else {
+          errors.push({
+            row: rowNumber,
+            field: fieldName,
+            value,
                 error: 'معرف الشركة غير موجود في النظام',
                 suggestion: 'تأكد من إضافة الشركة أولاً أو استخدم اسم الشركة',
-                severity: 'error'
-              });
-            }
+            severity: 'error'
+          });
+        }
           } else if (companyName && companyName.trim() !== '') {
             const companyByName = companies.find(c => 
               c.companyName.toLowerCase() === companyName.trim().toLowerCase()
@@ -463,14 +463,14 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
             if (companyByName) {
               companyFound = true;
             } else {
-              errors.push({
-                row: rowNumber,
-                field: fieldName,
-                value,
+      errors.push({
+        row: rowNumber,
+        field: fieldName,
+        value,
                 error: 'اسم الشركة غير موجود في النظام',
                 suggestion: 'تأكد من إضافة الشركة أولاً أو استخدم معرف الشركة',
-                severity: 'error'
-              });
+        severity: 'error'
+      });
             }
           }
         }
@@ -482,14 +482,14 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
       if (fieldName === 'companyId') {
         const company = companies.find(c => c.companyId === value);
         if (!company) {
-          errors.push({
-            row: rowNumber,
-            field: fieldName,
-            value,
+      errors.push({
+        row: rowNumber,
+        field: fieldName,
+        value,
             error: 'معرف الشركة غير موجود في النظام',
             suggestion: 'تأكد من إضافة الشركة أولاً في إدارة العملاء',
-            severity: 'error'
-          });
+        severity: 'error'
+      });
         }
       }
     }

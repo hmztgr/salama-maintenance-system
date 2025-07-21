@@ -192,7 +192,7 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (isSubmitting) {
       console.log('🚫 Form submission already in progress');
       return;

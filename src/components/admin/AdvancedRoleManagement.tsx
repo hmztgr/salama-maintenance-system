@@ -1012,6 +1012,132 @@ function UserDetailsModal({ user, permissions, permissionGroups, actions, onClos
             </div>
           </div>
 
+          {/* Permission Groups Management */}
+          <div className="space-y-4">
+            <h3 className="font-medium text-gray-900">إدارة مجموعات الصلاحيات</h3>
+            
+            <div className="space-y-2 max-h-48 overflow-y-auto border rounded p-3">
+              {permissionGroups.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center">لا توجد مجموعات صلاحيات متاحة</p>
+              ) : (
+                permissionGroups.map((group) => (
+                  <div key={group.id} className="flex items-center gap-2 justify-end">
+                    <div className="text-right">
+                      <div className="font-medium text-sm">{group.name}</div>
+                      <div className="text-xs text-gray-600">{group.description}</div>
+                    </div>
+                    <Checkbox
+                      checked={user.permissionGroups.includes(group.id)}
+                      onCheckedChange={(checked) => {
+                        // This would need to be implemented in the actions
+                        console.log('Toggle permission group:', group.id, checked);
+                      }}
+                    />
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Custom Permissions Management */}
+          <div className="space-y-4">
+            <h3 className="font-medium text-gray-900">إدارة الصلاحيات المخصصة</h3>
+            
+            <div className="space-y-2">
+              <Label className="text-right block mb-1">فئة الصلاحيات</Label>
+              <Select defaultValue="customer">
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="customer">إدارة العملاء</SelectItem>
+                  <SelectItem value="planning">التخطيط والجدولة</SelectItem>
+                  <SelectItem value="visits">إدارة الزيارات</SelectItem>
+                  <SelectItem value="reports">التقارير</SelectItem>
+                  <SelectItem value="admin">الإدارة</SelectItem>
+                  <SelectItem value="system">النظام</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-right block mb-1">الصلاحيات المخصصة</Label>
+              
+              {/* Bulk Selection Controls for Custom Permissions */}
+              <div className="flex items-center justify-between mb-3 p-2 bg-gray-50 rounded border">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    checked={false}
+                    onCheckedChange={(checked) => {
+                      // This would need to be implemented
+                      console.log('Select all custom permissions:', checked);
+                    }}
+                  />
+                  <span className="text-sm font-medium">تحديد الكل</span>
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      // This would need to be implemented
+                      console.log('Select read permissions');
+                    }}
+                    className="text-xs"
+                  >
+                    تحديد صلاحيات القراءة
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      // This would need to be implemented
+                      console.log('Select write permissions');
+                    }}
+                    className="text-xs"
+                  >
+                    تحديد صلاحيات الكتابة
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      // This would need to be implemented
+                      console.log('Clear all custom permissions');
+                    }}
+                    className="text-xs text-red-600 hover:text-red-700"
+                  >
+                    إلغاء التحديد
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="space-y-2 max-h-48 overflow-y-auto border rounded p-3">
+                {permissions.slice(0, 10).map((permission) => (
+                  <div key={permission.id} className="flex items-center gap-2 justify-end">
+                    <div className="text-right">
+                      <div className="font-medium text-sm">{permission.name}</div>
+                      <div className="text-xs text-gray-600">{permission.description}</div>
+                    </div>
+                    <Checkbox
+                      checked={user.customPermissions.includes(permission.id)}
+                      onCheckedChange={(checked) => {
+                        // This would need to be implemented in the actions
+                        console.log('Toggle custom permission:', permission.id, checked);
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
           {/* Actions */}
           <div className="flex gap-3 justify-end pt-4 border-t">
             <Button
@@ -1151,7 +1277,7 @@ function CreateGroupModal({ permissions, actions, onClose, onSuccess }: CreateGr
               <Label className="text-right block mb-1">الفئة *</Label>
               <Select
                 value={formData.category}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, category: value as PermissionCategory, permissions: [] }))}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, category: value as PermissionCategory }))}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -1169,6 +1295,83 @@ function CreateGroupModal({ permissions, actions, onClose, onSuccess }: CreateGr
 
             <div>
               <Label className="text-right block mb-3">الصلاحيات *</Label>
+              
+              {/* Bulk Selection Controls */}
+              <div className="flex items-center justify-between mb-3 p-2 bg-gray-50 rounded border">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    checked={permissionsByCategory.length > 0 && formData.permissions.length === permissionsByCategory.length}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setFormData(prev => ({
+                          ...prev,
+                          permissions: permissionsByCategory.map(p => p.id)
+                        }));
+                      } else {
+                        setFormData(prev => ({
+                          ...prev,
+                          permissions: []
+                        }));
+                      }
+                    }}
+                  />
+                  <span className="text-sm font-medium">تحديد الكل</span>
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const readPermissions = permissionsByCategory
+                        .filter(p => p.action === 'read')
+                        .map(p => p.id);
+                      setFormData(prev => ({
+                        ...prev,
+                        permissions: [...new Set([...prev.permissions, ...readPermissions])]
+                      }));
+                    }}
+                    className="text-xs"
+                  >
+                    تحديد صلاحيات القراءة
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const writePermissions = permissionsByCategory
+                        .filter(p => ['create', 'update', 'delete'].includes(p.action))
+                        .map(p => p.id);
+                      setFormData(prev => ({
+                        ...prev,
+                        permissions: [...new Set([...prev.permissions, ...writePermissions])]
+                      }));
+                    }}
+                    className="text-xs"
+                  >
+                    تحديد صلاحيات الكتابة
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        permissions: []
+                      }));
+                    }}
+                    className="text-xs text-red-600 hover:text-red-700"
+                  >
+                    إلغاء التحديد
+                  </Button>
+                </div>
+              </div>
+              
               <div className="space-y-2 max-h-64 overflow-y-auto border rounded p-3">
                 {permissionsByCategory.map((permission) => (
                   <div key={permission.id} className="flex items-center gap-2 justify-end">

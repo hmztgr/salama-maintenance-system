@@ -118,17 +118,17 @@ export function FileViewer({ file, isOpen, onClose }: FileViewerProps) {
                   }}
                 />
                              ) : isPDF ? (
-                <iframe
-                  src={`${file.url}#toolbar=1&navpanes=1&scrollbar=1&view=FitH`}
-                  className="w-full h-full border-0"
-                  onLoad={() => setIsLoading(false)}
-                  onError={() => {
+                 <iframe
+                   src={`${file.url}#toolbar=1&navpanes=1&scrollbar=1&view=FitH`}
+                   className="w-full h-full border-0"
+                   onLoad={() => setIsLoading(false)}
+                   onError={() => {
                     console.error('📄 FileViewer - PDF load error');
-                    setIsLoading(false);
-                    setError('فشل في تحميل ملف PDF');
-                  }}
-                  style={{ minHeight: '80vh' }}
-                />
+                     setIsLoading(false);
+                     setError('فشل في تحميل ملف PDF');
+                   }}
+                   style={{ minHeight: '80vh' }}
+                 />
               ) : null}
               
               {isLoading && (

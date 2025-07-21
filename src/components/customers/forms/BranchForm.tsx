@@ -157,26 +157,26 @@ export function BranchForm({ branch, onSuccess, onCancel }: BranchFormProps) {
               الشركة *
             </Label>
             <div className="relative">
-              <SearchableSelect
-                options={companies
-                  .filter(c => !c.isArchived)
-                  .sort((a, b) => a.companyId.localeCompare(b.companyId))
-                  .map((company): SearchableSelectOption => ({
-                    value: company.companyId,
-                    label: `${company.companyId} - ${company.companyName}`
-                  }))}
-                value={formData.companyId}
+            <SearchableSelect
+              options={companies
+                .filter(c => !c.isArchived)
+                .sort((a, b) => a.companyId.localeCompare(b.companyId))
+                .map((company): SearchableSelectOption => ({
+                  value: company.companyId,
+                  label: `${company.companyId} - ${company.companyName}`
+                }))}
+              value={formData.companyId}
                 onValueChange={(value) => {
                   console.log('🏢 BranchForm - Company selected:', value);
                   handleInputChange('companyId', value);
                 }}
-                placeholder="اختر الشركة"
-                searchPlaceholder="ابحث بالاسم أو الرقم..."
-                emptyMessage="لا توجد شركات"
-                className={errors.companyId ? 'border-red-500' : ''}
-                maxHeight="300px"
-                dir="rtl"
-              />
+              placeholder="اختر الشركة"
+              searchPlaceholder="ابحث بالاسم أو الرقم..."
+              emptyMessage="لا توجد شركات"
+              className={errors.companyId ? 'border-red-500' : ''}
+              maxHeight="300px"
+              dir="rtl"
+            />
               {/* Debug info */}
               <div className="text-xs text-gray-500 mt-1">
                 Debug: {companies.filter(c => !c.isArchived).length} companies available

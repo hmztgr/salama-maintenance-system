@@ -212,106 +212,106 @@ export function CompanyDetailView({
                 
                 console.log('📁 Found files in CompanyDetailView:', allFiles.length);
                 return (
-                  <div className="space-y-3">
+                <div className="space-y-3">
                     {/* Commercial Registration Files */}
                     {commercialRegFiles.map((fileUrl, index) => (
                       <div key={`commercial-${index}`} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <FileText className="w-5 h-5 text-blue-500" />
-                          <div>
+                      <div className="flex items-center gap-3">
+                        <FileText className="w-5 h-5 text-blue-500" />
+                        <div>
                             <p className="font-medium">السجل التجاري {commercialRegFiles.length > 1 ? `(${index + 1})` : ''}</p>
-                            <p className="text-sm text-gray-500">مستند مرفق</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-1"
-                            onClick={() => handleDocumentView(fileUrl, `commercial_registration_${index + 1}.pdf`)}
-                          >
-                            <Eye className="w-4 h-4" />
-                            عرض
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-1"
-                            onClick={() => handleDocumentDownload(fileUrl, `commercial_registration_${index + 1}.pdf`)}
-                          >
-                            <Download className="w-4 h-4" />
-                            تحميل
-                          </Button>
+                          <p className="text-sm text-gray-500">مستند مرفق</p>
                         </div>
                       </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1"
+                            onClick={() => handleDocumentView(fileUrl, `commercial_registration_${index + 1}.pdf`)}
+                        >
+                          <Eye className="w-4 h-4" />
+                          عرض
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1"
+                            onClick={() => handleDocumentDownload(fileUrl, `commercial_registration_${index + 1}.pdf`)}
+                        >
+                          <Download className="w-4 h-4" />
+                          تحميل
+                        </Button>
+                      </div>
+                    </div>
                     ))}
                     
                     {/* VAT Files */}
                     {vatFiles.map((fileUrl, index) => (
                       <div key={`vat-${index}`} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3">
                           <FileText className="w-5 h-5 text-green-500" />
-                          <div>
+                        <div>
                             <p className="font-medium">شهادة ضريبة القيمة المضافة {vatFiles.length > 1 ? `(${index + 1})` : ''}</p>
-                            <p className="text-sm text-gray-500">مستند مرفق</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-1"
-                            onClick={() => handleDocumentView(fileUrl, `vat_certificate_${index + 1}.pdf`)}
-                          >
-                            <Eye className="w-4 h-4" />
-                            عرض
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-1"
-                            onClick={() => handleDocumentDownload(fileUrl, `vat_certificate_${index + 1}.pdf`)}
-                          >
-                            <Download className="w-4 h-4" />
-                            تحميل
-                          </Button>
+                          <p className="text-sm text-gray-500">مستند مرفق</p>
                         </div>
                       </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1"
+                            onClick={() => handleDocumentView(fileUrl, `vat_certificate_${index + 1}.pdf`)}
+                        >
+                          <Eye className="w-4 h-4" />
+                          عرض
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1"
+                            onClick={() => handleDocumentDownload(fileUrl, `vat_certificate_${index + 1}.pdf`)}
+                        >
+                          <Download className="w-4 h-4" />
+                          تحميل
+                        </Button>
+                      </div>
+                    </div>
                     ))}
                     
                     {/* National Address Files */}
                     {nationalAddressFiles.map((fileUrl, index) => (
                       <div key={`national-${index}`} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3">
                           <FileText className="w-5 h-5 text-purple-500" />
-                          <div>
+                        <div>
                             <p className="font-medium">العنوان الوطني {nationalAddressFiles.length > 1 ? `(${index + 1})` : ''}</p>
-                            <p className="text-sm text-gray-500">مستند مرفق</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-1"
-                            onClick={() => handleDocumentView(fileUrl, `national_address_${index + 1}.pdf`)}
-                          >
-                            <Eye className="w-4 h-4" />
-                            عرض
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-1"
-                            onClick={() => handleDocumentDownload(fileUrl, `national_address_${index + 1}.pdf`)}
-                          >
-                            <Download className="w-4 h-4" />
-                            تحميل
-                          </Button>
+                          <p className="text-sm text-gray-500">مستند مرفق</p>
                         </div>
                       </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1"
+                            onClick={() => handleDocumentView(fileUrl, `national_address_${index + 1}.pdf`)}
+                        >
+                          <Eye className="w-4 h-4" />
+                          عرض
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1"
+                            onClick={() => handleDocumentDownload(fileUrl, `national_address_${index + 1}.pdf`)}
+                        >
+                          <Download className="w-4 h-4" />
+                          تحميل
+                        </Button>
+                      </div>
+                    </div>
                     ))}
-                  </div>
+                </div>
                 );
               })()}
             </CardContent>

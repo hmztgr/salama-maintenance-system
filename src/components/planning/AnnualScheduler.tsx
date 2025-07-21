@@ -145,15 +145,33 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
         });
       });
 
+      // Calculate total regular visits for this branch
+      const totalRegularVisits = branchContracts.reduce((sum, contract) => {
+        return sum + contract.serviceBatches?.reduce((batchSum, batch) => {
+          return batch.branchIds.includes(branch.branchId) ? 
+            batchSum + (batch.regularVisitsPerYear || 0) : batchSum;
+        }, 0) || 0;
+      }, 0);
+
+      // Count existing visits for this branch in the selected year
+      const existingVisitsCount = visits.filter(visit => 
+        visit.branchId === branch.branchId && 
+        !visit.isArchived &&
+        new Date(visit.scheduledDate).getFullYear() === selectedYear
+      ).length;
+
       return {
         ...branch,
         // Add company name for search
         companyName: company?.companyName || 'شركة غير معروفة',
         // Add contract type flags for filtering
         ...aggregatedServices,
+        // Add visit counts for filtering
+        totalRegularVisits,
+        existingVisitsCount,
       };
     });
-  }, [branches, contracts, companies]);
+  }, [branches, contracts, companies, visits, selectedYear]);
 
   const branchSearch = useSearch(enhancedBranches as unknown as (Branch & {
     companyName: string;
@@ -162,25 +180,42 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
     fireSuppressionMaintenance: boolean;
     gasFireSuppression: boolean;
     foamFireSuppression: boolean;
+    totalRegularVisits: number;
+    existingVisitsCount: number;
   })[], branchSearchConfig);
 
   // Generate available years (previous, current, next for contract continuity)
   const availableYears = [selectedYear - 1, selectedYear, selectedYear + 1];
 
-  // Use search results for filtered branches
+  // Use search results for filtered branches with additional visit count filtering
   const filteredBranches = useMemo(() => {
     console.log('🔍 AnnualScheduler search debug:', {
       totalEnhancedBranches: enhancedBranches.length,
       searchFilteredData: branchSearch.filteredData.length,
       searchTerm: branchSearch.filters.searchTerm,
-      searchResultCount: branchSearch.resultCount
+      searchResultCount: branchSearch.resultCount,
+      regularVisitsFilter: branchSearch.filters.regularVisits
     });
     
-    const filtered = branchSearch.filteredData.filter(branch => !branch.isArchived);
+    let filtered = branchSearch.filteredData.filter(branch => !branch.isArchived);
+    
+    // Apply visit count filtering
+    if (branchSearch.filters.regularVisits.min || branchSearch.filters.regularVisits.max) {
+      const minVisits = branchSearch.filters.regularVisits.min ? parseInt(branchSearch.filters.regularVisits.min) : 0;
+      const maxVisits = branchSearch.filters.regularVisits.max ? parseInt(branchSearch.filters.regularVisits.max) : Infinity;
+      
+      filtered = filtered.filter(branch => {
+        const visitCount = (branch as any).totalRegularVisits || 0;
+        return visitCount >= minVisits && visitCount <= maxVisits;
+      });
+      
+      console.log('🔍 After visit count filtering:', filtered.length, { minVisits, maxVisits });
+    }
+    
     console.log('🔍 Final filtered branches for display:', filtered.length);
     
     return filtered;
-  }, [branchSearch.filteredData, enhancedBranches.length, branchSearch.filters.searchTerm, branchSearch.resultCount]);
+  }, [branchSearch.filteredData, enhancedBranches.length, branchSearch.filters.searchTerm, branchSearch.resultCount, branchSearch.filters.regularVisits]);
 
   // Debug rendering
   useEffect(() => {

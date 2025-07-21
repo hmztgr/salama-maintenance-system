@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 
 // Firebase imports for invitation validation
-import { collection, query, where, getDocs, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 
 // Enhanced client-side invitation acceptance with Firebase integration
@@ -181,15 +181,46 @@ export function InvitationAcceptance() {
       return;
     }
 
-    // Simulate registration process
+    // Real user creation process
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // In a real app, this would create the user account
-      console.log('📝 User registration (simulated):', {
+      console.log('📝 Creating user account:', {
         token,
-        userData: formData
+        userData: formData,
+        invitation: invitation
       });
+
+      // Check if user already exists
+      const existingUserQuery = query(
+        collection(db, 'users'),
+        where('email', '==', formData.email)
+      );
+      const existingUserSnapshot = await getDocs(existingUserQuery);
+      
+      if (!existingUserSnapshot.empty) {
+        setFormErrors({ email: 'يوجد حساب بالفعل لهذا البريد الإلكتروني' });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Create new user in Firebase
+      const newUser = {
+        username: formData.username,
+        email: formData.email,
+        fullName: formData.fullName,
+        phone: formData.phone || '',
+        role: invitation.role || 'viewer',
+        permissionGroups: invitation.permissionGroups || [],
+        customPermissions: [],
+        deniedPermissions: [],
+        isActive: true,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        createdBy: invitation.invitedBy || 'system'
+      };
+
+      // Add user to Firestore
+      const userDocRef = await addDoc(collection(db, 'users'), newUser);
+      console.log('✅ User created in Firestore with ID:', userDocRef.id);
 
       // Mark invitation as accepted
       if (typeof window !== 'undefined' && token) {

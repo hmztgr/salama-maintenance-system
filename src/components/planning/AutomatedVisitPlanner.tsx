@@ -56,9 +56,11 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
   // Multi-branch selection state
   const [branchSelections, setBranchSelections] = useState<Map<string, boolean>>(new Map());
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<'branchName' | 'companyName' | 'contractCount' | 'visitCount'>('branchName');
+  const [sortBy, setSortBy] = useState<'branchName' | 'companyName' | 'contractCount' | 'visitCount' | 'city' | 'createdAt'>('branchName');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'withContracts' | 'withoutContracts'>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'withContracts' | 'withoutContracts' | 'activeContracts' | 'expiredContracts'>('all');
+  const [cityFilter, setCityFilter] = useState('all');
+  const [contractCountFilter, setContractCountFilter] = useState('all');
 
   // Check permissions
   if (!hasPermission('admin')) {
@@ -102,6 +104,8 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
       selectedCompanyId,
       searchTerm,
       filterStatus,
+      cityFilter,
+      contractCountFilter,
       sortBy,
       sortDirection
     });
@@ -146,8 +150,59 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
       case 'withoutContracts':
         filtered = filtered.filter(branch => branch.contractCount === 0);
         break;
+      case 'activeContracts':
+        filtered = filtered.filter(branch => {
+          const branchContracts = contracts.filter(contract => 
+            contract.serviceBatches?.some(batch => 
+              batch.branchIds.includes(branch.branchId)
+            ) && !contract.isArchived
+          );
+          return branchContracts.some(contract => {
+            const endDate = new Date(contract.contractEndDate);
+            return endDate > new Date();
+          });
+        });
+        break;
+      case 'expiredContracts':
+        filtered = filtered.filter(branch => {
+          const branchContracts = contracts.filter(contract => 
+            contract.serviceBatches?.some(batch => 
+              batch.branchIds.includes(branch.branchId)
+            ) && !contract.isArchived
+          );
+          return branchContracts.some(contract => {
+            const endDate = new Date(contract.contractEndDate);
+            return endDate <= new Date();
+          });
+        });
+        break;
       default:
         break;
+    }
+
+    // Filter by city
+    if (cityFilter && cityFilter !== 'all') {
+      filtered = filtered.filter(branch => branch.city === cityFilter);
+    }
+
+    // Filter by contract count
+    if (contractCountFilter && contractCountFilter !== 'all') {
+      switch (contractCountFilter) {
+        case '0':
+          filtered = filtered.filter(branch => branch.contractCount === 0);
+          break;
+        case '1':
+          filtered = filtered.filter(branch => branch.contractCount === 1);
+          break;
+        case '2-5':
+          filtered = filtered.filter(branch => branch.contractCount >= 2 && branch.contractCount <= 5);
+          break;
+        case '6+':
+          filtered = filtered.filter(branch => branch.contractCount >= 6);
+          break;
+        default:
+          break;
+      }
     }
 
     // Sort branches
@@ -166,6 +221,12 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
         case 'visitCount':
           comparison = a.visitCount - b.visitCount;
           break;
+        case 'city':
+          comparison = (a.city || '').localeCompare(b.city || '');
+          break;
+        case 'createdAt':
+          comparison = new Date(a.createdAt || '').getTime() - new Date(b.createdAt || '').getTime();
+          break;
         default:
           comparison = a.branchName.localeCompare(b.branchName);
       }
@@ -174,7 +235,7 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
 
     console.log('🔍 Final filtered branches:', filtered.length);
     return filtered;
-  }, [enhancedBranches, selectedCompanyId, searchTerm, filterStatus, sortBy, sortDirection]);
+  }, [enhancedBranches, selectedCompanyId, searchTerm, filterStatus, cityFilter, contractCountFilter, sortBy, sortDirection, contracts]);
 
   // Selection helpers
   const selectedBranches = useMemo(() => {
@@ -201,6 +262,16 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
       }
     });
     setBranchSelections(newSelections);
+  };
+
+  const clearAllFilters = () => {
+    setSearchTerm('');
+    setFilterStatus('all');
+    setCityFilter('all');
+    setContractCountFilter('all');
+    setSortBy('branchName');
+    setSortDirection('asc');
+    setSelectedCompanyId('all');
   };
 
   const handlePlanningStart = async () => {
@@ -307,7 +378,7 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
           </Button>
         </DialogTrigger>
         
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto" aria-describedby="automated-planning-description">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5" />
@@ -315,6 +386,10 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
             </DialogTitle>
           </DialogHeader>
 
+          <div id="automated-planning-description" className="sr-only">
+            نظام التخطيط التلقائي للزيارات - اختر الفروع وقم بتكوين خيارات التخطيط لإنشاء زيارات مجدولة تلقائياً
+          </div>
+          
           <div className="space-y-6">
             {/* Company Selection */}
             <Card>
@@ -370,51 +445,114 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {/* Search and Filter Controls */}
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  {/* Advanced Search and Filter Controls */}
+                  <div className="space-y-4">
+                    {/* Search Bar */}
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                       <Input
-                        placeholder="البحث في الفروع..."
+                        placeholder="البحث في الفروع والشركات..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-10"
                       />
                     </div>
 
-                    <Select value={filterStatus} onValueChange={(value: any) => setFilterStatus(value)}>
-                      <SelectTrigger>
-                        <Filter className="h-4 w-4 mr-2" />
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">جميع الفروع</SelectItem>
-                        <SelectItem value="withContracts">فروع لها عقود</SelectItem>
-                        <SelectItem value="withoutContracts">فروع بدون عقود</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    {/* Advanced Filters Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {/* Contract Status Filter */}
+                      <div>
+                        <Label className="text-sm font-medium">حالة العقود</Label>
+                        <Select value={filterStatus} onValueChange={(value: any) => setFilterStatus(value)}>
+                          <SelectTrigger>
+                            <Filter className="h-4 w-4 mr-2" />
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">جميع الفروع</SelectItem>
+                            <SelectItem value="withContracts">فروع لها عقود</SelectItem>
+                            <SelectItem value="withoutContracts">فروع بدون عقود</SelectItem>
+                            <SelectItem value="activeContracts">عقود نشطة</SelectItem>
+                            <SelectItem value="expiredContracts">عقود منتهية</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-                    <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                      <SelectTrigger>
-                        <SortAsc className="h-4 w-4 mr-2" />
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="branchName">اسم الفرع</SelectItem>
-                        <SelectItem value="companyName">اسم الشركة</SelectItem>
-                        <SelectItem value="contractCount">عدد العقود</SelectItem>
-                        <SelectItem value="visitCount">عدد الزيارات</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      {/* City Filter */}
+                      <div>
+                        <Label className="text-sm font-medium">المدينة</Label>
+                        <Select value={cityFilter} onValueChange={(value: any) => setCityFilter(value)}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="جميع المدن" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">جميع المدن</SelectItem>
+                            {Array.from(new Set(enhancedBranches.map(b => b.city).filter(Boolean))).sort().map(city => (
+                              <SelectItem key={city} value={city}>
+                                {city}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-                    <Button
-                      variant="outline"
-                      onClick={() => setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')}
-                      className="flex items-center gap-2"
-                    >
-                      {sortDirection === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
-                      {sortDirection === 'asc' ? 'تصاعدي' : 'تنازلي'}
-                    </Button>
+                      {/* Contract Count Range */}
+                      <div>
+                        <Label className="text-sm font-medium">عدد العقود</Label>
+                        <Select value={contractCountFilter} onValueChange={(value: any) => setContractCountFilter(value)}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="أي عدد" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">أي عدد</SelectItem>
+                            <SelectItem value="0">بدون عقود</SelectItem>
+                            <SelectItem value="1">عقد واحد</SelectItem>
+                            <SelectItem value="2-5">2-5 عقود</SelectItem>
+                            <SelectItem value="6+">6+ عقود</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Sort Options */}
+                      <div>
+                        <Label className="text-sm font-medium">ترتيب حسب</Label>
+                        <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                          <SelectTrigger>
+                            <SortAsc className="h-4 w-4 mr-2" />
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="branchName">اسم الفرع</SelectItem>
+                            <SelectItem value="companyName">اسم الشركة</SelectItem>
+                            <SelectItem value="contractCount">عدد العقود</SelectItem>
+                            <SelectItem value="visitCount">عدد الزيارات</SelectItem>
+                            <SelectItem value="city">المدينة</SelectItem>
+                            <SelectItem value="createdAt">تاريخ الإنشاء</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    {/* Sort Direction and Clear Filters */}
+                    <div className="flex items-center justify-between">
+                      <Button
+                        variant="outline"
+                        onClick={() => setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')}
+                        className="flex items-center gap-2"
+                      >
+                        {sortDirection === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
+                        {sortDirection === 'asc' ? 'تصاعدي' : 'تنازلي'}
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={clearAllFilters}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        مسح جميع الفلاتر
+                      </Button>
+                    </div>
                   </div>
 
                   {/* Bulk Selection Controls */}

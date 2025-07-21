@@ -678,7 +678,10 @@ function PermissionGroupsTab({ permissionGroups, permissions, actions, onRefresh
       </Card>
 
       {/* Group Details Modal */}
-      {console.log('🔧 Modal rendering check - showGroupDetails:', showGroupDetails, 'selectedGroup:', selectedGroup)}
+      {(() => {
+        console.log('🔧 Modal rendering check - showGroupDetails:', showGroupDetails, 'selectedGroup:', selectedGroup);
+        return null;
+      })()}
       {showGroupDetails && selectedGroup ? (
         <GroupDetailsModal
           group={selectedGroup}

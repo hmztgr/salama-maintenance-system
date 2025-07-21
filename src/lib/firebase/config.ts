@@ -5,18 +5,18 @@ import { getStorage } from 'firebase/storage';
 
 // Firebase configuration - loaded from environment variables
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'demo-key',
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'demo.firebaseapp.com',
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'demo-project',
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'demo.appspot.com',
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '123456789',
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || 'demo-app-id',
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || 'G-DEMO',
 };
 
 // Validate configuration
-if (!firebaseConfig.apiKey) {
-  console.warn('⚠️ Firebase configuration missing. Check .env.local file.');
+if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+  console.warn('⚠️ Firebase configuration missing. Check .env.local file. Using demo configuration.');
 }
 
 // Initialize Firebase only if we have the required configuration
@@ -25,7 +25,8 @@ let auth: any = null;
 let db: any = null;
 let storage: any = null;
 
-if (firebaseConfig.apiKey && typeof window !== 'undefined') {
+// For development, always initialize with demo config if real config is missing
+if (typeof window !== 'undefined') {
   try {
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);

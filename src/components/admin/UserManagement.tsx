@@ -558,7 +558,6 @@ function CreateUserModal({ permissionGroups, roleDefinitions, onClose, onSuccess
     fullName: '',
     password: '',
     confirmPassword: '',
-    role: 'viewer' as UserRole,
     permissionGroups: [] as string[],
     isActive: true
   });
@@ -600,6 +599,10 @@ function CreateUserModal({ permissionGroups, roleDefinitions, onClose, onSuccess
       newErrors.confirmPassword = 'تأكيد كلمة المرور مطلوب';
     } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'كلمة المرور غير متطابقة';
+    }
+
+    if (formData.permissionGroups.length === 0) {
+      newErrors.permissionGroups = 'يجب تحديد مجموعة صلاحيات واحدة على الأقل';
     }
 
     setErrors(newErrors);
@@ -645,13 +648,37 @@ function CreateUserModal({ permissionGroups, roleDefinitions, onClose, onSuccess
       console.log('✅ Firebase Auth account created:', userCredential.user.uid);
       console.log('👤 User email verified:', userCredential.user.emailVerified);
 
+      // Determine role based on permission groups
+      const determineRoleFromPermissionGroups = (permissionGroupIds: string[]): UserRole => {
+        // If user has admin permission groups, assign admin role
+        if (permissionGroupIds.some(groupId => {
+          const group = permissionGroups.find(g => g.id === groupId);
+          return group?.name?.toLowerCase().includes('admin') || group?.description?.toLowerCase().includes('admin');
+        })) {
+          return 'admin';
+        }
+        // If user has supervisor permission groups, assign supervisor role
+        if (permissionGroupIds.some(groupId => {
+          const group = permissionGroups.find(g => g.id === groupId);
+          return group?.name?.toLowerCase().includes('supervisor') || group?.description?.toLowerCase().includes('supervisor');
+        })) {
+          return 'supervisor';
+        }
+        // Default to viewer
+        return 'viewer';
+      };
+
+      const assignedRole = determineRoleFromPermissionGroups(formData.permissionGroups);
+      console.log('👤 New user role assigned:', assignedRole);
+      console.log('👤 New user permission groups:', formData.permissionGroups);
+
       // Create Firestore document using Firebase Auth UID as document ID
       const newUser = {
         uid: userCredential.user.uid,
         username: formData.username,
         email: formData.email,
         displayName: formData.fullName, // Use displayName to match FirebaseUserProfile interface
-        role: formData.role,
+        role: assignedRole,
         permissionGroups: formData.permissionGroups,
         customPermissions: [],
         deniedPermissions: [],
@@ -662,9 +689,6 @@ function CreateUserModal({ permissionGroups, roleDefinitions, onClose, onSuccess
         createdBy: authState.user?.displayName || authState.user?.email || 'admin',
         firebaseUid: userCredential.user.uid // Link to Firebase Auth
       };
-
-      console.log('👤 New user role assigned:', formData.role);
-      console.log('👤 New user permission groups:', formData.permissionGroups);
 
       await setDoc(doc(db, 'users', userCredential.user.uid), newUser);
       console.log('✅ Firestore user document created successfully');
@@ -789,23 +813,7 @@ function CreateUserModal({ permissionGroups, roleDefinitions, onClose, onSuccess
             </div>
 
             <div>
-              <Label className="text-right block mb-1">الدور</Label>
-              <Select value={formData.role} onValueChange={(value) => setFormData(prev => ({ ...prev, role: value as UserRole }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="اختر الدور" />
-                </SelectTrigger>
-                <SelectContent>
-                  {roleDefinitions.map((roleDef) => (
-                    <SelectItem key={roleDef.role} value={roleDef.role}>
-                      {roleDef.name} - {roleDef.description}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label className="text-right block mb-1">مجموعات الصلاحيات</Label>
+              <Label className="text-right block mb-1">مجموعات الصلاحيات *</Label>
               <div className="space-y-2 max-h-48 overflow-y-auto border rounded p-3">
                 {permissionGroups.length === 0 ? (
                   <p className="text-sm text-gray-500 text-center">لا توجد مجموعات صلاحيات متاحة</p>
@@ -836,6 +844,15 @@ function CreateUserModal({ permissionGroups, roleDefinitions, onClose, onSuccess
                   ))
                 )}
               </div>
+              {formData.permissionGroups.length === 0 && (
+                <p className="text-sm text-red-500 text-right mt-1">يجب تحديد مجموعة صلاحيات واحدة على الأقل</p>
+              )}
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-blue-800 text-sm text-right">
+                💡 سيتم تعيين الدور تلقائياً بناءً على مجموعات الصلاحيات المحددة
+              </p>
             </div>
 
             <div className="flex items-center gap-2">

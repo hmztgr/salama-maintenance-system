@@ -238,6 +238,11 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
     return filtered;
   }, [enhancedBranches, selectedCompanyId, searchTerm, filterStatus, cityFilter, contractCountFilter, sortBy, sortDirection, contracts]);
 
+  // Debug rendering
+  useEffect(() => {
+    console.log('🔍 Rendering table with branches:', filteredBranches.length, filteredBranches.map(b => ({ id: b.branchId, name: b.branchName, selected: b.isSelected })));
+  }, [filteredBranches]);
+
   // Selection helpers
   const selectedBranches = useMemo(() => {
     return filteredBranches.filter(branch => branch.isSelected);
@@ -591,7 +596,6 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
                         </tr>
                       </thead>
                       <tbody className="divide-y">
-                        {console.log('🔍 Rendering table with branches:', filteredBranches.length, filteredBranches.map(b => ({ id: b.branchId, name: b.branchName, selected: b.isSelected })))}
                         {filteredBranches.map(branch => (
                           <tr key={branch.branchId} className="hover:bg-gray-50">
                             <td className="px-4 py-2">

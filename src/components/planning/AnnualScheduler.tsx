@@ -182,6 +182,11 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
     return filtered;
   }, [branchSearch.filteredData, enhancedBranches.length, branchSearch.filters.searchTerm, branchSearch.resultCount]);
 
+  // Debug rendering
+  useEffect(() => {
+    console.log('🔍 AnnualScheduler rendering branches:', filteredBranches.length, filteredBranches.map(b => ({ id: b.branchId, name: b.branchName, company: b.companyName })));
+  }, [filteredBranches]);
+
   // Generate 52-week planning grid
   const weeklyData = useMemo(() => {
     const weeks: WeekData[] = [];
@@ -877,7 +882,6 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {console.log('🔍 AnnualScheduler rendering branches:', filteredBranches.length, filteredBranches.map(b => ({ id: b.branchId, name: b.branchName, company: b.companyName })))}
                   {filteredBranches.map(branch => {
                     const company = companies.find(c => c.companyId === branch.companyId);
                     return (

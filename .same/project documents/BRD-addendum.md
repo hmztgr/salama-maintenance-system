@@ -1333,8 +1333,235 @@ src/components/
 
 ---
 
+---
+
+## 🚀 **NEW MODULE: Automated Visit Planning System**
+
+### **Module 17: Automated Visit Planning & Scheduling**
+
+#### **17.1 Automated Visit Planning System**
+- **REQ-AUTO-001**: Comprehensive automated visit planning system
+  - **Contract-Based Planning**: Generate visits based on `regularVisitsPerYear` from service batches
+  - **Optimal Distribution**: Spread visits evenly throughout contract periods
+  - **Weekly Prioritization**: Prioritize Saturday starts with even weekly distribution
+  - **Daily Limits**: Configurable daily visit limits to prevent team overload
+  - **Conflict Resolution**: Smart handling of existing visits and scheduling conflicts
+
+- **REQ-AUTO-002**: Advanced planning algorithm
+  - **Date Calculation**: Optimal spacing between visits based on contract duration
+  - **Business Rule Enforcement**: Respect contract periods and service requirements
+  - **Existing Visit Consideration**: Account for completed and scheduled visits
+  - **Service Assignment**: Automatic service assignment from contract service batches
+  - **Batch Processing**: Efficient creation of multiple visits with progress tracking
+
+- **REQ-AUTO-003**: Planning configuration and control
+  - **Planning Parameters**: Configurable options for visit distribution
+  - **Preview Mode**: Show planned visits before creation
+  - **Selective Planning**: Plan for specific companies, contracts, or branches
+  - **Rollback Capability**: Ability to undo planning operations
+  - **Planning Templates**: Pre-defined planning configurations for common scenarios
+
+#### **17.2 User Interface Integration**
+- **REQ-AUTO-004**: Planning interface components
+  - **Automated Planning Button**: One-click planning trigger in Annual Scheduler
+  - **Configuration Modal**: Planning options and parameter settings
+  - **Progress Tracking**: Real-time planning progress with detailed logging
+  - **Results Summary**: Comprehensive planning completion report
+  - **Planning Dashboard**: Dedicated planning management interface
+
+- **REQ-AUTO-005**: Planning workflow integration
+  - **Annual Scheduler Integration**: Seamless integration with existing planning system
+  - **Manual Override**: Ability to modify automated plans manually
+  - **Planning History**: Track all automated planning operations
+  - **Planning Analytics**: Analyze planning efficiency and optimization opportunities
+  - **Mobile Planning**: Mobile-optimized planning interface
+
+#### **17.3 Performance and Scalability**
+- **REQ-AUTO-006**: High-performance planning engine
+  - **Speed Optimization**: Plan 1000+ visits in under 30 seconds
+  - **Memory Efficiency**: Handle large datasets without performance degradation
+  - **Batch Operations**: Efficient batch creation of planned visits
+  - **Progress Feedback**: Real-time progress updates for user confidence
+  - **Error Recovery**: Graceful handling of planning failures with rollback
+
+- **REQ-AUTO-007**: Scalability features
+  - **Large Company Support**: Handle companies with 100+ branches efficiently
+  - **System-wide Planning**: Plan entire system in minutes
+  - **Incremental Planning**: Add new visits to existing schedules
+  - **Planning Optimization**: AI-powered planning optimization suggestions
+  - **Load Balancing**: Distribute planning load across multiple operations
+
+#### **17.4 Business Intelligence Integration**
+- **REQ-AUTO-008**: Planning analytics and insights
+  - **Planning Efficiency Metrics**: Measure time savings and optimization
+  - **Resource Utilization**: Analyze team workload distribution
+  - **Contract Compliance**: Track planning compliance with contract requirements
+  - **Planning Quality**: Assess distribution quality and optimization opportunities
+  - **Cost Analysis**: Calculate planning cost savings and ROI
+
+- **REQ-AUTO-009**: Advanced planning features
+  - **Predictive Planning**: AI-powered visit scheduling optimization
+  - **Seasonal Adjustments**: Account for seasonal variations in visit requirements
+  - **Team Capacity Planning**: Consider team availability and capacity
+  - **Geographic Optimization**: Optimize visit routes and travel time
+  - **Customer Preference Integration**: Account for customer scheduling preferences
+
+### **Module 18: Automated Planning Implementation**
+
+#### **18.1 Technical Implementation Details**
+- **REQ-AUTO-010**: Core planning infrastructure
+  ```typescript
+  // Automated planning system architecture
+  src/components/planning/
+  ├── AutomatedVisitPlanner.tsx      // Main planning component
+  ├── VisitPlanningConfig.tsx        // Configuration options
+  ├── VisitPlanningProgress.tsx      // Progress tracking
+  └── VisitPlanningSummary.tsx       // Results summary
+  
+  src/lib/planning/
+  ├── VisitPlanningAlgorithm.ts      // Core planning algorithm
+  ├── ConflictResolver.ts            // Conflict detection and resolution
+  ├── ScheduleOptimizer.ts           // Schedule optimization
+  └── PlanningValidator.ts           // Business rule validation
+  ```
+
+- **REQ-AUTO-011**: Planning algorithm implementation
+  ```typescript
+  // Core planning algorithm structure
+  interface VisitPlanningData {
+    branch: Branch;
+    contract: Contract;
+    serviceBatch: ContractServiceBatch;
+    requiredVisits: number;
+    contractStart: Date;
+    contractEnd: Date;
+    existingVisits: Visit[];
+    completedVisits: Visit[];
+  }
+  
+  interface VisitSchedule {
+    branchId: string;
+    contractId: string;
+    scheduledDates: string[];
+    visitSpacing: number;
+    weeklyDistribution: number;
+  }
+  ```
+
+#### **18.2 Integration Strategy**
+- **REQ-AUTO-012**: Existing system integration
+  ```typescript
+  // Integration points:
+  1. Contract Service Batches → Visit Requirements
+  2. Branch-Contract Relationships → Visit Assignment
+  3. Existing Visits → Conflict Detection
+  4. Date Utilities → Schedule Calculation
+  5. Visit Management → Batch Creation
+  ```
+
+- **REQ-AUTO-013**: User workflow integration
+  ```typescript
+  // User workflow:
+  1. Navigate to Planning → Annual Scheduler
+  2. Select Automated Planning option
+  3. Configure planning parameters
+  4. Review planning preview
+  5. Execute planning operation
+  6. Review results summary
+  7. Continue with manual adjustments if needed
+  ```
+
+#### **18.3 Testing and Validation**
+- **REQ-AUTO-014**: Comprehensive testing strategy
+  - **Algorithm Testing**: Test planning algorithm accuracy and efficiency
+  - **Integration Testing**: Test integration with existing planning system
+  - **Performance Testing**: Test planning performance with large datasets
+  - **User Acceptance Testing**: Test with real business scenarios
+  - **Edge Case Testing**: Test planning with complex contract scenarios
+  - **Error Handling Testing**: Test error scenarios and recovery
+
+#### **18.4 Performance Optimization**
+- **REQ-AUTO-015**: Planning system optimization
+  - **Algorithm Optimization**: Optimize planning algorithm for speed and accuracy
+  - **Batch Processing**: Efficient batch creation of planned visits
+  - **Memory Management**: Optimize memory usage for large planning operations
+  - **Caching Strategy**: Intelligent caching of planning results
+  - **Progress Tracking**: Real-time progress updates without performance impact
+
+### **Module 19: Future Planning Enhancements**
+
+#### **19.1 Advanced Planning Features**
+- **REQ-AUTO-016**: AI-powered planning optimization
+  - **Machine Learning Integration**: Learn from planning patterns and optimize
+  - **Predictive Analytics**: Predict optimal visit timing based on historical data
+  - **Dynamic Adjustment**: Real-time planning adjustments based on changing conditions
+  - **Optimization Suggestions**: AI-powered suggestions for planning improvements
+  - **Continuous Learning**: System learns and improves over time
+
+#### **19.2 External System Integration**
+- **REQ-AUTO-017**: Third-party system integration
+  - **Calendar Integration**: Integration with external calendar systems
+  - **CRM Integration**: Integration with customer relationship management systems
+  - **ERP Integration**: Integration with enterprise resource planning systems
+  - **Mobile App Integration**: Integration with mobile planning applications
+  - **API Integration**: RESTful API for external system integration
+
+#### **19.3 Advanced Analytics**
+- **REQ-AUTO-018**: Planning analytics and reporting
+  - **Planning Efficiency Analytics**: Measure and optimize planning efficiency
+  - **Resource Utilization Reports**: Analyze team workload and capacity
+  - **Cost Analysis**: Calculate planning cost savings and ROI
+  - **Compliance Reporting**: Generate compliance reports for contract requirements
+  - **Performance Benchmarking**: Compare planning performance across companies
+
+---
+
+## 🎯 **SUCCESS METRICS FOR AUTOMATED PLANNING**
+
+### **Operational Efficiency Metrics**
+- ✅ **Time Savings**: 95% reduction in planning time (from 2-3 hours to 30 seconds per company)
+- ✅ **Planning Accuracy**: 100% contract compliance with automated planning
+- ✅ **Error Reduction**: Eliminate manual planning mistakes and inconsistencies
+- ✅ **Resource Optimization**: Better team workload distribution and capacity utilization
+
+### **Business Value Metrics**
+- ✅ **Cost Reduction**: Significant reduction in administrative overhead
+- ✅ **Quality Improvement**: Consistent and optimized service delivery
+- ✅ **Customer Satisfaction**: Reliable and predictable service schedules
+- ✅ **Scalability**: Support business growth without planning overhead increase
+
+### **Performance Metrics**
+- ✅ **Planning Speed**: Plan 1000+ visits in under 30 seconds
+- ✅ **System Reliability**: 99%+ success rate for planning operations
+- ✅ **Scalability**: Handle companies with 100+ branches efficiently
+- ✅ **User Experience**: Clear progress feedback and results summary
+
+---
+
+## 🔗 **INTEGRATION WITH EXISTING MODULES**
+
+### **Enhanced Planning and Scheduling**
+- **Automated Planning**: Seamless integration with existing Annual Scheduler
+- **Manual Override**: Ability to modify automated plans manually
+- **Real-time Updates**: Live planning updates across multiple users
+- **Mobile Planning**: Mobile-optimized automated planning interface
+
+### **Enhanced Customer Management**
+- **Contract Integration**: Direct integration with contract service batches
+- **Branch Management**: Automated planning for all branches in a company
+- **Service Assignment**: Automatic service assignment from contracts
+- **Compliance Tracking**: Track planning compliance with contract requirements
+
+### **Enhanced Reports and Analytics**
+- **Planning Analytics**: Comprehensive planning efficiency and optimization reports
+- **Resource Utilization**: Analyze team workload and capacity utilization
+- **Cost Analysis**: Calculate planning cost savings and ROI
+- **Performance Benchmarking**: Compare planning performance across companies
+
+---
+
 **Document Control:**
 - **Next Review Date**: Upon completion of Phase 3 features
 - **Approval Required**: Project Stakeholders
 - **Integration**: Must be compatible with original BRD v2.0 and existing addendum
-- **Priority**: High priority for user experience enhancement and security improvement
+- **Priority**: High priority for operational efficiency improvement and user experience enhancement

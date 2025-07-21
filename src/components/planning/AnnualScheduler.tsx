@@ -17,6 +17,7 @@ import { SearchAndFilter } from '@/components/common/SearchAndFilter';
 import { formatDateForDisplay, getWeekStartDate, getWeekEndDate, getWeekNumber, getCurrentDate } from '@/lib/date-handler';
 import { SafeStorage } from '@/lib/storage';
 import { Branch, Visit } from '@/types/customer';
+import { AutomatedVisitPlanner } from './AutomatedVisitPlanner';
 
 // Helper function to parse our custom date format (dd-mmm-yyyy)
 const parseCustomDate = (dateStr: string): Date => {
@@ -588,6 +589,12 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
     return colors[status as keyof typeof colors] || 'bg-gray-200';
   };
 
+  // Handle export planning
+  const handleExportPlanning = () => {
+    // TODO: Implement export functionality
+    alert('سيتم إضافة ميزة التصدير قريباً');
+  };
+
   const getStatusText = (status: string) => {
     const texts = {
       'planned': 'مجدولة',
@@ -629,70 +636,65 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Header */}
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">المجدول السنوي</h1>
-          <p className="text-gray-600 mt-2">
-            عرض 52 أسبوع لجميع الفروع مع إمكانية التخطيط المباشر
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Button variant="outline" className="gap-2">
-            <Download className="w-4 h-4" />
-            تصدير التقرير
-          </Button>
+      {/* Header with year navigation and filters */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex items-center gap-4">
           <Button
             variant="outline"
-            onClick={() => setShowFilters(!showFilters)}
-            className="gap-2"
+            size="sm"
+            onClick={() => setSelectedYear(prev => prev - 1)}
           >
-            <Filter className="w-4 h-4" />
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          
+          <div className="text-center">
+            <h2 className="text-2xl font-bold">{selectedYear}</h2>
+            <p className="text-sm text-gray-600">جدولة الزيارات السنوية</p>
+          </div>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setSelectedYear(prev => prev + 1)}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* Automated Planning Button */}
+          <AutomatedVisitPlanner />
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter className="h-4 w-4 mr-2" />
             تصفية
           </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportPlanning}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            تصدير
+          </Button>
+          
           {selectedVisits.size > 0 && hasPermission('supervisor') && (
             <Button
               variant="destructive"
+              size="sm"
               onClick={handleBulkDeleteVisits}
-              className="gap-2"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="h-4 w-4 mr-2" />
               حذف المحدد ({selectedVisits.size})
             </Button>
           )}
         </div>
       </div>
-
-      {/* Year Selection */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex justify-between items-center">
-            <Button
-              variant="outline"
-              onClick={() => setSelectedYear(selectedYear - 1)}
-              className="gap-2"
-            >
-              <ChevronRight className="w-4 h-4" />
-              {selectedYear - 1}
-            </Button>
-
-            <div className="text-center">
-              <h3 className="font-bold text-2xl">{selectedYear}</h3>
-              <p className="text-sm text-gray-600">السنة المختارة</p>
-            </div>
-
-            <Button
-              variant="outline"
-              onClick={() => setSelectedYear(selectedYear + 1)}
-              className="gap-2"
-            >
-              {selectedYear + 1}
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Filters Panel */}
       {showFilters && (

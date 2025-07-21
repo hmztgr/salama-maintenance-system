@@ -60,6 +60,11 @@ export function AdvancedRoleManagement() {
     refreshData
   } = useRoleManagementFirebase();
 
+  // Debug logging
+  console.log('🔍 AdvancedRoleManagement - permissionGroups:', permissionGroups);
+  console.log('🔍 AdvancedRoleManagement - loading:', loading);
+  console.log('🔍 AdvancedRoleManagement - error:', error);
+
   const [activeTab, setActiveTab] = useState<'users' | 'groups' | 'history' | 'statistics'>('users');
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<UserRole | 'all'>('all');

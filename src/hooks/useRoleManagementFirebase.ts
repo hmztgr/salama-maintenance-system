@@ -150,10 +150,12 @@ export function useRoleManagementFirebase() {
     console.log('🔥 Setting up Firebase real-time listener for permission groups...');
     setLoading(true);
 
+    // Start with a simple query without ordering to avoid index issues
     const permissionGroupsQuery = query(
-      collection(db, 'permissionGroups'),
-      orderBy('createdAt', 'desc')
+      collection(db, 'permissionGroups')
     );
+
+    console.log('🔥 Query created, setting up listener...');
 
     const unsubscribe = onSnapshot(
       permissionGroupsQuery,
@@ -161,9 +163,20 @@ export function useRoleManagementFirebase() {
         try {
           console.log('🔥 Firebase permission groups snapshot received:', snapshot.size, 'documents');
           
+          // Debug: Log each document
+          snapshot.docs.forEach((doc, index) => {
+            console.log(`📄 Document ${index + 1}:`, {
+              id: doc.id,
+              data: doc.data(),
+              exists: doc.exists()
+            });
+          });
+          
           const permissionGroupsData = snapshot.docs.map(convertDocToPermissionGroup);
           
-          console.log('📊 Processed permission groups data:', permissionGroupsData.length, 'groups');
+          console.log('📊 Processed permission groups data:', permissionGroupsData);
+          console.log('📊 Number of groups:', permissionGroupsData.length);
+          
           setPermissionGroups(permissionGroupsData);
           setError(null);
           setLoading(false);

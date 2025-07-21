@@ -20,6 +20,7 @@ export interface SearchFilters {
     start: string;
     end: string;
   };
+  visitStatus: 'all' | 'hasPlanned' | 'hasEmergency' | 'hasCompleted' | 'noVisits' | 'hasAnyVisits';
   sortBy: string;
   sortDirection: 'asc' | 'desc';
 }
@@ -56,6 +57,7 @@ export function useSearch<T>(data: T[], searchConfig: {
     regularVisits: { min: '', max: '' },
     emergencyVisits: { min: '', max: '' },
     dateRange: { start: '', end: '' },
+    visitStatus: 'all',
     sortBy: searchConfig.defaultSortField || 'id',
     sortDirection: 'asc'
   });
@@ -261,6 +263,31 @@ export function useSearch<T>(data: T[], searchConfig: {
       });
     }
 
+    // Visit status filter
+    if (filters.visitStatus !== 'all') {
+      result = result.filter(item => {
+        const hasPlannedVisits = Boolean(item['hasPlannedVisits' as keyof T]);
+        const hasEmergencyVisits = Boolean(item['hasEmergencyVisits' as keyof T]);
+        const hasCompletedVisits = Boolean(item['hasCompletedVisits' as keyof T]);
+        const hasAnyVisits = hasPlannedVisits || hasEmergencyVisits || hasCompletedVisits;
+
+        switch (filters.visitStatus) {
+          case 'hasPlanned':
+            return hasPlannedVisits;
+          case 'hasEmergency':
+            return hasEmergencyVisits;
+          case 'hasCompleted':
+            return hasCompletedVisits;
+          case 'noVisits':
+            return !hasAnyVisits;
+          case 'hasAnyVisits':
+            return hasAnyVisits;
+          default:
+            return true;
+        }
+      });
+    }
+
     // Date range filter
     if ((filters.dateRange.start || filters.dateRange.end) && searchConfig.dateField) {
       result = result.filter(item => {
@@ -369,6 +396,7 @@ export function useSearch<T>(data: T[], searchConfig: {
       regularVisits: { min: '', max: '' },
       emergencyVisits: { min: '', max: '' },
       dateRange: { start: '', end: '' },
+      visitStatus: 'all',
       sortBy: 'name',
       sortDirection: 'asc'
     });

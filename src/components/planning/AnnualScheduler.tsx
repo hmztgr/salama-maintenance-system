@@ -160,6 +160,18 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
         new Date(visit.scheduledDate).getFullYear() === selectedYear
       ).length;
 
+      // Calculate visit status flags for filtering
+      const branchVisits = visits.filter(visit => 
+        visit.branchId === branch.branchId && 
+        !visit.isArchived &&
+        new Date(visit.scheduledDate).getFullYear() === selectedYear
+      );
+
+      const hasPlannedVisits = branchVisits.some(visit => visit.status === 'scheduled' && visit.type === 'regular');
+      const hasEmergencyVisits = branchVisits.some(visit => visit.type === 'emergency');
+      const hasCompletedVisits = branchVisits.some(visit => visit.status === 'completed');
+      const hasAnyVisits = hasPlannedVisits || hasEmergencyVisits || hasCompletedVisits;
+
       return {
         ...branch,
         // Add company name for search
@@ -169,6 +181,11 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
         // Add visit counts for filtering
         totalRegularVisits,
         existingVisitsCount,
+        // Add visit status flags for filtering
+        hasPlannedVisits,
+        hasEmergencyVisits,
+        hasCompletedVisits,
+        hasAnyVisits,
       };
     });
   }, [branches, contracts, companies, visits, selectedYear]);
@@ -182,6 +199,10 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
     foamFireSuppression: boolean;
     totalRegularVisits: number;
     existingVisitsCount: number;
+    hasPlannedVisits: boolean;
+    hasEmergencyVisits: boolean;
+    hasCompletedVisits: boolean;
+    hasAnyVisits: boolean;
   })[], branchSearchConfig);
 
   // Generate available years (previous, current, next for contract continuity)

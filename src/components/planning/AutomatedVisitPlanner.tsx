@@ -43,7 +43,7 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
   const [isPlanning, setIsPlanning] = useState(false);
   const [planningProgress, setPlanningProgress] = useState(0);
   const [planningResult, setPlanningResult] = useState<PlanningResult | null>(null);
-  const [selectedCompanyId, setSelectedCompanyId] = useState('');
+  const [selectedCompanyId, setSelectedCompanyId] = useState('all');
   const [planningOptions, setPlanningOptions] = useState<PlanningOptions>({
     maxVisitsPerDay: 5,
     preferredWeekStart: 'saturday',
@@ -67,6 +67,13 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
 
   // Enhanced branch data with company names and contract counts
   const enhancedBranches = useMemo(() => {
+    console.log('🏢 Enhanced branches calculation:', {
+      totalBranches: branches.length,
+      totalCompanies: companies.length,
+      totalContracts: contracts.length,
+      totalVisits: visits.length
+    });
+    
     return branches
       .filter(branch => !branch.isArchived)
       .map(branch => {
@@ -90,23 +97,45 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
 
   // Filtered and sorted branches
   const filteredBranches = useMemo(() => {
+    console.log('🔍 Filtering branches:', {
+      totalEnhancedBranches: enhancedBranches.length,
+      selectedCompanyId,
+      searchTerm,
+      filterStatus,
+      sortBy,
+      sortDirection
+    });
+    
     let filtered = enhancedBranches;
 
     // Filter by company
-    if (selectedCompanyId) {
+    if (selectedCompanyId && selectedCompanyId !== 'all') {
       filtered = filtered.filter(branch => branch.companyId === selectedCompanyId);
+      console.log('🔍 After company filter:', filtered.length);
     }
 
     // Filter by search term
     if (searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(branch => 
-        branch.branchName.toLowerCase().includes(searchLower) ||
-        branch.companyName.toLowerCase().includes(searchLower) ||
-        branch.branchId.toLowerCase().includes(searchLower) ||
-        branch.address?.toLowerCase().includes(searchLower) ||
-        branch.contactPerson?.toLowerCase().includes(searchLower)
-      );
+      console.log('🔍 Searching for:', searchLower);
+      console.log('🔍 Total branches before search:', filtered.length);
+      
+      filtered = filtered.filter(branch => {
+        const matches = 
+          branch.branchName.toLowerCase().includes(searchLower) ||
+          branch.companyName.toLowerCase().includes(searchLower) ||
+          branch.branchId.toLowerCase().includes(searchLower) ||
+          (branch.address && branch.address.toLowerCase().includes(searchLower)) ||
+          (branch.contactPerson && branch.contactPerson.toLowerCase().includes(searchLower));
+        
+        if (matches) {
+          console.log('🔍 Match found:', branch.branchName, branch.companyName);
+        }
+        
+        return matches;
+      });
+      
+      console.log('🔍 Branches after search:', filtered.length);
     }
 
     // Filter by status
@@ -143,6 +172,7 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
       return sortDirection === 'desc' ? -comparison : comparison;
     });
 
+    console.log('🔍 Final filtered branches:', filtered.length);
     return filtered;
   }, [enhancedBranches, selectedCompanyId, searchTerm, filterStatus, sortBy, sortDirection]);
 
@@ -300,7 +330,7 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
                         <SelectValue placeholder="اختر الشركة للتصفية (اختياري)" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">جميع الشركات</SelectItem>
+                        <SelectItem value="all">جميع الشركات</SelectItem>
                         {companies
                           .filter(company => !company.isArchived)
                           .map(company => (
@@ -317,7 +347,7 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
                     </Select>
                   </div>
 
-                  {selectedCompanyId && (
+                  {selectedCompanyId && selectedCompanyId !== 'all' && (
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div className="flex items-center gap-2">
                         <Badge variant="secondary">الفروع</Badge>

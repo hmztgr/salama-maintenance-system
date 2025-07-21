@@ -1508,6 +1508,7 @@ function GroupDetailsModal({ group, permissions, actions, onClose, onSuccess }: 
   const [formData, setFormData] = useState({
     name: group.name,
     description: group.description,
+    category: group.category,
     permissions: group.permissions || []
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -1530,10 +1531,6 @@ function GroupDetailsModal({ group, permissions, actions, onClose, onSuccess }: 
 
     if (!formData.name.trim()) {
       newErrors.name = 'اسم المجموعة مطلوب';
-    }
-
-    if (!formData.description.trim()) {
-      newErrors.description = 'وصف المجموعة مطلوب';
     }
 
     setErrors(newErrors);
@@ -1563,6 +1560,7 @@ function GroupDetailsModal({ group, permissions, actions, onClose, onSuccess }: 
       updates: {
         name: formData.name,
         description: formData.description,
+        category: formData.category,
         permissions: formData.permissions
       }
     });
@@ -1574,6 +1572,7 @@ function GroupDetailsModal({ group, permissions, actions, onClose, onSuccess }: 
       const result = await actions.updatePermissionGroup(group.id, {
         name: formData.name,
         description: formData.description,
+        category: formData.category,
         permissions: formData.permissions
       });
 
@@ -1594,9 +1593,11 @@ function GroupDetailsModal({ group, permissions, actions, onClose, onSuccess }: 
     }
   };
 
+  const permissionsByCategory = permissions.filter(p => p.category === formData.category);
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4" style={{ zIndex: 9999 }}>
-      <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto" style={{ zIndex: 10000 }}>
+      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto" style={{ zIndex: 10000 }}>
         <CardHeader>
           <CardTitle className="text-right flex items-center justify-between">
             <span>تعديل مجموعة الصلاحيات: {group.name}</span>
@@ -1607,90 +1608,113 @@ function GroupDetailsModal({ group, permissions, actions, onClose, onSuccess }: 
         </CardHeader>
 
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="name" className="text-right block mb-1">اسم المجموعة *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  className={`text-right ${errors.name ? 'border-red-500' : ''}`}
-                  dir="rtl"
-                />
-                {errors.name && (
-                  <p className="text-sm text-red-500 text-right mt-1">{errors.name}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="description" className="text-right block mb-1">وصف المجموعة *</Label>
-                <Input
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  className={`text-right ${errors.description ? 'border-red-500' : ''}`}
-                  dir="rtl"
-                />
-                {errors.description && (
-                  <p className="text-sm text-red-500 text-right mt-1">{errors.description}</p>
-                )}
-              </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="name" className="text-right block mb-1">اسم المجموعة *</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="مثال: مجموعة إدارة العملاء"
+                className={`text-right ${errors.name ? 'border-red-500' : ''}`}
+                dir="rtl"
+              />
+              {errors.name && (
+                <p className="text-sm text-red-500 text-right mt-1">{errors.name}</p>
+              )}
             </div>
 
             <div>
-              <Label className="text-right block mb-3">الصلاحيات</Label>
+              <Label htmlFor="description" className="text-right block mb-1">الوصف</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="وصف المجموعة والغرض منها"
+                className="text-right"
+                dir="rtl"
+              />
+            </div>
+
+            <div>
+              <Label className="text-right block mb-1">الفئة *</Label>
+              <Select
+                value={formData.category}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, category: value as PermissionCategory }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="customer">إدارة العملاء</SelectItem>
+                  <SelectItem value="planning">التخطيط والجدولة</SelectItem>
+                  <SelectItem value="visits">إدارة الزيارات</SelectItem>
+                  <SelectItem value="reports">التقارير</SelectItem>
+                  <SelectItem value="admin">الإدارة</SelectItem>
+                  <SelectItem value="system">النظام</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="text-right block mb-3">الصلاحيات *</Label>
               
               {/* Bulk Selection Controls */}
-              <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                <h5 className="font-medium text-right mb-2">أدوات التحديد السريع</h5>
-                <div className="flex flex-wrap gap-2 justify-end">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const allPermissionIds = permissions.map(p => p.id);
-                      setFormData(prev => ({
-                        ...prev,
-                        permissions: allPermissionIds
-                      }));
-                    }}
-                    className="text-xs"
-                  >
-                    تحديد الكل (جميع الفئات)
-                  </Button>
+              <div className="flex items-center justify-between mb-3 p-2 bg-gray-50 rounded border">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={permissions.length > 0 && formData.permissions.length === permissions.length}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setFormData(prev => ({
+                            ...prev,
+                            permissions: permissions.map(p => p.id)
+                          }));
+                        } else {
+                          setFormData(prev => ({
+                            ...prev,
+                            permissions: []
+                          }));
+                        }
+                      }}
+                    />
+                    <span className="text-sm font-medium">تحديد الكل (جميع الفئات)</span>
+                  </div>
                   
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={permissionsByCategory.length > 0 && 
+                        permissionsByCategory.every(p => formData.permissions.includes(p.id))}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setFormData(prev => ({
+                            ...prev,
+                            permissions: [...new Set([...prev.permissions, ...permissionsByCategory.map(p => p.id)])]
+                          }));
+                        } else {
+                          setFormData(prev => ({
+                            ...prev,
+                            permissions: prev.permissions.filter(id => 
+                              !permissionsByCategory.some(p => p.id === id)
+                            )
+                          }));
+                        }
+                      }}
+                    />
+                    <span className="text-sm font-medium">تحديد الكل (الفئة الحالية)</span>
+                  </div>
+                </div>
+                
+                <div className="flex gap-2">
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      const currentCategoryPermissions = permissions.filter(p => 
-                        Object.keys(permissions.reduce((acc, permission) => {
-                          if (!acc[permission.category]) {
-                            acc[permission.category] = [];
-                          }
-                          acc[permission.category].push(permission);
-                          return acc;
-                        }, {} as Record<PermissionCategory, Permission[]>))[0] === p.category
-                      ).map(p => p.id);
-                      setFormData(prev => ({
-                        ...prev,
-                        permissions: [...new Set([...prev.permissions, ...currentCategoryPermissions])]
-                      }));
-                    }}
-                    className="text-xs"
-                  >
-                    تحديد الكل (الفئة الحالية)
-                  </Button>
-                  
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const readPermissions = permissions.filter(p => p.action === 'read').map(p => p.id);
+                      const readPermissions = permissionsByCategory
+                        .filter(p => p.action === 'read')
+                        .map(p => p.id);
                       setFormData(prev => ({
                         ...prev,
                         permissions: [...new Set([...prev.permissions, ...readPermissions])]
@@ -1706,9 +1730,9 @@ function GroupDetailsModal({ group, permissions, actions, onClose, onSuccess }: 
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      const writePermissions = permissions.filter(p => 
-                        ['create', 'update', 'delete', 'manage'].includes(p.action)
-                      ).map(p => p.id);
+                      const writePermissions = permissionsByCategory
+                        .filter(p => ['create', 'update', 'delete'].includes(p.action))
+                        .map(p => p.id);
                       setFormData(prev => ({
                         ...prev,
                         permissions: [...new Set([...prev.permissions, ...writePermissions])]
@@ -1731,42 +1755,34 @@ function GroupDetailsModal({ group, permissions, actions, onClose, onSuccess }: 
                     }}
                     className="text-xs text-red-600 hover:text-red-700"
                   >
-                    مسح التحديد
+                    إلغاء التحديد
                   </Button>
                 </div>
               </div>
               
-              <div className="space-y-4">
-                {Object.entries(
-                  permissions.reduce((acc, permission) => {
-                    if (!acc[permission.category]) {
-                      acc[permission.category] = [];
-                    }
-                    acc[permission.category].push(permission);
-                    return acc;
-                  }, {} as Record<PermissionCategory, Permission[]>)
-                ).map(([category, categoryPermissions]) => (
-                  <div key={category} className="border rounded-lg p-4">
-                    <h4 className="font-medium text-right mb-3">
-                      {getCategoryDisplay(category as PermissionCategory).name}
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {categoryPermissions.map((permission) => (
-                        <div key={permission.id} className="flex items-center gap-2 justify-end">
-                          <div className="text-right">
-                            <div className="font-medium text-sm">{permission.name}</div>
-                            <div className="text-xs text-gray-600">{permission.description}</div>
-                          </div>
-                          <Checkbox
-                            checked={formData.permissions.includes(permission.id)}
-                            onCheckedChange={() => handlePermissionToggle(permission.id)}
-                          />
-                        </div>
-                      ))}
+              {/* Selection Summary */}
+              <div className="text-xs text-gray-600 text-right mb-2">
+                محدد {formData.permissions.length} من {permissions.length} صلاحية (جميع الفئات) | 
+                محدد {permissionsByCategory.filter(p => formData.permissions.includes(p.id)).length} من {permissionsByCategory.length} صلاحية (الفئة الحالية)
+              </div>
+              
+              <div className="space-y-2 max-h-64 overflow-y-auto border rounded p-3">
+                {permissionsByCategory.map((permission) => (
+                  <div key={permission.id} className="flex items-center gap-2 justify-end">
+                    <div className="text-right">
+                      <div className="font-medium text-sm">{permission.name}</div>
+                      <div className="text-xs text-gray-600">{permission.description}</div>
                     </div>
+                    <Checkbox
+                      checked={formData.permissions.includes(permission.id)}
+                      onCheckedChange={() => handlePermissionToggle(permission.id)}
+                    />
                   </div>
                 ))}
               </div>
+              <p className="text-xs text-gray-600 mt-2 text-right">
+                محدد {formData.permissions.length} من {permissions.length} صلاحية (جميع الفئات)
+              </p>
             </div>
 
             {errors.submit && (
@@ -1778,12 +1794,31 @@ function GroupDetailsModal({ group, permissions, actions, onClose, onSuccess }: 
               </Alert>
             )}
 
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={onClose}>
+            <div className="flex gap-3 justify-end pt-4 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={isSubmitting}
+              >
                 إلغاء
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'جاري التحديث...' : 'تحديث المجموعة'}
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="gap-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    جاري التحديث...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    تحديث المجموعة
+                  </>
+                )}
               </Button>
             </div>
           </form>

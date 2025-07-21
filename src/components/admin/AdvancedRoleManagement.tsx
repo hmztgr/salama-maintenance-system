@@ -644,8 +644,10 @@ function PermissionGroupsTab({ permissionGroups, permissions, actions, onRefresh
                             variant="outline"
                             size="sm"
                             onClick={() => {
+                              console.log('🔧 Edit button clicked for group:', group);
                               setSelectedGroup(group);
                               setShowGroupDetails(true);
+                              console.log('🔧 Modal state set - selectedGroup:', group, 'showGroupDetails:', true);
                             }}
                             className="gap-1"
                           >
@@ -676,21 +678,28 @@ function PermissionGroupsTab({ permissionGroups, permissions, actions, onRefresh
       </Card>
 
       {/* Group Details Modal */}
-      {showGroupDetails && selectedGroup && (
+      {console.log('🔧 Modal rendering check - showGroupDetails:', showGroupDetails, 'selectedGroup:', selectedGroup)}
+      {showGroupDetails && selectedGroup ? (
         <GroupDetailsModal
           group={selectedGroup}
           permissions={permissions}
           actions={actions}
           onClose={() => {
+            console.log('🔧 Modal closing');
             setShowGroupDetails(false);
             setSelectedGroup(null);
           }}
           onSuccess={() => {
+            console.log('🔧 Modal success');
             onRefresh();
             setShowGroupDetails(false);
             setSelectedGroup(null);
           }}
         />
+      ) : (
+        <div style={{ display: 'none' }}>
+          {/* Debug: Modal not rendering - showGroupDetails: {String(showGroupDetails)}, selectedGroup: {selectedGroup ? 'exists' : 'null'} */}
+        </div>
       )}
     </div>
   );
@@ -1493,6 +1502,8 @@ interface GroupDetailsModalProps {
 }
 
 function GroupDetailsModal({ group, permissions, actions, onClose, onSuccess }: GroupDetailsModalProps) {
+  console.log('🔧 GroupDetailsModal rendered with group:', group);
+  
   const [formData, setFormData] = useState({
     name: group.name,
     description: group.description,
@@ -1565,8 +1576,8 @@ function GroupDetailsModal({ group, permissions, actions, onClose, onSuccess }: 
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4" style={{ zIndex: 9999 }}>
+      <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto" style={{ zIndex: 10000 }}>
         <CardHeader>
           <CardTitle className="text-right flex items-center justify-between">
             <span>تعديل مجموعة الصلاحيات: {group.name}</span>

@@ -1645,7 +1645,7 @@ function GroupDetailsModal({ group, permissions, actions, onClose, onSuccess }: 
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[10001]" style={{ zIndex: 10001 }}>
                   <SelectItem value="customer">إدارة العملاء</SelectItem>
                   <SelectItem value="planning">التخطيط والجدولة</SelectItem>
                   <SelectItem value="visits">إدارة الزيارات</SelectItem>

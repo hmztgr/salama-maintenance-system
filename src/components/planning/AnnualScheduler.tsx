@@ -169,8 +169,18 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
 
   // Use search results for filtered branches
   const filteredBranches = useMemo(() => {
-    return branchSearch.filteredData.filter(branch => !branch.isArchived);
-  }, [branchSearch.filteredData]);
+    console.log('🔍 AnnualScheduler search debug:', {
+      totalEnhancedBranches: enhancedBranches.length,
+      searchFilteredData: branchSearch.filteredData.length,
+      searchTerm: branchSearch.filters.searchTerm,
+      searchResultCount: branchSearch.resultCount
+    });
+    
+    const filtered = branchSearch.filteredData.filter(branch => !branch.isArchived);
+    console.log('🔍 Final filtered branches for display:', filtered.length);
+    
+    return filtered;
+  }, [branchSearch.filteredData, enhancedBranches.length, branchSearch.filters.searchTerm, branchSearch.resultCount]);
 
   // Generate 52-week planning grid
   const weeklyData = useMemo(() => {

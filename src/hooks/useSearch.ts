@@ -92,15 +92,25 @@ export function useSearch<T>(data: T[], searchConfig: {
     // Text search across specified fields
     if (filters.searchTerm.trim()) {
       const searchTerm = filters.searchTerm.toLowerCase();
+      console.log('🔍 useSearch: Searching for:', searchTerm, 'in fields:', searchConfig.searchFields);
+      console.log('🔍 useSearch: Total items before search:', result.length);
+      
       result = result.filter(item => {
-        return searchConfig.searchFields.some(field => {
+        const matches = searchConfig.searchFields.some(field => {
           const value = item[field];
           if (typeof value === 'string') {
-            return value.toLowerCase().includes(searchTerm);
+            const fieldMatches = value.toLowerCase().includes(searchTerm);
+            if (fieldMatches) {
+              console.log('🔍 useSearch: Match found in field', field, ':', value);
+            }
+            return fieldMatches;
           }
           return false;
         });
+        return matches;
       });
+      
+      console.log('🔍 useSearch: Items after search:', result.length);
     }
 
     // Status filter

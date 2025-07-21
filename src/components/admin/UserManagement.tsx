@@ -43,7 +43,8 @@ import {
   getDocs,
   serverTimestamp
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase/config';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { db, auth } from '@/lib/firebase/config';
 import { UserRole, PermissionGroup } from '@/types/role-management';
 import { getCurrentDate } from '@/lib/date-handler';
 
@@ -61,6 +62,7 @@ interface User {
   updatedAt: string;
   createdBy: string;
   lastLogin?: string;
+  firebaseUid?: string;
 }
 
 export function UserManagement() {
@@ -550,6 +552,8 @@ function CreateUserModal({ permissionGroups, roleDefinitions, onClose, onSuccess
     username: '',
     email: '',
     fullName: '',
+    password: '',
+    confirmPassword: '',
     role: 'viewer' as UserRole,
     permissionGroups: [] as string[],
     isActive: true
@@ -574,6 +578,18 @@ function CreateUserModal({ permissionGroups, roleDefinitions, onClose, onSuccess
       newErrors.fullName = 'الاسم الكامل مطلوب';
     }
 
+    if (!formData.password) {
+      newErrors.password = 'كلمة المرور مطلوبة';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+    }
+
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'تأكيد كلمة المرور مطلوب';
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'كلمة المرور غير متطابقة';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -586,7 +602,7 @@ function CreateUserModal({ permissionGroups, roleDefinitions, onClose, onSuccess
     setIsSubmitting(true);
 
     try {
-      // Check if user already exists
+      // Check if user already exists in Firestore
       const existingUserQuery = query(
         collection(db, 'users'),
         where('email', '==', formData.email)
@@ -599,23 +615,49 @@ function CreateUserModal({ permissionGroups, roleDefinitions, onClose, onSuccess
         return;
       }
 
-      // Create new user
+      // Create Firebase Auth account first
+      console.log('🔥 Creating Firebase Auth account...');
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
+      
+      console.log('✅ Firebase Auth account created:', userCredential.user.uid);
+
+      // Create Firestore document
       const newUser = {
-        ...formData,
+        username: formData.username,
+        email: formData.email,
+        fullName: formData.fullName,
+        role: formData.role,
+        permissionGroups: formData.permissionGroups,
         customPermissions: [],
         deniedPermissions: [],
+        isActive: formData.isActive,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        createdBy: 'current-user' // Should come from auth context
+        createdBy: 'current-user', // Should come from auth context
+        firebaseUid: userCredential.user.uid // Link to Firebase Auth
       };
 
       await addDoc(collection(db, 'users'), newUser);
-      console.log('✅ User created successfully');
+      console.log('✅ Firestore user document created successfully');
 
       onSuccess();
-    } catch (err) {
+    } catch (err: any) {
       console.error('❌ Failed to create user:', err);
-      setErrors({ submit: 'فشل في إنشاء المستخدم' });
+      
+      // Handle specific Firebase Auth errors
+      if (err.code === 'auth/email-already-in-use') {
+        setErrors({ email: 'البريد الإلكتروني مستخدم بالفعل في نظام المصادقة' });
+      } else if (err.code === 'auth/weak-password') {
+        setErrors({ password: 'كلمة المرور ضعيفة جداً' });
+      } else if (err.code === 'auth/invalid-email') {
+        setErrors({ email: 'البريد الإلكتروني غير صحيح' });
+      } else {
+        setErrors({ submit: 'فشل في إنشاء المستخدم: ' + (err.message || 'خطأ غير معروف') });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -678,6 +720,38 @@ function CreateUserModal({ permissionGroups, roleDefinitions, onClose, onSuccess
               {errors.fullName && (
                 <p className="text-sm text-red-500 text-right mt-1">{errors.fullName}</p>
               )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="password" className="text-right block mb-1">كلمة المرور *</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                  className={`text-right ${errors.password ? 'border-red-500' : ''}`}
+                  dir="rtl"
+                />
+                {errors.password && (
+                  <p className="text-sm text-red-500 text-right mt-1">{errors.password}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="confirmPassword" className="text-right block mb-1">تأكيد كلمة المرور *</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                  className={`text-right ${errors.confirmPassword ? 'border-red-500' : ''}`}
+                  dir="rtl"
+                />
+                {errors.confirmPassword && (
+                  <p className="text-sm text-red-500 text-right mt-1">{errors.confirmPassword}</p>
+                )}
+              </div>
             </div>
 
             <div>

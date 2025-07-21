@@ -73,7 +73,8 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
       totalBranches: branches.length,
       totalCompanies: companies.length,
       totalContracts: contracts.length,
-      totalVisits: visits.length
+      totalVisits: visits.length,
+      branchSelectionsSize: branchSelections.size
     });
     
     return branches
@@ -590,6 +591,7 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
                         </tr>
                       </thead>
                       <tbody className="divide-y">
+                        {console.log('🔍 Rendering table with branches:', filteredBranches.length, filteredBranches.map(b => ({ id: b.branchId, name: b.branchName, selected: b.isSelected })))}
                         {filteredBranches.map(branch => (
                           <tr key={branch.branchId} className="hover:bg-gray-50">
                             <td className="px-4 py-2">

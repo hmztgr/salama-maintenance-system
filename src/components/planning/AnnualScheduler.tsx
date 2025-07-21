@@ -877,6 +877,7 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
+                  {console.log('🔍 AnnualScheduler rendering branches:', filteredBranches.length, filteredBranches.map(b => ({ id: b.branchId, name: b.branchName, company: b.companyName })))}
                   {filteredBranches.map(branch => {
                     const company = companies.find(c => c.companyId === branch.companyId);
                     return (

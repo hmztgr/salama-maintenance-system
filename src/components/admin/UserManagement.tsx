@@ -34,6 +34,7 @@ import {
   collection,
   doc,
   addDoc,
+  setDoc,
   updateDoc,
   deleteDoc,
   query,
@@ -109,7 +110,7 @@ export function UserManagement() {
       id: doc.id,
       username: data.username || '',
       email: data.email || '',
-      fullName: data.fullName || '',
+      fullName: data.displayName || data.fullName || '', // Support both displayName and fullName
       role: data.role || 'viewer',
       permissionGroups: data.permissionGroups || [],
       customPermissions: data.customPermissions || [],
@@ -118,7 +119,8 @@ export function UserManagement() {
       createdAt: convertTimestamp(data.createdAt),
       updatedAt: convertTimestamp(data.updatedAt),
       createdBy: data.createdBy || 'system',
-      lastLogin: data.lastLogin ? convertTimestamp(data.lastLogin) : undefined,
+      lastLogin: data.lastLoginAt ? convertTimestamp(data.lastLoginAt) : undefined,
+      firebaseUid: data.uid || data.firebaseUid,
     };
   };
 
@@ -625,23 +627,25 @@ function CreateUserModal({ permissionGroups, roleDefinitions, onClose, onSuccess
       
       console.log('✅ Firebase Auth account created:', userCredential.user.uid);
 
-      // Create Firestore document
+      // Create Firestore document using Firebase Auth UID as document ID
       const newUser = {
+        uid: userCredential.user.uid,
         username: formData.username,
         email: formData.email,
-        fullName: formData.fullName,
+        displayName: formData.fullName, // Use displayName to match FirebaseUserProfile interface
         role: formData.role,
         permissionGroups: formData.permissionGroups,
         customPermissions: [],
         deniedPermissions: [],
         isActive: formData.isActive,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        lastLoginAt: new Date().toISOString(),
         createdBy: 'current-user', // Should come from auth context
         firebaseUid: userCredential.user.uid // Link to Firebase Auth
       };
 
-      await addDoc(collection(db, 'users'), newUser);
+      await setDoc(doc(db, 'users', userCredential.user.uid), newUser);
       console.log('✅ Firestore user document created successfully');
 
       onSuccess();

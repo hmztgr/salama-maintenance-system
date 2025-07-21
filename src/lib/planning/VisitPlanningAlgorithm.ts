@@ -125,17 +125,29 @@ export class VisitPlanningAlgorithm {
     branches: Branch[],
     existingVisits: Visit[]
   ): VisitPlanningData[] {
+    console.log('🔍 Planning Algorithm Debug:', {
+      companyId,
+      totalBranches: branches.length,
+      totalContracts: contracts.length,
+      totalExistingVisits: existingVisits.length
+    });
+
     const planningData: VisitPlanningData[] = [];
 
-    // Get company branches
-    const companyBranches = branches.filter(branch => 
-      branch.companyId === companyId && !branch.isArchived
-    );
+    // Get company branches (handle 'all' case)
+    const companyBranches = companyId === 'all' 
+      ? branches.filter(branch => !branch.isArchived)
+      : branches.filter(branch => branch.companyId === companyId && !branch.isArchived);
 
-    // Get active contracts for the company
-    const companyContracts = contracts.filter(contract => 
-      contract.companyId === companyId && !contract.isArchived
-    );
+    // Get active contracts for the company (handle 'all' case)
+    const companyContracts = companyId === 'all'
+      ? contracts.filter(contract => !contract.isArchived)
+      : contracts.filter(contract => contract.companyId === companyId && !contract.isArchived);
+
+    console.log('🔍 Filtered Data:', {
+      companyBranchesCount: companyBranches.length,
+      companyContractsCount: companyContracts.length
+    });
 
     for (const branch of companyBranches) {
       // Find contracts that include this branch in their service batches
@@ -151,7 +163,15 @@ export class VisitPlanningAlgorithm {
           batch.branchIds.includes(branch.branchId)
         );
 
-                  if (serviceBatch && serviceBatch.regularVisitsPerYear > 0) {
+        console.log('🔍 Processing branch-contract:', {
+          branchId: branch.branchId,
+          branchName: branch.branchName,
+          contractId: contract.contractId,
+          hasServiceBatch: !!serviceBatch,
+          regularVisitsPerYear: serviceBatch?.regularVisitsPerYear || 0
+        });
+
+        if (serviceBatch && serviceBatch.regularVisitsPerYear > 0) {
             const contractStart = parseStandardDate(contract.contractStartDate);
             const contractEnd = parseStandardDate(contract.contractEndDate);
             
@@ -186,6 +206,19 @@ export class VisitPlanningAlgorithm {
       }
     }
 
+    console.log('🔍 Planning Data Collected:', {
+      totalPlanningData: planningData.length,
+      planningDataSummary: planningData.map(data => ({
+        branchId: data.branch.branchId,
+        branchName: data.branch.branchName,
+        contractId: data.contract.contractId,
+        requiredVisits: data.requiredVisits,
+        completedVisits: data.completedVisits.length,
+        contractStart: data.contractStart.toISOString(),
+        contractEnd: data.contractEnd.toISOString()
+      }))
+    });
+
     return planningData;
   }
 
@@ -193,6 +226,8 @@ export class VisitPlanningAlgorithm {
    * Calculate visit requirements for each branch
    */
   private calculateVisitRequirements(planningData: VisitPlanningData[]): VisitSchedule[] {
+    console.log('🔍 Calculating visit requirements for:', planningData.length, 'planning data items');
+    
     const schedules: VisitSchedule[] = [];
 
     for (const data of planningData) {
@@ -201,6 +236,14 @@ export class VisitPlanningAlgorithm {
       // Calculate how many visits are still needed
       const completedCount = completedVisits.length;
       const remainingVisits = Math.max(0, requiredVisits - completedCount);
+
+      console.log('🔍 Visit calculation:', {
+        branchId: data.branch.branchId,
+        branchName: data.branch.branchName,
+        requiredVisits,
+        completedCount,
+        remainingVisits
+      });
 
       if (remainingVisits > 0) {
         // Calculate optimal spacing

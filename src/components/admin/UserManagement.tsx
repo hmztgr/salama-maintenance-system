@@ -558,6 +558,7 @@ function CreateUserModal({ permissionGroups, roleDefinitions, onClose, onSuccess
     fullName: '',
     password: '',
     confirmPassword: '',
+    role: 'viewer' as UserRole,
     permissionGroups: [] as string[],
     isActive: true
   });
@@ -648,27 +649,46 @@ function CreateUserModal({ permissionGroups, roleDefinitions, onClose, onSuccess
       console.log('✅ Firebase Auth account created:', userCredential.user.uid);
       console.log('👤 User email verified:', userCredential.user.emailVerified);
 
-      // Determine role based on permission groups
-      const determineRoleFromPermissionGroups = (permissionGroupIds: string[]): UserRole => {
-        // If user has admin permission groups, assign admin role
-        if (permissionGroupIds.some(groupId => {
-          const group = permissionGroups.find(g => g.id === groupId);
-          return group?.name?.toLowerCase().includes('admin') || group?.description?.toLowerCase().includes('admin');
-        })) {
+      // Determine role based on permission groups and explicit role selection
+      const determineRoleFromPermissionGroups = (permissionGroupIds: string[], explicitRole: UserRole): UserRole => {
+        // If explicit role is admin, always use admin
+        if (explicitRole === 'admin') {
           return 'admin';
         }
-        // If user has supervisor permission groups, assign supervisor role
-        if (permissionGroupIds.some(groupId => {
+        
+        // Check if permission groups contain admin-level permissions
+        const hasAdminPermissions = permissionGroupIds.some(groupId => {
           const group = permissionGroups.find(g => g.id === groupId);
-          return group?.name?.toLowerCase().includes('supervisor') || group?.description?.toLowerCase().includes('supervisor');
-        })) {
+          return group?.permissions?.some(permissionId => 
+            permissionId.includes('admin.') || 
+            permissionId.includes('system.')
+          );
+        });
+        
+        if (hasAdminPermissions) {
+          return 'admin';
+        }
+        
+        // Check if permission groups contain supervisor-level permissions
+        const hasSupervisorPermissions = permissionGroupIds.some(groupId => {
+          const group = permissionGroups.find(g => g.id === groupId);
+          return group?.permissions?.some(permissionId => 
+            permissionId.includes('customer.') || 
+            permissionId.includes('planning.') || 
+            permissionId.includes('visits.') ||
+            permissionId.includes('reports.')
+          );
+        });
+        
+        if (hasSupervisorPermissions && explicitRole !== 'viewer') {
           return 'supervisor';
         }
-        // Default to viewer
-        return 'viewer';
+        
+        // Use explicit role or default to viewer
+        return explicitRole || 'viewer';
       };
 
-      const assignedRole = determineRoleFromPermissionGroups(formData.permissionGroups);
+      const assignedRole = determineRoleFromPermissionGroups(formData.permissionGroups, formData.role);
       console.log('👤 New user role assigned:', assignedRole);
       console.log('👤 New user permission groups:', formData.permissionGroups);
 
@@ -810,6 +830,26 @@ function CreateUserModal({ permissionGroups, roleDefinitions, onClose, onSuccess
                   <p className="text-sm text-red-500 text-right mt-1">{errors.confirmPassword}</p>
                 )}
               </div>
+            </div>
+
+            <div>
+              <Label className="text-right block mb-1">الدور الأساسي *</Label>
+              <Select
+                value={formData.role}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, role: value as UserRole }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">مدير النظام</SelectItem>
+                  <SelectItem value="supervisor">مشرف</SelectItem>
+                  <SelectItem value="viewer">مستخدم</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-600 mt-1 text-right">
+                سيتم تحديد الدور النهائي بناءً على مجموعات الصلاحيات المحددة
+              </p>
             </div>
 
             <div>

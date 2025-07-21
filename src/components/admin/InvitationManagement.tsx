@@ -627,12 +627,25 @@ function CreateInvitationForm({ onClose, onSuccess, actions }: CreateInvitationF
               </div>
             )}
 
-            {/* Role Selection - Simplified */}
+            {/* Role Selection */}
             <div className="space-y-2">
-              <Label className="text-right block">الدور الأساسي</Label>
-              <div className="p-3 bg-gray-50 rounded border text-sm text-gray-600 text-right">
-                سيتم تعيين الدور تلقائياً بناءً على مجموعات الصلاحيات المحددة
-              </div>
+              <Label className="text-right block">الدور الأساسي *</Label>
+              <Select
+                value={formData.role || 'viewer'}
+                onValueChange={(value) => handleInputChange('role', value as UserRole)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">مدير النظام</SelectItem>
+                  <SelectItem value="supervisor">مشرف</SelectItem>
+                  <SelectItem value="viewer">مستخدم</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-600 text-right">
+                سيتم تحديد الدور النهائي بناءً على مجموعات الصلاحيات المحددة
+              </p>
             </div>
 
             {/* Permission Groups Selection */}

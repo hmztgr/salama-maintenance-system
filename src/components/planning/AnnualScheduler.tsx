@@ -97,7 +97,14 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
 
   // Search functionality for branches with contract type filtering
   const branchSearchConfig = {
-    searchFields: ['branchName', 'branchId', 'address', 'contactPerson'] as (keyof Branch)[],
+    searchFields: ['branchName', 'branchId', 'address', 'contactPerson', 'companyName'] as (keyof (Branch & { 
+      companyName: string;
+      fireExtinguisherMaintenance: boolean;
+      alarmSystemMaintenance: boolean;
+      fireSuppressionMaintenance: boolean;
+      gasFireSuppression: boolean;
+      foamFireSuppression: boolean;
+    }))[],
     statusField: 'isArchived' as keyof Branch,
     cityField: 'city' as keyof Branch,
     locationField: 'location' as keyof Branch,
@@ -107,6 +114,9 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
   // Enhanced branch search with contract type filtering using new serviceBatches structure
   const enhancedBranches = useMemo(() => {
     return branches.map(branch => {
+      // Find company name for this branch
+      const company = companies.find(c => c.companyId === branch.companyId);
+      
       // Find contracts that include this branch in their service batches
       const branchContracts = contracts.filter(contract => 
         contract.serviceBatches?.some(batch => 
@@ -137,13 +147,16 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
 
       return {
         ...branch,
+        // Add company name for search
+        companyName: company?.companyName || 'شركة غير معروفة',
         // Add contract type flags for filtering
         ...aggregatedServices,
       };
     });
-  }, [branches, contracts]);
+  }, [branches, contracts, companies]);
 
   const branchSearch = useSearch(enhancedBranches as unknown as (Branch & {
+    companyName: string;
     fireExtinguisherMaintenance: boolean;
     alarmSystemMaintenance: boolean;
     fireSuppressionMaintenance: boolean;

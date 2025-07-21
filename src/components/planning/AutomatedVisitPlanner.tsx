@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -11,16 +11,24 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Calendar, Settings, Play, CheckCircle, AlertCircle, Clock } from 'lucide-react';
+import { Calendar, Settings, Play, CheckCircle, AlertCircle, Clock, Search, Filter, SortAsc, SortDesc, CheckSquare, Square } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContextFirebase';
 import { useCompaniesFirebase } from '@/hooks/useCompaniesFirebase';
 import { useContractsFirebase } from '@/hooks/useContractsFirebase';
 import { useBranchesFirebase } from '@/hooks/useBranchesFirebase';
 import { useVisitsFirebase } from '@/hooks/useVisitsFirebase';
 import { VisitPlanningAlgorithm, PlanningOptions, PlanningResult } from '@/lib/planning/VisitPlanningAlgorithm';
+import { Branch } from '@/types/customer';
 
 interface AutomatedVisitPlannerProps {
   className?: string;
+}
+
+interface BranchSelectionData extends Branch {
+  isSelected: boolean;
+  contractCount: number;
+  visitCount: number;
+  companyName: string;
 }
 
 export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerProps) {
@@ -45,14 +53,129 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
     batchSize: 50
   });
 
+  // Multi-branch selection state
+  const [branchSelections, setBranchSelections] = useState<Map<string, boolean>>(new Map());
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState<'branchName' | 'companyName' | 'contractCount' | 'visitCount'>('branchName');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'withContracts' | 'withoutContracts'>('all');
+
   // Check permissions
   if (!hasPermission('admin')) {
     return null; // Only admins can access automated planning
   }
 
+  // Enhanced branch data with company names and contract counts
+  const enhancedBranches = useMemo(() => {
+    return branches
+      .filter(branch => !branch.isArchived)
+      .map(branch => {
+        const company = companies.find(c => c.companyId === branch.companyId);
+        const branchContracts = contracts.filter(contract => 
+          contract.serviceBatches?.some(batch => 
+            batch.branchIds.includes(branch.branchId)
+          ) && !contract.isArchived
+        );
+        const branchVisits = visits.filter(v => v.branchId === branch.branchId);
+
+        return {
+          ...branch,
+          companyName: company?.companyName || 'شركة غير معروفة',
+          contractCount: branchContracts.length,
+          visitCount: branchVisits.length,
+          isSelected: branchSelections.get(branch.branchId) || false
+        } as BranchSelectionData;
+      });
+  }, [branches, companies, contracts, visits, branchSelections]);
+
+  // Filtered and sorted branches
+  const filteredBranches = useMemo(() => {
+    let filtered = enhancedBranches;
+
+    // Filter by company
+    if (selectedCompanyId) {
+      filtered = filtered.filter(branch => branch.companyId === selectedCompanyId);
+    }
+
+    // Filter by search term
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(branch => 
+        branch.branchName.toLowerCase().includes(searchLower) ||
+        branch.companyName.toLowerCase().includes(searchLower) ||
+        branch.branchId.toLowerCase().includes(searchLower) ||
+        branch.address?.toLowerCase().includes(searchLower) ||
+        branch.contactPerson?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Filter by status
+    switch (filterStatus) {
+      case 'withContracts':
+        filtered = filtered.filter(branch => branch.contractCount > 0);
+        break;
+      case 'withoutContracts':
+        filtered = filtered.filter(branch => branch.contractCount === 0);
+        break;
+      default:
+        break;
+    }
+
+    // Sort branches
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      switch (sortBy) {
+        case 'branchName':
+          comparison = a.branchName.localeCompare(b.branchName);
+          break;
+        case 'companyName':
+          comparison = a.companyName.localeCompare(b.companyName);
+          break;
+        case 'contractCount':
+          comparison = a.contractCount - b.contractCount;
+          break;
+        case 'visitCount':
+          comparison = a.visitCount - b.visitCount;
+          break;
+        default:
+          comparison = a.branchName.localeCompare(b.branchName);
+      }
+      return sortDirection === 'desc' ? -comparison : comparison;
+    });
+
+    return filtered;
+  }, [enhancedBranches, selectedCompanyId, searchTerm, filterStatus, sortBy, sortDirection]);
+
+  // Selection helpers
+  const selectedBranches = useMemo(() => {
+    return filteredBranches.filter(branch => branch.isSelected);
+  }, [filteredBranches]);
+
+  const handleBranchSelection = (branchId: string, isSelected: boolean) => {
+    setBranchSelections(prev => new Map(prev.set(branchId, isSelected)));
+  };
+
+  const handleSelectAll = (isSelected: boolean) => {
+    const newSelections = new Map(branchSelections);
+    filteredBranches.forEach(branch => {
+      newSelections.set(branch.branchId, isSelected);
+    });
+    setBranchSelections(newSelections);
+  };
+
+  const handleSelectAllWithContracts = () => {
+    const newSelections = new Map(branchSelections);
+    filteredBranches.forEach(branch => {
+      if (branch.contractCount > 0) {
+        newSelections.set(branch.branchId, true);
+      }
+    });
+    setBranchSelections(newSelections);
+  };
+
   const handlePlanningStart = async () => {
-    if (!selectedCompanyId) {
-      alert('يرجى اختيار شركة للبدء في التخطيط التلقائي');
+    if (selectedBranches.length === 0) {
+      alert('يرجى اختيار فروع واحدة على الأقل للبدء في التخطيط التلقائي');
       return;
     }
 
@@ -67,11 +190,11 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
       // Update progress
       setPlanningProgress(20);
 
-      // Generate automated visits
+      // Generate automated visits for selected branches
       const result = planner.generateAutomatedVisits(
         selectedCompanyId,
         contracts,
-        branches,
+        selectedBranches,
         visits
       );
 
@@ -154,7 +277,7 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
           </Button>
         </DialogTrigger>
         
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5" />
@@ -171,12 +294,13 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
               <CardContent>
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="company-select">الشركة</Label>
+                    <Label htmlFor="company-select">الشركة (اختياري - للتصفية)</Label>
                     <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
                       <SelectTrigger>
-                        <SelectValue placeholder="اختر الشركة" />
+                        <SelectValue placeholder="اختر الشركة للتصفية (اختياري)" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="">جميع الشركات</SelectItem>
                         {companies
                           .filter(company => !company.isArchived)
                           .map(company => (
@@ -203,6 +327,132 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
                         <Badge variant="secondary">العقود</Badge>
                         <span>{getCompanyContractCount(selectedCompanyId)}</span>
                       </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Branch Selection */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">اختيار الفروع</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Search and Filter Controls */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        placeholder="البحث في الفروع..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+
+                    <Select value={filterStatus} onValueChange={(value: any) => setFilterStatus(value)}>
+                      <SelectTrigger>
+                        <Filter className="h-4 w-4 mr-2" />
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">جميع الفروع</SelectItem>
+                        <SelectItem value="withContracts">فروع لها عقود</SelectItem>
+                        <SelectItem value="withoutContracts">فروع بدون عقود</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                      <SelectTrigger>
+                        <SortAsc className="h-4 w-4 mr-2" />
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="branchName">اسم الفرع</SelectItem>
+                        <SelectItem value="companyName">اسم الشركة</SelectItem>
+                        <SelectItem value="contractCount">عدد العقود</SelectItem>
+                        <SelectItem value="visitCount">عدد الزيارات</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    <Button
+                      variant="outline"
+                      onClick={() => setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')}
+                      className="flex items-center gap-2"
+                    >
+                      {sortDirection === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
+                      {sortDirection === 'asc' ? 'تصاعدي' : 'تنازلي'}
+                    </Button>
+                  </div>
+
+                  {/* Bulk Selection Controls */}
+                  <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        checked={filteredBranches.length > 0 && filteredBranches.every(b => b.isSelected)}
+                        onCheckedChange={handleSelectAll}
+                      />
+                      <Label>تحديد الكل</Label>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSelectAllWithContracts}
+                    >
+                      تحديد الفروع ذات العقود
+                    </Button>
+                    <Badge variant="secondary">
+                      {selectedBranches.length} من {filteredBranches.length} فرع محدد
+                    </Badge>
+                  </div>
+
+                  {/* Branches List */}
+                  <div className="max-h-96 overflow-y-auto border rounded-lg">
+                    <table className="w-full">
+                      <thead className="bg-gray-50 sticky top-0">
+                        <tr>
+                          <th className="px-4 py-2 text-right">تحديد</th>
+                          <th className="px-4 py-2 text-right">اسم الفرع</th>
+                          <th className="px-4 py-2 text-right">الشركة</th>
+                          <th className="px-4 py-2 text-right">العقود</th>
+                          <th className="px-4 py-2 text-right">الزيارات</th>
+                          <th className="px-4 py-2 text-right">المدينة</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {filteredBranches.map(branch => (
+                          <tr key={branch.branchId} className="hover:bg-gray-50">
+                            <td className="px-4 py-2">
+                              <Checkbox
+                                checked={branch.isSelected}
+                                onCheckedChange={(checked) => handleBranchSelection(branch.branchId, checked as boolean)}
+                              />
+                            </td>
+                            <td className="px-4 py-2">
+                              <div className="font-medium">{branch.branchName}</div>
+                              <div className="text-sm text-gray-500">{branch.branchId}</div>
+                            </td>
+                            <td className="px-4 py-2 text-sm">{branch.companyName}</td>
+                            <td className="px-4 py-2">
+                              <Badge variant={branch.contractCount > 0 ? "default" : "secondary"}>
+                                {branch.contractCount}
+                              </Badge>
+                            </td>
+                            <td className="px-4 py-2">
+                              <Badge variant="outline">{branch.visitCount}</Badge>
+                            </td>
+                            <td className="px-4 py-2 text-sm">{branch.city}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {filteredBranches.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      لا توجد فروع تطابق معايير البحث
                     </div>
                   )}
                 </div>
@@ -357,7 +607,7 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
                         </div>
                         <div className="text-center">
                           <div className="text-2xl font-bold text-purple-600">
-                            {getCompanyBranchCount(selectedCompanyId)}
+                            {selectedBranches.length}
                           </div>
                           <div className="text-sm text-gray-600">فرع مخطط</div>
                         </div>
@@ -392,7 +642,7 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
               
               <Button
                 onClick={handlePlanningStart}
-                disabled={!selectedCompanyId || isPlanning}
+                disabled={selectedBranches.length === 0 || isPlanning}
                 className="min-w-[120px]"
               >
                 {isPlanning ? (
@@ -403,7 +653,7 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
                 ) : (
                   <>
                     <Play className="h-4 w-4 mr-2" />
-                    بدء التخطيط
+                    بدء التخطيط ({selectedBranches.length} فرع)
                   </>
                 )}
               </Button>

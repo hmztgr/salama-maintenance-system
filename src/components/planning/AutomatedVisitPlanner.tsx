@@ -337,7 +337,7 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
               const addResult = await addVisit(visit);
               if (addResult.success) {
                 successCount++;
-                console.log('✅ Visit created successfully:', { visitId: addResult.visitId, branchId: visit.branchId, scheduledDate: visit.scheduledDate });
+                console.log('✅ Visit created successfully:', { visitId: addResult.visit?.visitId, branchId: visit.branchId, scheduledDate: visit.scheduledDate });
               } else {
                 errorCount++;
                 console.error('❌ Failed to create visit:', { error: addResult.error, visit });

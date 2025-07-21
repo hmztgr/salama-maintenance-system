@@ -298,12 +298,23 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
       setPlanningProgress(20);
 
       // Generate automated visits for selected branches
+      console.log('🚀 Starting automated planning for:', selectedBranches.length, 'branches');
+      console.log('🚀 Selected branches:', selectedBranches.map(b => ({ id: b.branchId, name: b.branchName, company: b.companyName })));
+      
       const result = planner.generateAutomatedVisits(
         selectedCompanyId,
         contracts,
         selectedBranches,
         visits
       );
+
+      console.log('🚀 Planning result:', {
+        success: result.success,
+        plannedVisitsCount: result.plannedVisits.length,
+        conflictsCount: result.conflicts.length,
+        summary: result.summary,
+        errors: result.errors
+      });
 
       setPlanningProgress(60);
 
@@ -312,18 +323,39 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
         const batchSize = planningOptions.batchSize;
         const totalBatches = Math.ceil(result.plannedVisits.length / batchSize);
         
+        console.log('🚀 Creating visits in batches:', { totalVisits: result.plannedVisits.length, batchSize, totalBatches });
+        
+        let successCount = 0;
+        let errorCount = 0;
+        
         for (let i = 0; i < result.plannedVisits.length; i += batchSize) {
           const batch = result.plannedVisits.slice(i, i + batchSize);
           
           // Add visits to the system
           for (const visit of batch) {
-            await addVisit(visit);
+            try {
+              const addResult = await addVisit(visit);
+              if (addResult.success) {
+                successCount++;
+                console.log('✅ Visit created successfully:', { visitId: addResult.visitId, branchId: visit.branchId, scheduledDate: visit.scheduledDate });
+              } else {
+                errorCount++;
+                console.error('❌ Failed to create visit:', { error: addResult.error, visit });
+              }
+            } catch (error) {
+              errorCount++;
+              console.error('❌ Exception creating visit:', error, visit);
+            }
           }
           
           // Update progress
           const batchProgress = Math.min(60 + ((i + batchSize) / result.plannedVisits.length) * 30, 90);
           setPlanningProgress(batchProgress);
         }
+        
+        console.log('🚀 Visit creation summary:', { successCount, errorCount, totalAttempted: result.plannedVisits.length });
+      } else {
+        console.log('⚠️ No visits to create or planning failed');
       }
 
       setPlanningProgress(100);

@@ -1505,8 +1505,6 @@ interface GroupDetailsModalProps {
 }
 
 function GroupDetailsModal({ group, permissions, actions, onClose, onSuccess }: GroupDetailsModalProps) {
-  console.log('🔧 GroupDetailsModal rendered with group:', group);
-  
   const [formData, setFormData] = useState({
     name: group.name,
     description: group.description,
@@ -1553,25 +1551,43 @@ function GroupDetailsModal({ group, permissions, actions, onClose, onSuccess }: 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🔧 GroupDetailsModal handleSubmit called');
 
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      console.log('🔧 Form validation failed');
+      return;
+    }
+
+    console.log('🔧 Starting update with data:', {
+      groupId: group.id,
+      updates: {
+        name: formData.name,
+        description: formData.description,
+        permissions: formData.permissions
+      }
+    });
 
     setIsSubmitting(true);
 
     try {
+      console.log('🔧 Calling actions.updatePermissionGroup...');
       const result = await actions.updatePermissionGroup(group.id, {
         name: formData.name,
         description: formData.description,
         permissions: formData.permissions
       });
 
+      console.log('🔧 Update result:', result);
+
       if (result.success) {
+        console.log('🔧 Update successful, calling onSuccess');
         onSuccess();
       } else {
+        console.log('🔧 Update failed:', result.error);
         setErrors({ submit: result.error || 'فشل في تحديث مجموعة الصلاحيات' });
       }
     } catch (err) {
-      console.error('Failed to update permission group:', err);
+      console.error('🔧 Exception during update:', err);
       setErrors({ submit: 'فشل في تحديث مجموعة الصلاحيات' });
     } finally {
       setIsSubmitting(false);
@@ -1624,6 +1640,102 @@ function GroupDetailsModal({ group, permissions, actions, onClose, onSuccess }: 
 
             <div>
               <Label className="text-right block mb-3">الصلاحيات</Label>
+              
+              {/* Bulk Selection Controls */}
+              <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                <h5 className="font-medium text-right mb-2">أدوات التحديد السريع</h5>
+                <div className="flex flex-wrap gap-2 justify-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const allPermissionIds = permissions.map(p => p.id);
+                      setFormData(prev => ({
+                        ...prev,
+                        permissions: allPermissionIds
+                      }));
+                    }}
+                    className="text-xs"
+                  >
+                    تحديد الكل (جميع الفئات)
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const currentCategoryPermissions = permissions.filter(p => 
+                        Object.keys(permissions.reduce((acc, permission) => {
+                          if (!acc[permission.category]) {
+                            acc[permission.category] = [];
+                          }
+                          acc[permission.category].push(permission);
+                          return acc;
+                        }, {} as Record<PermissionCategory, Permission[]>))[0] === p.category
+                      ).map(p => p.id);
+                      setFormData(prev => ({
+                        ...prev,
+                        permissions: [...new Set([...prev.permissions, ...currentCategoryPermissions])]
+                      }));
+                    }}
+                    className="text-xs"
+                  >
+                    تحديد الكل (الفئة الحالية)
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const readPermissions = permissions.filter(p => p.action === 'read').map(p => p.id);
+                      setFormData(prev => ({
+                        ...prev,
+                        permissions: [...new Set([...prev.permissions, ...readPermissions])]
+                      }));
+                    }}
+                    className="text-xs"
+                  >
+                    تحديد صلاحيات القراءة
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const writePermissions = permissions.filter(p => 
+                        ['create', 'update', 'delete', 'manage'].includes(p.action)
+                      ).map(p => p.id);
+                      setFormData(prev => ({
+                        ...prev,
+                        permissions: [...new Set([...prev.permissions, ...writePermissions])]
+                      }));
+                    }}
+                    className="text-xs"
+                  >
+                    تحديد صلاحيات الكتابة
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        permissions: []
+                      }));
+                    }}
+                    className="text-xs text-red-600 hover:text-red-700"
+                  >
+                    مسح التحديد
+                  </Button>
+                </div>
+              </div>
+              
               <div className="space-y-4">
                 {Object.entries(
                   permissions.reduce((acc, permission) => {

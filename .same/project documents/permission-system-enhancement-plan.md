@@ -42,6 +42,40 @@ type PermissionAction = 'read' | 'create' | 'update' | 'delete' | 'export' | 'im
 // Examples: 'customer.read', 'planning.create', 'admin.delete'
 ```
 
+### Role System Architecture
+
+```typescript
+// User roles for navigation and page visibility
+type UserRole = 'admin' | 'supervisor' | 'viewer';
+
+// Role-based navigation control
+interface NavigationTab {
+  id: string;
+  label: string;
+  requiredRole: UserRole; // Controls page visibility
+  icon: ReactNode;
+  component: ReactNode;
+}
+
+// Smart role determination logic
+const determineRoleFromPermissionGroups = (
+  permissionGroupIds: string[], 
+  explicitRole: UserRole
+): UserRole => {
+  // Admin role if explicit or admin-level permissions
+  if (explicitRole === 'admin' || hasAdminPermissions(permissionGroupIds)) {
+    return 'admin';
+  }
+  
+  // Supervisor role if management permissions
+  if (hasSupervisorPermissions(permissionGroupIds) && explicitRole !== 'viewer') {
+    return 'supervisor';
+  }
+  
+  return explicitRole || 'viewer';
+};
+```
+
 ### Current Implementation Issues
 
 1. **UI Elements Visible but Non-Functional**
@@ -58,6 +92,67 @@ type PermissionAction = 'read' | 'create' | 'update' | 'delete' | 'export' | 'im
    - Users discover permissions through trial and error
    - No clear indication of what they can/cannot do
    - Confusing error messages
+
+4. **Role System Navigation Issues** ⚠️ **RESOLVED**
+   - Users couldn't see pages they had permissions for
+   - Navigation system relies on roles, not just permissions
+   - **Solution**: Restored role selection in user creation and invitations
+
+## ✅ **IMPLEMENTED: Role System Restoration**
+
+### **Problem Identified (January 18, 2025)**
+Users created with permission groups but no explicit role assignment couldn't see pages they had permissions for because the app's navigation system relies on **roles** (`admin`, `supervisor`, `viewer`) for page visibility.
+
+### **Solution Implemented**
+
+#### **1. User Creation Role Selection**
+- **Location**: `src/components/admin/UserManagement.tsx`
+- **Feature**: Added role dropdown with options:
+  - `مدير النظام` (Admin)
+  - `مشرف` (Supervisor) 
+  - `مستخدم` (Viewer)
+- **Smart Logic**: Role is intelligently determined based on:
+  - Explicit role selection
+  - Permission group contents
+  - Fallback to explicit selection
+
+#### **2. Invitation Role Selection**
+- **Location**: `src/components/admin/InvitationManagement.tsx`
+- **Feature**: Added role dropdown to invitation form
+- **Consistency**: Both user creation and invitations work identically
+
+#### **3. Enhanced Role Determination Logic**
+```typescript
+const determineRoleFromPermissionGroups = (
+  permissionGroupIds: string[], 
+  explicitRole: UserRole
+): UserRole => {
+  // Admin role if explicit or admin-level permissions
+  if (explicitRole === 'admin' || hasAdminPermissions(permissionGroupIds)) {
+    return 'admin';
+  }
+  
+  // Supervisor role if management permissions
+  if (hasSupervisorPermissions(permissionGroupIds) && explicitRole !== 'viewer') {
+    return 'supervisor';
+  }
+  
+  return explicitRole || 'viewer';
+};
+```
+
+#### **4. Navigation Integration**
+- **Location**: `src/components/MainDashboard.tsx`
+- **Logic**: `const availableTabs = tabs.filter(tab => hasPermission(tab.requiredRole));`
+- **Result**: Users now see appropriate pages based on their role
+
+### **Benefits Achieved**
+- ✅ **Proper Navigation**: Users can see pages appropriate to their role
+- ✅ **Flexible System**: Combines role-based navigation with granular permissions
+- ✅ **Backward Compatible**: Existing users with roles work correctly
+- ✅ **Future-Proof**: Can still use permission groups for fine-grained control
+
+---
 
 ## 🏗️ Enhanced Permission System Architecture
 

@@ -83,20 +83,23 @@ This document extends the original BRD with additional requirements that were id
   - **Bulk Invitations**: Generate multiple invitation links simultaneously
   - **Link Management**: View, revoke, and regenerate invitation links
 
-#### **1.3.2 Advanced Role Management**
-- **REQ-USER-008**: Dynamic role assignment and modification
+#### **1.3.2 Advanced Role Management** ✅ **IMPLEMENTED**
+- **REQ-USER-008**: Dynamic role assignment and modification ✅ **COMPLETED**
   - **Role Changes**: Modify user roles with immediate effect
   - **Permission Preview**: Show users what permissions they will gain/lose
   - **Role History**: Track all role changes with timestamps and admin attribution
   - **Batch Operations**: Change roles for multiple users simultaneously
   - **Role Templates**: Pre-defined role configurations for common scenarios
+  - **Smart Role Determination**: Automatic role assignment based on permission groups
+  - **Role Selection UI**: Dropdown selection in user creation and invitations
 
-- **REQ-USER-009**: Custom permission management
+- **REQ-USER-009**: Custom permission management ✅ **COMPLETED**
   - **Granular Permissions**: Define specific permissions beyond basic roles
   - **Permission Groups**: Create custom permission sets for specialized users
   - **Temporary Permissions**: Grant time-limited elevated permissions
   - **Permission Inheritance**: Users can inherit permissions from multiple groups
   - **Permission Audit**: Track and log all permission changes
+  - **Role-Permission Integration**: Seamless integration between roles and permission groups
 
 #### **1.3.3 Self-Service User Features**
 - **REQ-USER-010**: Forgot password system

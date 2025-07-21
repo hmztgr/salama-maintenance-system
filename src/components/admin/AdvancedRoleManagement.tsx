@@ -1298,24 +1298,49 @@ function CreateGroupModal({ permissions, actions, onClose, onSuccess }: CreateGr
               
               {/* Bulk Selection Controls */}
               <div className="flex items-center justify-between mb-3 p-2 bg-gray-50 rounded border">
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    checked={permissionsByCategory.length > 0 && formData.permissions.length === permissionsByCategory.length}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setFormData(prev => ({
-                          ...prev,
-                          permissions: permissionsByCategory.map(p => p.id)
-                        }));
-                      } else {
-                        setFormData(prev => ({
-                          ...prev,
-                          permissions: []
-                        }));
-                      }
-                    }}
-                  />
-                  <span className="text-sm font-medium">تحديد الكل</span>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={permissions.length > 0 && formData.permissions.length === permissions.length}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setFormData(prev => ({
+                            ...prev,
+                            permissions: permissions.map(p => p.id)
+                          }));
+                        } else {
+                          setFormData(prev => ({
+                            ...prev,
+                            permissions: []
+                          }));
+                        }
+                      }}
+                    />
+                    <span className="text-sm font-medium">تحديد الكل (جميع الفئات)</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={permissionsByCategory.length > 0 && 
+                        permissionsByCategory.every(p => formData.permissions.includes(p.id))}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setFormData(prev => ({
+                            ...prev,
+                            permissions: [...new Set([...prev.permissions, ...permissionsByCategory.map(p => p.id)])]
+                          }));
+                        } else {
+                          setFormData(prev => ({
+                            ...prev,
+                            permissions: prev.permissions.filter(id => 
+                              !permissionsByCategory.some(p => p.id === id)
+                            )
+                          }));
+                        }
+                      }}
+                    />
+                    <span className="text-sm font-medium">تحديد الكل (الفئة الحالية)</span>
+                  </div>
                 </div>
                 
                 <div className="flex gap-2">
@@ -1372,6 +1397,12 @@ function CreateGroupModal({ permissions, actions, onClose, onSuccess }: CreateGr
                 </div>
               </div>
               
+              {/* Selection Summary */}
+              <div className="text-xs text-gray-600 text-right mb-2">
+                محدد {formData.permissions.length} من {permissions.length} صلاحية (جميع الفئات) | 
+                محدد {permissionsByCategory.filter(p => formData.permissions.includes(p.id)).length} من {permissionsByCategory.length} صلاحية (الفئة الحالية)
+              </div>
+              
               <div className="space-y-2 max-h-64 overflow-y-auto border rounded p-3">
                 {permissionsByCategory.map((permission) => (
                   <div key={permission.id} className="flex items-center gap-2 justify-end">
@@ -1387,7 +1418,7 @@ function CreateGroupModal({ permissions, actions, onClose, onSuccess }: CreateGr
                 ))}
               </div>
               <p className="text-xs text-gray-600 mt-2 text-right">
-                محدد {formData.permissions.length} من {permissionsByCategory.length} صلاحية
+                محدد {formData.permissions.length} من {permissions.length} صلاحية (جميع الفئات)
               </p>
             </div>
 

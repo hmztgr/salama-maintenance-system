@@ -472,7 +472,7 @@ interface CreateInvitationFormProps {
 }
 
 function CreateInvitationForm({ onClose, onSuccess, actions }: CreateInvitationFormProps) {
-  const { permissionGroups, roleDefinitions } = useRoleManagement();
+  const { permissionGroups, roleDefinitions } = useRoleManagementFirebase();
   
   const [formData, setFormData] = useState<InvitationFormData>({
     type: 'email',

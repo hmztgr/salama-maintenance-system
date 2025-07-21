@@ -34,7 +34,7 @@ import {
   History
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContextFirebase';
-import { useRoleManagement } from '@/hooks/useRoleManagement';
+import { useRoleManagementFirebase } from '@/hooks/useRoleManagementFirebase';
 import {
   ExtendedUser,
   UserRole,
@@ -58,7 +58,7 @@ export function AdvancedRoleManagement() {
     stats,
     actions,
     refreshData
-  } = useRoleManagement();
+  } = useRoleManagementFirebase();
 
   const [activeTab, setActiveTab] = useState<'users' | 'groups' | 'history' | 'statistics'>('users');
   const [searchQuery, setSearchQuery] = useState('');

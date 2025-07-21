@@ -30,14 +30,14 @@ import {
 } from 'lucide-react';
 import { useInvitationsFirebase } from '@/hooks/useInvitationsFirebase';
 import { useAuth } from '@/contexts/AuthContextFirebase';
-import { useRoleManagement } from '@/hooks/useRoleManagement';
+import { useRoleManagementFirebase } from '@/hooks/useRoleManagementFirebase';
 import { InvitationFormData, InvitationType, UserRole, InvitationStatus } from '@/types/invitation';
 import { formatDateForDisplay } from '@/lib/date-handler';
 
 export function InvitationManagement() {
   const { hasPermission } = useAuth();
   const { invitations, loading, error, stats, actions, refreshInvitations } = useInvitationsFirebase();
-  const { permissionGroups } = useRoleManagement();
+  const { permissionGroups } = useRoleManagementFirebase();
 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');

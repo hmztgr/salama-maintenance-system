@@ -162,6 +162,34 @@
 
 ---
 
+#### **2025-01-XX - OPTIMIZATION - Console Logging Improvements**
+### Files Changed:
+- `src/hooks/useWeeklyPlanning.ts` - MODIFIED: Optimized console logging to reduce spam
+
+### Issue:
+- Hundreds of repeated "Invalid date parsed" warnings in console
+- Console was being flooded with the same warning message multiple times
+- Poor user experience due to excessive logging
+
+### Fix Applied:
+- Added checks for literal "Invalid Date" and "NaN" strings before parsing
+- Reduced individual visit logging to avoid spam
+- Added summary logging that shows total count of invalid dates
+- Implemented session-based warning logging (only shows once per browser session)
+- Added proper TypeScript typing for window property
+
+### Rollback Instructions:
+- Revert changes to useWeeklyPlanning.ts if needed
+- Restore original logging behavior
+
+### Testing Required:
+- Verify console is no longer flooded with repeated warnings
+- Confirm summary warning appears only once per session
+- Validate that valid visits still appear correctly
+- Test that invalid dates are properly skipped without errors
+
+---
+
 ## 🚀 **IMPLEMENTATION PHASES TRACKING**
 
 ### **Phase 1: Foundation (Week 1)**

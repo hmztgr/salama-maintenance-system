@@ -13,6 +13,7 @@ import { FirebaseTest } from './admin/FirebaseTest';
 import { FirebaseAuthTest } from './admin/FirebaseAuthTest';
 import { FirebaseMigration } from './admin/FirebaseMigration';
 import { FirebaseDataTest } from './admin/FirebaseDataTest';
+import { DataMigration } from './admin/DataMigration';
 import { UserProfile } from './profile/UserProfile';
 import { ReportsDashboard } from './reports/ReportsDashboard';
 
@@ -235,6 +236,16 @@ export function MainDashboard({ className = '' }: MainDashboardProps) {
                     💾 اختبار البيانات
                   </button>
                   <button
+                    onClick={() => setAdminSubTab('data-migration')}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                      adminSubTab === 'data-migration'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    🔧 ترحيل البيانات
+                  </button>
+                  <button
                     onClick={() => setAdminSubTab('settings')}
                     className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                       adminSubTab === 'settings'
@@ -271,6 +282,9 @@ export function MainDashboard({ className = '' }: MainDashboardProps) {
 
                 {/* Firebase Data Test */}
                 {adminSubTab === 'firebase-data' && <FirebaseDataTest />}
+
+                {/* Data Migration */}
+                {adminSubTab === 'data-migration' && <DataMigration />}
 
                 {/* System Settings (Placeholder) */}
                 {adminSubTab === 'settings' && (

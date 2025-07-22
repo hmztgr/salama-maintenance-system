@@ -132,6 +132,36 @@
 
 ---
 
+#### **2025-01-XX - BUGFIX - Weekly Planner Date Parsing Error**
+### Files Changed:
+- `src/hooks/useWeeklyPlanning.ts` - MODIFIED: Fixed date parsing errors and added robust error handling
+
+### Issue:
+- "Invalid time value" error when loading weekly planner
+- Date parsing was failing for certain date formats
+- No error handling for invalid dates or missing scheduled dates
+
+### Fix Applied:
+- Added comprehensive error handling around date parsing
+- Added validation for missing scheduled dates
+- Added validation for invalid month names
+- Added validation for invalid parsed dates
+- Added try-catch blocks around visit processing
+- Added fallback values for error cases
+- Improved error logging for debugging
+
+### Rollback Instructions:
+- Revert changes to useWeeklyPlanning.ts if needed
+- Restore original date parsing logic
+
+### Testing Required:
+- Verify weekly planner loads without "Invalid time value" error
+- Test with visits that have different date formats
+- Confirm error handling works for invalid dates
+- Validate that visits still appear correctly when dates are valid
+
+---
+
 ## 🚀 **IMPLEMENTATION PHASES TRACKING**
 
 ### **Phase 1: Foundation (Week 1)**

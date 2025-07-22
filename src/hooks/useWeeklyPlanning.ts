@@ -59,6 +59,12 @@ export function useWeeklyPlanning(weekNumber: number, year: number) {
             return false;
           }
           
+          // Check for literal "Invalid Date" string
+          if (visit.scheduledDate === 'Invalid Date' || visit.scheduledDate === 'NaN') {
+            // Don't log every single invalid date to avoid spam
+            return false;
+          }
+          
           if (visit.scheduledDate.includes('-') && visit.scheduledDate.length === 10) {
             // Format: dd-mmm-yyyy (e.g., "01-Jan-2025")
             const [day, monthName, year] = visit.scheduledDate.split('-');
@@ -108,8 +114,19 @@ export function useWeeklyPlanning(weekNumber: number, year: number) {
         }
       });
 
+      // Count invalid dates for summary
+      const invalidDateCount = visits.filter(v => 
+        v.scheduledDate === 'Invalid Date' || v.scheduledDate === 'NaN'
+      ).length;
+      
+      if (invalidDateCount > 0) {
+        console.warn(`⚠️ Found ${invalidDateCount} visits with invalid dates that were skipped`);
+      }
+      
       console.log('✅ Filtered Week Visits:', {
         weekVisitsCount: weekVisits.length,
+        totalVisits: visits.length,
+        invalidDateCount,
         weekVisits: weekVisits.map(v => ({
           id: v.id,
           scheduledDate: v.scheduledDate
@@ -124,7 +141,12 @@ export function useWeeklyPlanning(weekNumber: number, year: number) {
           
           // Parse date using the same logic as above
           let visitDate: Date;
-          if (visit.scheduledDate.includes('-') && visit.scheduledDate.length === 10) {
+          
+          // Check for literal "Invalid Date" string
+          if (visit.scheduledDate === 'Invalid Date' || visit.scheduledDate === 'NaN') {
+            // Don't log every single invalid date to avoid spam
+            visitDate = new Date(); // Fallback to current date
+          } else if (visit.scheduledDate.includes('-') && visit.scheduledDate.length === 10) {
             const [day, monthName, year] = visit.scheduledDate.split('-');
             const monthNames: Record<string, number> = {
               'jan': 0, 'feb': 1, 'mar': 2, 'apr': 3, 'may': 4, 'jun': 5,

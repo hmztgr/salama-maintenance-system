@@ -114,13 +114,15 @@ export function useWeeklyPlanning(weekNumber: number, year: number) {
         }
       });
 
-      // Count invalid dates for summary
+      // Count invalid dates for summary (only log once per session)
       const invalidDateCount = visits.filter(v => 
         v.scheduledDate === 'Invalid Date' || v.scheduledDate === 'NaN'
       ).length;
       
-      if (invalidDateCount > 0) {
+      // Use a ref to track if we've already logged this warning
+      if (invalidDateCount > 0 && !(window as any).invalidDateWarningLogged) {
         console.warn(`⚠️ Found ${invalidDateCount} visits with invalid dates that were skipped`);
+        (window as any).invalidDateWarningLogged = true;
       }
       
       console.log('✅ Filtered Week Visits:', {

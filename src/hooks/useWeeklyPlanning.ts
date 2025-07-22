@@ -4,6 +4,7 @@ import { WeeklyPlanningData, VisitMovement, WeeklyVisit } from '@/types/weekly-p
 import { useVisits } from '@/hooks/useVisits';
 import { useBranches } from '@/hooks/useBranches';
 import { useCompanies } from '@/hooks/useCompanies';
+import { getWeekNumber } from '@/lib/date-handler';
 
 export function useWeeklyPlanning(weekNumber: number, year: number) {
   const [weekData, setWeekData] = useState<WeeklyPlanningData | null>(null);
@@ -15,12 +16,12 @@ export function useWeeklyPlanning(weekNumber: number, year: number) {
   const { branches } = useBranches();
   const { companies } = useCompanies();
 
-  // Helper function to get week number
-  const getWeekNumber = (date: Date): number => {
-    const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
-    const pastDaysOfYear = (date.getTime() - firstDayOfYear.getTime()) / 86400000;
-    return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
-  };
+  // Helper function to get week number (using the same function as annual planner)
+  // const getWeekNumber = (date: Date): number => {
+  //   const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+  //   const pastDaysOfYear = (date.getTime() - firstDayOfYear.getTime()) / 86400000;
+  //   return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+  // };
 
   // Helper function to get day of week (0-6, Saturday to Friday)
   const getDayOfWeek = (date: Date): number => {
@@ -35,20 +36,83 @@ export function useWeeklyPlanning(weekNumber: number, year: number) {
       setLoading(true);
       setError(null);
 
+      console.log('🔍 Weekly Planning Debug:', {
+        totalVisits: visits.length,
+        weekNumber,
+        year,
+        sampleVisits: visits.slice(0, 3).map(v => ({
+          id: v.id,
+          scheduledDate: v.scheduledDate,
+          branchId: v.branchId,
+          companyId: v.companyId
+        }))
+      });
+
       // Filter visits for the specific week and year
       const weekVisits = visits.filter(visit => {
-        const visitDate = new Date(visit.scheduledDate);
+        // Handle different date formats
+        let visitDate: Date;
+        
+        if (visit.scheduledDate.includes('-') && visit.scheduledDate.length === 10) {
+          // Format: dd-mmm-yyyy (e.g., "01-Jan-2025")
+          const [day, monthName, year] = visit.scheduledDate.split('-');
+          const monthNames: Record<string, number> = {
+            'jan': 0, 'feb': 1, 'mar': 2, 'apr': 3, 'may': 4, 'jun': 5,
+            'jul': 6, 'aug': 7, 'sep': 8, 'oct': 9, 'nov': 10, 'dec': 11
+          };
+          const monthIndex = monthNames[monthName.toLowerCase()];
+          visitDate = new Date(parseInt(year), monthIndex, parseInt(day));
+        } else {
+          // Try standard Date parsing
+          visitDate = new Date(visit.scheduledDate);
+        }
+        
         const visitWeek = getWeekNumber(visitDate);
         const visitYear = visitDate.getFullYear();
         
-        return visitWeek === weekNumber && visitYear === year;
+        const isInWeek = visitWeek === weekNumber && visitYear === year;
+        
+        console.log('📅 Visit Week Check:', {
+          visitId: visit.id,
+          scheduledDate: visit.scheduledDate,
+          parsedDate: visitDate.toISOString(),
+          visitWeek,
+          visitYear,
+          targetWeek: weekNumber,
+          targetYear: year,
+          isInWeek
+        });
+        
+        return isInWeek;
+      });
+
+      console.log('✅ Filtered Week Visits:', {
+        weekVisitsCount: weekVisits.length,
+        weekVisits: weekVisits.map(v => ({
+          id: v.id,
+          scheduledDate: v.scheduledDate,
+          dayOfWeek: getDayOfWeek(new Date(v.scheduledDate))
+        }))
       });
 
       // Enhance visits with company and branch names
       const enhancedVisits: WeeklyVisit[] = weekVisits.map(visit => {
         const branch = branches.find(b => b.id === visit.branchId);
         const company = companies.find(c => c.id === visit.companyId);
-        const visitDate = new Date(visit.scheduledDate);
+        
+        // Parse date using the same logic as above
+        let visitDate: Date;
+        if (visit.scheduledDate.includes('-') && visit.scheduledDate.length === 10) {
+          const [day, monthName, year] = visit.scheduledDate.split('-');
+          const monthNames: Record<string, number> = {
+            'jan': 0, 'feb': 1, 'mar': 2, 'apr': 3, 'may': 4, 'jun': 5,
+            'jul': 6, 'aug': 7, 'sep': 8, 'oct': 9, 'nov': 10, 'dec': 11
+          };
+          const monthIndex = monthNames[monthName.toLowerCase()];
+          visitDate = new Date(parseInt(year), monthIndex, parseInt(day));
+        } else {
+          visitDate = new Date(visit.scheduledDate);
+        }
         
         return {
           ...visit,

@@ -105,6 +105,33 @@
 
 ---
 
+#### **2025-01-XX - BUGFIX - Weekly Planner Visit Loading Issue**
+### Files Changed:
+- `src/hooks/useWeeklyPlanning.ts` - MODIFIED: Fixed week calculation and date parsing
+
+### Issue:
+- Visits from annual planner were not showing in weekly planner
+- Week number calculation was inconsistent with annual planner
+- Date format parsing was not handling dd-mmm-yyyy format correctly
+
+### Fix Applied:
+- Use same `getWeekNumber` function as annual planner
+- Add proper date parsing for dd-mmm-yyyy format
+- Add debugging logs to track visit filtering
+- Ensure consistent date handling across components
+
+### Rollback Instructions:
+- Revert changes to useWeeklyPlanning.ts if needed
+- Restore original week calculation logic
+
+### Testing Required:
+- Verify visits from annual planner now appear in weekly planner
+- Test with different date formats
+- Confirm week navigation works correctly
+- Validate visit filtering by week and year
+
+---
+
 ## 🚀 **IMPLEMENTATION PHASES TRACKING**
 
 ### **Phase 1: Foundation (Week 1)**

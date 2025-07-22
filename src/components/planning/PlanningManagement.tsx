@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { AnnualScheduler } from './AnnualScheduler';
 import { PlanningGrid } from './PlanningGrid';
+import { WeeklyPlanner } from './WeeklyPlanner';
 import { VisitImportTemplate } from './VisitImportTemplate';
 import { VisitExportTemplate } from './VisitExportTemplate';
 import { Button } from '@/components/ui/button';
@@ -65,7 +66,7 @@ export function PlanningManagement() {
 
       {/* Tab Content */}
       {activeTab === 'annual' && <AnnualScheduler />}
-      {activeTab === 'weekly' && <PlanningGrid />}
+      {activeTab === 'weekly' && <WeeklyPlanner weekNumber={1} year={2025} />}
       {activeTab === 'visits' && (
         <div className="space-y-6">
           {/* Visit Management Header */}

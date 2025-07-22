@@ -1,0 +1,185 @@
+import { useState, useEffect, useCallback } from 'react';
+import { Visit } from '@/types/customer';
+import { WeeklyPlanningData, VisitMovement, WeeklyVisit } from '@/types/weekly-planning';
+import { useVisits } from '@/hooks/useVisits';
+import { useBranches } from '@/hooks/useBranches';
+import { useCompanies } from '@/hooks/useCompanies';
+
+export function useWeeklyPlanning(weekNumber: number, year: number) {
+  const [weekData, setWeekData] = useState<WeeklyPlanningData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [movements, setMovements] = useState<VisitMovement[]>([]);
+
+  const { visits, updateVisit: updateVisitInStore } = useVisits();
+  const { branches } = useBranches();
+  const { companies } = useCompanies();
+
+  // Helper function to get week number
+  const getWeekNumber = (date: Date): number => {
+    const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+    const pastDaysOfYear = (date.getTime() - firstDayOfYear.getTime()) / 86400000;
+    return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+  };
+
+  // Helper function to get day of week (0-6, Saturday to Friday)
+  const getDayOfWeek = (date: Date): number => {
+    const day = date.getDay();
+    // Convert Sunday=0 to Saturday=0
+    return day === 0 ? 6 : day - 1;
+  };
+
+  // Load week data
+  const loadWeekData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Filter visits for the specific week and year
+      const weekVisits = visits.filter(visit => {
+        const visitDate = new Date(visit.scheduledDate);
+        const visitWeek = getWeekNumber(visitDate);
+        const visitYear = visitDate.getFullYear();
+        
+        return visitWeek === weekNumber && visitYear === year;
+      });
+
+      // Enhance visits with company and branch names
+      const enhancedVisits: WeeklyVisit[] = weekVisits.map(visit => {
+        const branch = branches.find(b => b.id === visit.branchId);
+        const company = companies.find(c => c.id === visit.companyId);
+        const visitDate = new Date(visit.scheduledDate);
+        
+        return {
+          ...visit,
+          dayOfWeek: getDayOfWeek(visitDate),
+          weekNumber,
+          year,
+          companyName: company?.companyName || 'Unknown Company',
+          branchName: branch?.branchName || 'Unknown Branch'
+        };
+      });
+
+      // Create week data structure
+      const weekPlanningData: WeeklyPlanningData = {
+        weekNumber,
+        year,
+        visits: enhancedVisits,
+        status: 'draft',
+        lastModified: new Date().toISOString(),
+        modifiedBy: 'current-user' // Get from auth context
+      };
+
+      setWeekData(weekPlanningData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load week data');
+    } finally {
+      setLoading(false);
+    }
+  }, [weekNumber, year, visits, branches, companies]);
+
+  // Update visit
+  const updateVisit = useCallback(async (visitId: string, updates: Partial<Visit>) => {
+    try {
+      await updateVisitInStore(visitId, updates);
+      
+      // Update local week data
+      setWeekData(prev => {
+        if (!prev) return prev;
+        
+        return {
+          ...prev,
+          visits: prev.visits.map(visit =>
+            visit.id === visitId ? { ...visit, ...updates } : visit
+          ),
+          lastModified: new Date().toISOString()
+        };
+      });
+    } catch (err) {
+      console.error('Failed to update visit:', err);
+      throw err;
+    }
+  }, [updateVisitInStore]);
+
+  // Move visit
+  const moveVisit = useCallback(async (visitId: string, fromDay: number, toDay: number) => {
+    try {
+      const visit = weekData?.visits.find(v => v.id === visitId);
+      if (!visit) throw new Error('Visit not found');
+
+      // Calculate new scheduled date
+      const currentDate = new Date(visit.scheduledDate);
+      const daysDiff = toDay - fromDay;
+      const newDate = new Date(currentDate);
+      newDate.setDate(currentDate.getDate() + daysDiff);
+
+      // Update visit
+      await updateVisit(visitId, {
+        scheduledDate: newDate.toISOString()
+      });
+
+      // Record movement
+      const movement: VisitMovement = {
+        visitId,
+        fromDay,
+        toDay,
+        timestamp: new Date().toISOString(),
+        userId: 'current-user' // Get from auth context
+      };
+
+      setMovements(prev => [...prev, movement]);
+    } catch (err) {
+      console.error('Failed to move visit:', err);
+      throw err;
+    }
+  }, [weekData, updateVisit]);
+
+  // Approve week
+  const approveWeek = useCallback(async () => {
+    try {
+      setWeekData(prev => {
+        if (!prev) return prev;
+        
+        return {
+          ...prev,
+          status: 'approved',
+          lastModified: new Date().toISOString()
+        };
+      });
+
+      // Save to backend
+      await saveWeekData(weekData!);
+    } catch (err) {
+      console.error('Failed to approve week:', err);
+      throw err;
+    }
+  }, [weekData]);
+
+  // Save week data
+  const saveWeekData = useCallback(async (data: WeeklyPlanningData) => {
+    try {
+      // Save to backend (implement based on your data store)
+      console.log('Saving week data:', data);
+    } catch (err) {
+      console.error('Failed to save week data:', err);
+      throw err;
+    }
+  }, []);
+
+  // Load data on mount or when week/year changes
+  useEffect(() => {
+    loadWeekData();
+  }, [loadWeekData]);
+
+  return {
+    weekData,
+    loading,
+    error,
+    movements,
+    updateVisit,
+    moveVisit,
+    approveWeek,
+    saveWeekData,
+    refreshWeek: loadWeekData
+  };
+} 

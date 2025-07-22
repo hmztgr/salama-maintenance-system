@@ -1,0 +1,168 @@
+/* Weekly Planner Styles */
+.weekly-planner {
+  @apply space-y-6;
+}
+
+.weekly-planner-grid {
+  @apply bg-white rounded-lg shadow-sm border;
+}
+
+.day-column {
+  @apply p-4 border-r border-gray-200 min-h-[400px];
+}
+
+.day-column:last-child {
+  @apply border-r-0;
+}
+
+.day-column.holiday {
+  @apply bg-red-50;
+}
+
+.day-column.drag-over {
+  @apply bg-blue-50 border-blue-300;
+}
+
+.day-header {
+  @apply mb-4 pb-2 border-b border-gray-200;
+}
+
+.day-header h3 {
+  @apply text-lg font-semibold text-gray-900;
+}
+
+.visit-list {
+  @apply space-y-2;
+}
+
+.visit-card {
+  @apply p-3 bg-white border border-gray-200 rounded-lg shadow-sm cursor-move;
+  @apply hover:shadow-md transition-shadow duration-200;
+}
+
+.visit-card.dragging {
+  @apply opacity-50 transform rotate-2;
+}
+
+.visit-card.completed {
+  @apply bg-green-50 border-green-200;
+}
+
+.visit-header {
+  @apply flex justify-between items-start mb-2;
+}
+
+.visit-title {
+  @apply font-medium text-gray-900;
+}
+
+.visit-meta {
+  @apply flex gap-1 mt-1;
+}
+
+.visit-details {
+  @apply space-y-1;
+}
+
+.visit-company {
+  @apply text-sm text-gray-600;
+}
+
+.visit-notes {
+  @apply text-xs text-gray-500 italic;
+}
+
+.visit-actions {
+  @apply flex gap-1 mt-3;
+}
+
+.visit-dropdown-actions {
+  @apply absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-10;
+  @apply flex flex-col gap-1;
+}
+
+.empty-visit-slot {
+  @apply p-4 text-center border-2 border-dashed border-gray-300 rounded-lg;
+}
+
+.drag-drop-error {
+  @apply flex justify-center items-center p-8;
+}
+
+.error-content {
+  @apply text-center;
+}
+
+.week-navigation {
+  @apply bg-white rounded-lg shadow-sm border p-4;
+}
+
+.week-status-overview {
+  @apply bg-white rounded-lg shadow-sm border p-4;
+}
+
+.status-cards {
+  @apply grid grid-cols-4 gap-4 mb-4;
+}
+
+.status-card {
+  @apply p-3 bg-gray-50 rounded-lg text-center;
+}
+
+.quick-actions {
+  @apply flex gap-2;
+}
+
+.day-options {
+  @apply grid grid-cols-2 gap-2;
+}
+
+.day-option.available {
+  @apply opacity-100;
+}
+
+.day-option.unavailable {
+  @apply opacity-50;
+}
+
+.dialog-actions {
+  @apply flex justify-end gap-2 pt-4 border-t border-gray-200;
+}
+
+/* Badge styles */
+.badge {
+  @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium;
+}
+
+.badge-emergency {
+  @apply bg-red-100 text-red-800 border border-red-300;
+}
+
+.badge-regular {
+  @apply bg-blue-100 text-blue-800 border border-blue-300;
+}
+
+.badge-completed {
+  @apply bg-green-100 text-green-800 border border-green-300;
+}
+
+/* Button styles for fallback interface */
+.btn {
+  @apply px-3 py-1 rounded text-sm font-medium transition-colors duration-200;
+}
+
+.btn-sm {
+  @apply px-2 py-1 text-xs;
+}
+
+.btn-move {
+  @apply bg-blue-500 text-white hover:bg-blue-600;
+}
+
+.btn-complete {
+  @apply bg-green-500 text-white hover:bg-green-600;
+}
+
+.btn-notes {
+  @apply bg-gray-500 text-white hover:bg-gray-600;
+} 

@@ -171,7 +171,7 @@ export function useContractsFirebase() {
       }
       isListenerActiveRef.current = false;
     };
-  }, [authState.user]);
+  }, [authState.user?.uid || authState.user?.email]); // Use user ID or email as fallback
 
   // Cleanup on unmount
   useEffect(() => {

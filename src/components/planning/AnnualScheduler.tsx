@@ -19,13 +19,30 @@ import { SafeStorage } from '@/lib/storage';
 import { Branch, Visit } from '@/types/customer';
 import { AutomatedVisitPlanner } from './AutomatedVisitPlanner';
 
-// Helper function to parse our custom date format (dd-mmm-yyyy)
+// Helper function to parse our custom date format (dd-mmm-yyyy) or ISO strings
 const parseCustomDate = (dateStr: string): Date => {
   if (!dateStr) {
     console.warn('🗓️ Empty date string provided to parseCustomDate');
     return new Date();
   }
 
+  // Handle ISO string format (e.g., "2024-12-30T21:00:00.000Z")
+  if (dateStr.includes('T') && dateStr.includes('Z')) {
+    const parsedDate = new Date(dateStr);
+    if (!isNaN(parsedDate.getTime())) {
+      return parsedDate;
+    }
+  }
+
+  // Handle ISO format first (e.g., "2024-12-30T21:00:00.000Z")
+  if (dateStr.includes('T') && dateStr.includes('Z')) {
+    const isoDate = new Date(dateStr);
+    if (!isNaN(isoDate.getTime())) {
+      return isoDate;
+    }
+  }
+
+  // Handle dd-mmm-yyyy format
   const parts = dateStr.split('-');
   if (parts.length !== 3) {
     console.warn('🗓️ Invalid date format (should be dd-mmm-yyyy):', dateStr);
@@ -52,15 +69,17 @@ const parseCustomDate = (dateStr: string): Date => {
 
   const parsedDate = new Date(yearNum, monthIndex, dayNum);
 
-  // Additional debug logging
-  console.log('🗓️ parseCustomDate:', {
-    input: dateStr,
-    day: dayNum,
-    month: month,
-    monthIndex: monthIndex,
-    year: yearNum,
-    result: parsedDate.toISOString()
-  });
+  // Only log for debugging specific issues (commented out to reduce spam)
+  // if (!isNaN(parsedDate.getTime())) {
+  // console.log('🗓️ parseCustomDate:', {
+  //   input: dateStr,
+  //   day: dayNum,
+  //   month: month,
+  //   monthIndex: monthIndex,
+  //   year: yearNum,
+  //   result: parsedDate.toISOString()
+  // });
+  // }
 
   return parsedDate;
 };

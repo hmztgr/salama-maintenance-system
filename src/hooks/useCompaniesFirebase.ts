@@ -31,10 +31,19 @@ export function useCompaniesFirebase() {
   const componentMountedRef = useRef(true);
   // Real-time listener for companies with robust conflict prevention
   useEffect(() => {
+    console.log('🏢 Companies useEffect triggered:', {
+      hasUser: !!authState.user,
+      userId: authState.user?.uid,
+      isListenerActive: isListenerActiveRef.current,
+      hasUnsubscribe: !!unsubscribeRef.current
+    });
+    
     if (!authState.user) {
+      console.log('🏢 No user, setting loading to false');
       setLoading(false);
       return;
     }
+    
     // Prevent multiple listeners and ensure cleanup
     if (isListenerActiveRef.current && unsubscribeRef.current) {
       console.log('🏢 Listener already active, cleaning up first...');
@@ -49,6 +58,8 @@ export function useCompaniesFirebase() {
       }, 500);
       return;
     }
+    
+    console.log('🏢 Setting up initial listener...');
     setupListener();
     function setupListener() {
       if (!componentMountedRef.current) return;
@@ -170,7 +181,11 @@ export function useCompaniesFirebase() {
       unsubscribeRef.current = unsubscribe;
     }
     return () => {
-      console.log('🏢 Cleaning up companies listener...');
+      console.log('🏢 Cleaning up companies listener...', {
+        componentMounted: componentMountedRef.current,
+        hasUnsubscribe: !!unsubscribeRef.current,
+        isListenerActive: isListenerActiveRef.current
+      });
       componentMountedRef.current = false;
       if (unsubscribeRef.current) {
         unsubscribeRef.current();
@@ -178,7 +193,7 @@ export function useCompaniesFirebase() {
       }
       isListenerActiveRef.current = false;
     };
-  }, [authState.user]);
+  }, [authState.user?.uid || authState.user?.email]); // Use user ID or email as fallback
   // Cleanup on unmount
   useEffect(() => {
     return () => {

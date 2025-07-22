@@ -82,6 +82,9 @@ export function useWeeklyPlanning(weekNumber: number, year: number) {
             }
             
             visitDate = new Date(parseInt(year), monthIndex, parseInt(day));
+          } else if (visit.scheduledDate.includes('T') && visit.scheduledDate.includes('Z')) {
+            // Format: ISO string (e.g., "2024-12-30T21:00:00.000Z")
+            visitDate = new Date(visit.scheduledDate);
           } else {
             // Try standard Date parsing
             visitDate = new Date(visit.scheduledDate);
@@ -254,6 +257,42 @@ export function useWeeklyPlanning(weekNumber: number, year: number) {
       const newDate = new Date(currentDate);
       newDate.setDate(currentDate.getDate() + daysDiff);
 
+      // Validate that the new date is within reasonable bounds
+      const minDate = new Date('2024-01-01');
+      const maxDate = new Date('2030-12-31');
+      
+      if (newDate < minDate) {
+        console.warn('⚠️ Cannot move visit before 2024:', {
+          visitId,
+          newDate: newDate.toISOString(),
+          minDate: minDate.toISOString()
+        });
+        throw new Error('Cannot move visit before 2024');
+      }
+      
+      if (newDate > maxDate) {
+        console.warn('⚠️ Cannot move visit after 2030:', {
+          visitId,
+          newDate: newDate.toISOString(),
+          maxDate: maxDate.toISOString()
+        });
+        throw new Error('Cannot move visit after 2030');
+      }
+      
+      // Check if the new date would move the visit to a different year
+      const currentYear = new Date(visit.scheduledDate).getFullYear();
+      const newYear = newDate.getFullYear();
+      
+      if (newYear !== currentYear) {
+        console.warn('⚠️ Cannot move visit to different year:', {
+          visitId,
+          currentYear,
+          newYear,
+          newDate: newDate.toISOString()
+        });
+        throw new Error('Cannot move visit to different year');
+      }
+
       // Format date in dd-mmm-yyyy format to match the system
       const day = newDate.getDate().toString().padStart(2, '0');
       const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -267,7 +306,8 @@ export function useWeeklyPlanning(weekNumber: number, year: number) {
         toDay,
         originalDate: visit.scheduledDate,
         newDate: formattedDate,
-        daysDiff
+        daysDiff,
+        newDateISO: newDate.toISOString()
       });
 
       // Update visit

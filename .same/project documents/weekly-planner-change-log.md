@@ -190,6 +190,64 @@
 
 ---
 
+#### **2025-01-XX - CLEANUP - Orphaned Visits Cleanup Tool**
+### Files Changed:
+- `src/components/admin/DataMigration.tsx` - MODIFIED: Added orphaned visits cleanup functionality
+
+### Issue:
+- 711 old test visits with invalid dates cluttering the database
+- Visits referencing non-existent branches causing confusion
+- New visits (about 30) not showing properly due to old data interference
+- Weekly planner performance affected by processing invalid data
+
+### Fix Applied:
+- Added "Cleanup Orphaned Visits" functionality to DataMigration component
+- Identifies visits that reference non-existent branches
+- Safely deletes orphaned visits with confirmation
+- Provides detailed cleanup results and error reporting
+- Maintains existing "Fix Invalid Dates" functionality
+
+### Rollback Instructions:
+- Revert changes to DataMigration.tsx if needed
+- Restore original migration functionality only
+
+### Testing Required:
+- Verify orphaned visits are correctly identified
+- Confirm cleanup process works safely
+- Test that valid visits remain unaffected
+- Validate weekly planner performance improvement
+
+---
+
+#### **2025-01-XX - BUGFIX - Weekly Planner Data Source Issue**
+### Files Changed:
+- `src/hooks/useWeeklyPlanning.ts` - MODIFIED: Fixed data source to use Firebase instead of localStorage
+
+### Issue:
+- Weekly planner showing 0 visits even after cleanup
+- Debug logs showed `totalVisits: 0` despite having visits in Firebase
+- Weekly planner was using localStorage (`useVisits`) instead of Firebase (`useVisitsFirebase`)
+- Data source mismatch causing visits not to appear
+
+### Fix Applied:
+- Changed imports from `useVisits` to `useVisitsFirebase`
+- Changed imports from `useBranches` to `useBranchesFirebase`
+- Changed imports from `useCompanies` to `useCompaniesFirebase`
+- Updated hook usage to use Firebase data sources
+- Maintained all existing functionality and error handling
+
+### Rollback Instructions:
+- Revert changes to useWeeklyPlanning.ts if needed
+- Restore original localStorage imports
+
+### Testing Required:
+- Verify weekly planner now shows visits from Firebase
+- Test week navigation functionality
+- Confirm visits appear in correct weeks
+- Validate that new visits created in annual planner appear in weekly planner
+
+---
+
 ## 🚀 **IMPLEMENTATION PHASES TRACKING**
 
 ### **Phase 1: Foundation (Week 1)**

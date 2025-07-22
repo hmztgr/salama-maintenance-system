@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Visit } from '@/types/customer';
 import { WeeklyPlanningData, VisitMovement, WeeklyVisit } from '@/types/weekly-planning';
-import { useVisits } from '@/hooks/useVisits';
-import { useBranches } from '@/hooks/useBranches';
-import { useCompanies } from '@/hooks/useCompanies';
+import { useVisitsFirebase } from '@/hooks/useVisitsFirebase';
+import { useBranchesFirebase } from '@/hooks/useBranchesFirebase';
+import { useCompaniesFirebase } from '@/hooks/useCompaniesFirebase';
 import { getWeekNumber } from '@/lib/date-handler';
 
 export function useWeeklyPlanning(weekNumber: number, year: number) {
@@ -12,9 +12,9 @@ export function useWeeklyPlanning(weekNumber: number, year: number) {
   const [error, setError] = useState<string | null>(null);
   const [movements, setMovements] = useState<VisitMovement[]>([]);
 
-  const { visits, updateVisit: updateVisitInStore } = useVisits();
-  const { branches } = useBranches();
-  const { companies } = useCompanies();
+  const { visits, updateVisit: updateVisitInStore } = useVisitsFirebase();
+  const { branches } = useBranchesFirebase();
+  const { companies } = useCompaniesFirebase();
 
   // Helper function to get week number (using the same function as annual planner)
   // const getWeekNumber = (date: Date): number => {

@@ -40,6 +40,8 @@ export function useWeeklyPlanning(weekNumber: number, year: number) {
         totalVisits: visits.length,
         weekNumber,
         year,
+        branchesCount: branches.length,
+        companiesCount: companies.length,
         sampleVisits: visits.slice(0, 3).map(v => ({
           id: v.id,
           scheduledDate: v.scheduledDate,
@@ -96,16 +98,19 @@ export function useWeeklyPlanning(weekNumber: number, year: number) {
           
           const isInWeek = visitWeek === weekNumber && visitYear === year;
           
-          console.log('📅 Visit Week Check:', {
-            visitId: visit.id,
-            scheduledDate: visit.scheduledDate,
-            parsedDate: visitDate.toISOString(),
-            visitWeek,
-            visitYear,
-            targetWeek: weekNumber,
-            targetYear: year,
-            isInWeek
-          });
+          // Only log if this visit is in the target week to reduce spam
+          if (isInWeek) {
+            console.log('📅 Visit Week Check:', {
+              visitId: visit.id,
+              scheduledDate: visit.scheduledDate,
+              parsedDate: visitDate.toISOString(),
+              visitWeek,
+              visitYear,
+              targetWeek: weekNumber,
+              targetYear: year,
+              isInWeek
+            });
+          }
           
           return isInWeek;
         } catch (error) {
@@ -249,9 +254,25 @@ export function useWeeklyPlanning(weekNumber: number, year: number) {
       const newDate = new Date(currentDate);
       newDate.setDate(currentDate.getDate() + daysDiff);
 
+      // Format date in dd-mmm-yyyy format to match the system
+      const day = newDate.getDate().toString().padStart(2, '0');
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const month = monthNames[newDate.getMonth()];
+      const year = newDate.getFullYear();
+      const formattedDate = `${day}-${month}-${year}`;
+
+      console.log('🔄 Moving visit:', {
+        visitId,
+        fromDay,
+        toDay,
+        originalDate: visit.scheduledDate,
+        newDate: formattedDate,
+        daysDiff
+      });
+
       // Update visit
       await updateVisit(visitId, {
-        scheduledDate: newDate.toISOString()
+        scheduledDate: formattedDate
       });
 
       // Record movement

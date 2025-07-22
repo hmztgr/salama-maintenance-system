@@ -248,6 +248,35 @@
 
 ---
 
+#### **2025-01-XX - BUGFIX - Weekly Planner Drag-and-Drop Date Format Issue**
+### Files Changed:
+- `src/hooks/useWeeklyPlanning.ts` - MODIFIED: Fixed date format in moveVisit function and reduced logging
+
+### Issue:
+- Visits disappearing when dragged to different days
+- Visits being moved to wrong weeks (e.g., week 53 of 2024 instead of week 1 of 2025)
+- Excessive console logging causing performance issues
+- Date format mismatch between moveVisit and system expectations
+
+### Fix Applied:
+- Fixed moveVisit function to use `dd-mmm-yyyy` format instead of ISO string
+- Added proper date formatting with month names array
+- Reduced excessive logging by only logging visits in target week
+- Added better debug information for move operations
+- Added branches and companies count to debug logs
+
+### Rollback Instructions:
+- Revert changes to useWeeklyPlanning.ts if needed
+- Restore original moveVisit function and logging
+
+### Testing Required:
+- Test drag-and-drop functionality - visits should stay in correct weeks
+- Verify reduced console logging
+- Confirm visits appear in correct days after moving
+- Test week navigation after moving visits
+
+---
+
 ## 🚀 **IMPLEMENTATION PHASES TRACKING**
 
 ### **Phase 1: Foundation (Week 1)**

@@ -54,6 +54,21 @@ export function WeeklyPlannerGrid({
     const fromDay = parseInt(e.dataTransfer.getData('fromDay'));
 
     if (visitId && fromDay !== dayIndex) {
+      // Validate drop target
+      const dayVisits = visitsByDay[dayIndex] || [];
+      const maxVisits = 8; // Maximum visits per day
+      
+      if (dayIndex === 6) {
+        // Friday is holiday - prevent drops
+        console.warn('Cannot drop visits on Friday (holiday)');
+        return;
+      }
+      
+      if (dayVisits.length >= maxVisits) {
+        console.warn('Day is at maximum capacity');
+        return;
+      }
+      
       onDrop(visitId, fromDay, dayIndex);
     }
   };
@@ -61,13 +76,31 @@ export function WeeklyPlannerGrid({
   // Handle drag over
   const handleDragOver = (e: React.DragEvent, dayIndex: number) => {
     e.preventDefault();
-    e.currentTarget.classList.add('drag-over');
+    
+    // Only allow drops on working days
+    if (dayIndex === 6) {
+      e.dataTransfer.dropEffect = 'none';
+      return;
+    }
+    
+    // Check capacity
+    const dayVisits = visitsByDay[dayIndex] || [];
+    const maxVisits = 8;
+    
+    if (dayVisits.length >= maxVisits) {
+      e.dataTransfer.dropEffect = 'none';
+      e.currentTarget.classList.add('drag-over-invalid');
+    } else {
+      e.dataTransfer.dropEffect = 'move';
+      e.currentTarget.classList.add('drag-over');
+    }
+    
     onDragOver(dayIndex);
   };
 
   // Handle drag leave
   const handleDragLeave = (e: React.DragEvent) => {
-    e.currentTarget.classList.remove('drag-over');
+    e.currentTarget.classList.remove('drag-over', 'drag-over-invalid');
   };
 
   return (
@@ -158,9 +191,26 @@ function WeeklyVisitCard({
   const handleDragStart = (e: React.DragEvent) => {
     if (!isDragSupported || readonly) return;
 
+    // Set drag data
     e.dataTransfer.setData('visitId', visit.id);
     e.dataTransfer.setData('fromDay', dayIndex.toString());
+    e.dataTransfer.setData('visitType', visit.type);
+    e.dataTransfer.setData('visitStatus', visit.status);
     e.dataTransfer.effectAllowed = 'move';
+    
+    // Set drag image (optional - creates a custom drag preview)
+    const dragImage = e.currentTarget.cloneNode(true) as HTMLElement;
+    dragImage.style.opacity = '0.7';
+    dragImage.style.transform = 'rotate(5deg)';
+    document.body.appendChild(dragImage);
+    e.dataTransfer.setDragImage(dragImage, 0, 0);
+    
+    // Remove the temporary element after a short delay
+    setTimeout(() => {
+      if (document.body.contains(dragImage)) {
+        document.body.removeChild(dragImage);
+      }
+    }, 0);
     
     onDragStart(visit.id, dayIndex);
   };
@@ -168,6 +218,11 @@ function WeeklyVisitCard({
   // Handle drag end
   const handleDragEnd = (e: React.DragEvent) => {
     e.preventDefault();
+    
+    // Clean up any temporary elements
+    const tempElements = document.querySelectorAll('.temp-drag-image');
+    tempElements.forEach(el => el.remove());
+    
     onDragEnd();
   };
 

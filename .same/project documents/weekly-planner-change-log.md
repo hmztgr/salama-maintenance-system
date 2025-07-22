@@ -118,17 +118,19 @@
 - Restore original PlanningManagement.tsx if modified
 
 ### **Phase 2: Drag-and-Drop (Week 2)**
-**Status**: PLANNED
-**Start Date**: TBD
+**Status**: IN PROGRESS
+**Start Date**: 2025-01-XX
 **End Date**: TBD
 
 #### **Planned Changes:**
-- [ ] Create `src/hooks/useDragAndDrop.ts`
-- [ ] Create `src/components/planning/DragDropErrorBoundary.tsx`
-- [ ] Update `src/components/planning/VisitCard.tsx` with drag support
-- [ ] Update `src/components/planning/WeeklyPlannerGrid.tsx` with drop zones
-- [ ] Add drag-and-drop CSS styles
+- [x] Create `src/hooks/useDragAndDrop.ts` - ✅ COMPLETED in Phase 1
+- [x] Create `src/components/planning/DragDropErrorBoundary.tsx` - ✅ COMPLETED in Phase 1
+- [ ] Update `src/components/planning/WeeklyPlannerGrid.tsx` with enhanced drag support
+- [ ] Update `src/components/planning/WeeklyPlanner.tsx` with drag event handling
+- [ ] Add enhanced drag-and-drop CSS styles
 - [ ] Create `src/components/planning/ButtonBasedInterface.tsx` (fallback)
+- [ ] Add visual feedback during drag operations
+- [ ] Implement drag validation and constraints
 
 #### **Rollback Plan:**
 - Remove drag-and-drop related files

@@ -21,6 +21,12 @@
 
 .day-column.drag-over {
   @apply bg-blue-50 border-blue-300;
+  @apply transform scale-[1.02] transition-all duration-200;
+}
+
+.day-column.drag-over-invalid {
+  @apply bg-red-50 border-red-300;
+  @apply transform scale-[1.02] transition-all duration-200;
 }
 
 .day-header {
@@ -42,6 +48,14 @@
 
 .visit-card.dragging {
   @apply opacity-50 transform rotate-2;
+  @apply shadow-lg z-10;
+  @apply transition-all duration-200;
+}
+
+.visit-card.drag-preview {
+  @apply opacity-70 transform rotate-5deg;
+  @apply shadow-xl z-20;
+  @apply pointer-events-none;
 }
 
 .visit-card.completed {
@@ -165,4 +179,26 @@
 
 .btn-notes {
   @apply bg-gray-500 text-white hover:bg-gray-600;
+}
+
+/* Button-based interface styles */
+.button-based-interface {
+  @apply space-y-4;
+}
+
+.button-based-interface .visit-card {
+  @apply cursor-default;
+}
+
+.button-based-interface .visit-actions {
+  @apply flex flex-col gap-1 mt-3;
+}
+
+.button-based-interface .visit-actions button {
+  @apply text-xs;
+}
+
+/* Drag preview styles */
+.transform.rotate-5deg {
+  transform: rotate(5deg);
 } 

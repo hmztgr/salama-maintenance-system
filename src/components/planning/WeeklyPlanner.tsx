@@ -5,6 +5,7 @@ import { useWeeklyPlanning } from '@/hooks/useWeeklyPlanning';
 import { useDragAndDrop } from '@/hooks/useDragAndDrop';
 import { DragDropErrorBoundary } from './DragDropErrorBoundary';
 import { WeeklyPlannerGrid } from './WeeklyPlannerGrid';
+import { ButtonBasedInterface } from './ButtonBasedInterface';
 import { WeekStatusOverview } from './WeekStatusOverview';
 import { MoveVisitDialog } from './MoveVisitDialog';
 import { Button } from '@/components/ui/button';
@@ -45,8 +46,52 @@ export function WeeklyPlanner({
     handleDragStart,
     handleDragOver,
     handleDragEnd,
-    handleDrop
+    handleDrop: handleDropEvent
   } = useDragAndDrop();
+
+  // Enhanced drop handler with validation and feedback
+  const handleDrop = useCallback((visitId: string, fromDay: number, toDay: number) => {
+    try {
+      // Validate the move
+      const visit = weekData?.visits.find(v => v.id === visitId);
+      if (!visit) {
+        console.error('Visit not found');
+        return;
+      }
+
+      // Check if it's a valid move
+      if (fromDay === toDay) {
+        console.log('No movement needed');
+        return;
+      }
+
+      // Check if target day is Friday (holiday)
+      if (toDay === 6) {
+        console.warn('Cannot move visits to Friday (holiday)');
+        return;
+      }
+
+      // Check capacity of target day
+      const targetDayVisits = weekData?.visits.filter(v => {
+        const weeklyVisit = v as any;
+        return weeklyVisit.dayOfWeek === toDay;
+      }) || [];
+      
+      if (targetDayVisits.length >= 8) {
+        console.warn('Target day is at maximum capacity');
+        return;
+      }
+
+      // Perform the move
+      moveVisit(visitId, fromDay, toDay);
+      
+      // Show success feedback
+      console.log(`Visit ${visitId} moved from day ${fromDay} to day ${toDay}`);
+      
+    } catch (error) {
+      console.error('Error moving visit:', error);
+    }
+  }, [weekData, moveVisit]);
 
   // Week navigation
   const handleWeekChange = useCallback((newWeek: number, newYear: number) => {
@@ -165,17 +210,25 @@ export function WeeklyPlanner({
         />
 
         {/* Main Planning Grid */}
-        <WeeklyPlannerGrid
-          weekData={weekData}
-          dragState={dragState}
-          onDragStart={handleDragStart}
-          onDragOver={handleDragOver}
-          onDragEnd={handleDragEnd}
-          onDrop={handleDrop}
-          onVisitAction={handleVisitAction}
-          readonly={readonly}
-          isDragSupported={isDragSupported}
-        />
+        {isDragSupported ? (
+          <WeeklyPlannerGrid
+            weekData={weekData}
+            dragState={dragState}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+            onDrop={handleDrop}
+            onVisitAction={handleVisitAction}
+            readonly={readonly}
+            isDragSupported={isDragSupported}
+          />
+        ) : (
+          <ButtonBasedInterface
+            weekData={weekData}
+            onVisitAction={handleVisitAction}
+            readonly={readonly}
+          />
+        )}
 
         {/* Move Visit Dialog */}
         {showMoveDialog && selectedVisit && (

@@ -50,78 +50,124 @@ export function useWeeklyPlanning(weekNumber: number, year: number) {
 
       // Filter visits for the specific week and year
       const weekVisits = visits.filter(visit => {
-        // Handle different date formats
-        let visitDate: Date;
-        
-        if (visit.scheduledDate.includes('-') && visit.scheduledDate.length === 10) {
-          // Format: dd-mmm-yyyy (e.g., "01-Jan-2025")
-          const [day, monthName, year] = visit.scheduledDate.split('-');
-          const monthNames: Record<string, number> = {
-            'jan': 0, 'feb': 1, 'mar': 2, 'apr': 3, 'may': 4, 'jun': 5,
-            'jul': 6, 'aug': 7, 'sep': 8, 'oct': 9, 'nov': 10, 'dec': 11
-          };
-          const monthIndex = monthNames[monthName.toLowerCase()];
-          visitDate = new Date(parseInt(year), monthIndex, parseInt(day));
-        } else {
-          // Try standard Date parsing
-          visitDate = new Date(visit.scheduledDate);
+        try {
+          // Handle different date formats
+          let visitDate: Date;
+          
+          if (!visit.scheduledDate) {
+            console.warn('Visit has no scheduled date:', visit.id);
+            return false;
+          }
+          
+          if (visit.scheduledDate.includes('-') && visit.scheduledDate.length === 10) {
+            // Format: dd-mmm-yyyy (e.g., "01-Jan-2025")
+            const [day, monthName, year] = visit.scheduledDate.split('-');
+            const monthNames: Record<string, number> = {
+              'jan': 0, 'feb': 1, 'mar': 2, 'apr': 3, 'may': 4, 'jun': 5,
+              'jul': 6, 'aug': 7, 'sep': 8, 'oct': 9, 'nov': 10, 'dec': 11
+            };
+            const monthIndex = monthNames[monthName.toLowerCase()];
+            
+            if (monthIndex === undefined) {
+              console.warn('Invalid month name:', monthName, 'in visit:', visit.id);
+              return false;
+            }
+            
+            visitDate = new Date(parseInt(year), monthIndex, parseInt(day));
+          } else {
+            // Try standard Date parsing
+            visitDate = new Date(visit.scheduledDate);
+          }
+          
+          // Validate the parsed date
+          if (isNaN(visitDate.getTime())) {
+            console.warn('Invalid date parsed for visit:', visit.id, 'scheduledDate:', visit.scheduledDate);
+            return false;
+          }
+          
+          const visitWeek = getWeekNumber(visitDate);
+          const visitYear = visitDate.getFullYear();
+          
+          const isInWeek = visitWeek === weekNumber && visitYear === year;
+          
+          console.log('📅 Visit Week Check:', {
+            visitId: visit.id,
+            scheduledDate: visit.scheduledDate,
+            parsedDate: visitDate.toISOString(),
+            visitWeek,
+            visitYear,
+            targetWeek: weekNumber,
+            targetYear: year,
+            isInWeek
+          });
+          
+          return isInWeek;
+        } catch (error) {
+          console.error('Error processing visit:', visit.id, error);
+          return false;
         }
-        
-        const visitWeek = getWeekNumber(visitDate);
-        const visitYear = visitDate.getFullYear();
-        
-        const isInWeek = visitWeek === weekNumber && visitYear === year;
-        
-        console.log('📅 Visit Week Check:', {
-          visitId: visit.id,
-          scheduledDate: visit.scheduledDate,
-          parsedDate: visitDate.toISOString(),
-          visitWeek,
-          visitYear,
-          targetWeek: weekNumber,
-          targetYear: year,
-          isInWeek
-        });
-        
-        return isInWeek;
       });
 
       console.log('✅ Filtered Week Visits:', {
         weekVisitsCount: weekVisits.length,
         weekVisits: weekVisits.map(v => ({
           id: v.id,
-          scheduledDate: v.scheduledDate,
-          dayOfWeek: getDayOfWeek(new Date(v.scheduledDate))
+          scheduledDate: v.scheduledDate
         }))
       });
 
       // Enhance visits with company and branch names
       const enhancedVisits: WeeklyVisit[] = weekVisits.map(visit => {
-        const branch = branches.find(b => b.id === visit.branchId);
-        const company = companies.find(c => c.id === visit.companyId);
-        
-        // Parse date using the same logic as above
-        let visitDate: Date;
-        if (visit.scheduledDate.includes('-') && visit.scheduledDate.length === 10) {
-          const [day, monthName, year] = visit.scheduledDate.split('-');
-          const monthNames: Record<string, number> = {
-            'jan': 0, 'feb': 1, 'mar': 2, 'apr': 3, 'may': 4, 'jun': 5,
-            'jul': 6, 'aug': 7, 'sep': 8, 'oct': 9, 'nov': 10, 'dec': 11
+        try {
+          const branch = branches.find(b => b.id === visit.branchId);
+          const company = companies.find(c => c.id === visit.companyId);
+          
+          // Parse date using the same logic as above
+          let visitDate: Date;
+          if (visit.scheduledDate.includes('-') && visit.scheduledDate.length === 10) {
+            const [day, monthName, year] = visit.scheduledDate.split('-');
+            const monthNames: Record<string, number> = {
+              'jan': 0, 'feb': 1, 'mar': 2, 'apr': 3, 'may': 4, 'jun': 5,
+              'jul': 6, 'aug': 7, 'sep': 8, 'oct': 9, 'nov': 10, 'dec': 11
+            };
+            const monthIndex = monthNames[monthName.toLowerCase()];
+            
+            if (monthIndex === undefined) {
+              console.warn('Invalid month name in enhanced visit:', monthName);
+              visitDate = new Date(); // Fallback to current date
+            } else {
+              visitDate = new Date(parseInt(year), monthIndex, parseInt(day));
+            }
+          } else {
+            visitDate = new Date(visit.scheduledDate);
+          }
+          
+          // Validate the parsed date
+          if (isNaN(visitDate.getTime())) {
+            console.warn('Invalid date in enhanced visit, using current date');
+            visitDate = new Date();
+          }
+          
+          return {
+            ...visit,
+            dayOfWeek: getDayOfWeek(visitDate),
+            weekNumber,
+            year,
+            companyName: company?.companyName || 'Unknown Company',
+            branchName: branch?.branchName || 'Unknown Branch'
           };
-          const monthIndex = monthNames[monthName.toLowerCase()];
-          visitDate = new Date(parseInt(year), monthIndex, parseInt(day));
-        } else {
-          visitDate = new Date(visit.scheduledDate);
+        } catch (error) {
+          console.error('Error enhancing visit:', visit.id, error);
+          // Return a fallback visit object
+          return {
+            ...visit,
+            dayOfWeek: 0,
+            weekNumber,
+            year,
+            companyName: 'Error Loading Company',
+            branchName: 'Error Loading Branch'
+          };
         }
-        
-        return {
-          ...visit,
-          dayOfWeek: getDayOfWeek(visitDate),
-          weekNumber,
-          year,
-          companyName: company?.companyName || 'Unknown Company',
-          branchName: branch?.branchName || 'Unknown Branch'
-        };
       });
 
       // Create week data structure
@@ -136,7 +182,9 @@ export function useWeeklyPlanning(weekNumber: number, year: number) {
 
       setWeekData(weekPlanningData);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load week data');
+      console.error('Error in loadWeekData:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load week data';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

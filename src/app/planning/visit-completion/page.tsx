@@ -74,12 +74,16 @@ function VisitCompletionContent() {
           setVisit(visitWithId);
           
           // Load branch and company names
+          console.log('🔍 Loading visit data:', { branchId: visitData.branchId, companyId: visitData.companyId });
+          
           if (visitData.branchId) {
             const branchName = await getBranchName(visitData.branchId);
+            console.log('🏢 Branch name loaded:', branchName);
             setBranchName(branchName);
           }
           if (visitData.companyId) {
             const companyName = await getCompanyName(visitData.companyId);
+            console.log('🏭 Company name loaded:', companyName);
             setCompanyName(companyName);
           }
           
@@ -193,12 +197,18 @@ function VisitCompletionContent() {
       setError(null);
 
       // Check if visit document exists before updating
+      console.log('🔍 Checking visit document existence for ID:', visit.id);
       const visitDocRef = doc(db, 'visits', visit.id);
       const visitDoc = await getDoc(visitDocRef);
       
+      console.log('📄 Visit document exists:', visitDoc.exists());
+      
       if (!visitDoc.exists()) {
-        throw new Error('Visit document does not exist');
+        console.error('❌ Visit document does not exist for ID:', visit.id);
+        throw new Error(`Visit document with ID ${visit.id} does not exist`);
       }
+
+      console.log('✅ Visit document exists, proceeding with update...');
 
       // Update visit status to completed
       await updateDoc(visitDocRef, {

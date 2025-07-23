@@ -309,7 +309,7 @@ export function FileUpload({
                     <p className="font-medium text-sm">{file.name}</p>
                     <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
                     <Badge variant="secondary" className="text-xs mt-1">
-                      {new Date(file.uploadedAt).toLocaleDateString('ar-SA')}
+                      {new Date(file.uploadedAt).toLocaleDateString('en-GB')}
                     </Badge>
                   </div>
                 </div>

@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { AnnualScheduler } from '@/components/planning/AnnualScheduler';
 import { PlanningGrid } from '@/components/planning/PlanningGrid';
+import { VisitLogsViewer } from '@/components/planning/VisitLogsViewer';
 
 export default function PlanningPage() {
-  const [activeTab, setActiveTab] = useState<'annual' | 'weekly'>('annual');
+  const [activeTab, setActiveTab] = useState<'annual' | 'weekly' | 'logs'>('annual');
 
   const tabs = [
     {
@@ -19,6 +20,12 @@ export default function PlanningPage() {
       label: 'التخطيط الأسبوعي المفصل',
       icon: '🗓️',
       description: 'تخطيط مفصل على مستوى الأيام'
+    },
+    {
+      id: 'logs' as const,
+      label: 'سجلات الزيارات',
+      icon: '📋',
+      description: 'عرض سجلات الإكمال والإلغاء'
     }
   ];
 
@@ -50,6 +57,7 @@ export default function PlanningPage() {
       {/* Tab Content */}
       {activeTab === 'annual' && <AnnualScheduler />}
       {activeTab === 'weekly' && <PlanningGrid />}
+      {activeTab === 'logs' && <VisitLogsViewer />}
     </div>
   );
 }

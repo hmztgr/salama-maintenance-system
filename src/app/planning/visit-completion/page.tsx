@@ -40,6 +40,18 @@ function VisitCompletionContent() {
   const [attachments, setAttachments] = useState<UploadedFile[]>([]);
   const [users, setUsers] = useState<Array<{id: string, fullName: string, email: string}>>([]);
 
+  // Handle files uploaded
+  const handleFilesUploaded = (files: UploadedFile[]) => {
+    console.log('📁 Files uploaded to form:', files);
+    setAttachments(files);
+  };
+
+  // Handle file deleted
+  const handleFileDeleted = (filePath: string) => {
+    console.log('🗑️ File deleted from form:', filePath);
+    setAttachments(prev => prev.filter(file => file.path !== filePath));
+  };
+
   // Load visit data
   useEffect(() => {
     const loadVisit = async () => {
@@ -409,20 +421,6 @@ function VisitCompletionContent() {
             </div>
 
             <div>
-              <Label htmlFor="servicesCompleted" className="text-sm font-medium text-gray-700">
-                ملاحظات
-              </Label>
-              <Textarea
-                id="servicesCompleted"
-                value={servicesCompleted}
-                onChange={(e) => setServicesCompleted(e.target.value)}
-                placeholder="تفاصيل العمل المنجز والملاحظات..."
-                className="mt-1"
-                rows={4}
-              />
-            </div>
-
-            <div>
               <Label className="text-sm font-medium text-gray-700">
                 النتائج والتوصيات
               </Label>
@@ -464,6 +462,20 @@ function VisitCompletionContent() {
             </div>
 
             <div>
+              <Label htmlFor="servicesCompleted" className="text-sm font-medium text-gray-700">
+                ملاحظات
+              </Label>
+              <Textarea
+                id="servicesCompleted"
+                value={servicesCompleted}
+                onChange={(e) => setServicesCompleted(e.target.value)}
+                placeholder="تفاصيل العمل المنجز والملاحظات..."
+                className="mt-1"
+                rows={4}
+              />
+            </div>
+
+            <div>
               <Label htmlFor="internalNotes" className="text-sm font-medium text-gray-700">
                 ملاحظات داخلية
               </Label>
@@ -500,11 +512,9 @@ function VisitCompletionContent() {
                 المرفقات
               </Label>
               <FileUpload
-                onFilesUploaded={setAttachments}
-                onFileDeleted={(filePath) => {
-                  setAttachments(prev => prev.filter(file => file.path !== filePath));
-                }}
-                existingFiles={[]}
+                onFilesUploaded={handleFilesUploaded}
+                onFileDeleted={handleFileDeleted}
+                existingFiles={attachments}
                 folder={`visits/${visit?.id}`}
                 maxFiles={10}
                 maxSize={25}

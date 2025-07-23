@@ -252,7 +252,14 @@ export function useWeeklyPlanning(weekNumber: number, year: number) {
       if (!visit) throw new Error('Visit not found');
 
       // Calculate new scheduled date
-      const currentDate = new Date(visit.scheduledDate);
+      // Parse the date correctly from dd-mmm-yyyy format
+      const dateParts = visit.scheduledDate.split('-');
+      const parsedDay = parseInt(dateParts[0]);
+      const monthNamesArray = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const parsedMonth = monthNamesArray.indexOf(dateParts[1]);
+      const parsedYear = parseInt(dateParts[2]);
+      
+      const currentDate = new Date(parsedYear, parsedMonth, parsedDay);
       const daysDiff = toDay - fromDay;
       const newDate = new Date(currentDate);
       newDate.setDate(currentDate.getDate() + daysDiff);

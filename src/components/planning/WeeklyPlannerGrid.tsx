@@ -151,131 +151,133 @@ export function WeeklyPlannerGrid({
   };
 
   return (
-    <div className="weekly-planner-grid">
-      <div className="grid grid-cols-7 gap-4">
-        {weekDays.map((dayName, dayIndex) => {
-          const date = weekDates[dayIndex];
-          const dayVisits = visitsByDay[dayIndex] || [];
-          const isDragTarget = dragState.dragTargetDay === dayIndex;
-          const isFriday = dayIndex === 6;
+    <>
+      <div className="weekly-planner-grid">
+        <div className="grid grid-cols-7 gap-4">
+          {weekDays.map((dayName, dayIndex) => {
+            const date = weekDates[dayIndex];
+            const dayVisits = visitsByDay[dayIndex] || [];
+            const isDragTarget = dragState.dragTargetDay === dayIndex;
+            const isFriday = dayIndex === 6;
 
-          return (
-            <div
-              key={dayIndex}
-              className={`day-column ${isDragTarget ? 'drag-target' : ''}`}
-              onDragOver={(e) => handleDragOver(e, dayIndex)}
-              onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, dayIndex)}
-            >
-              {/* Day Header */}
-              <div className="day-header">
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-lg font-semibold">{dayName}</h3>
-                  {!readonly && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleAddVisit(dayIndex)}
-                      className="h-6 w-6 p-0"
-                      title={`إضافة زيارة لـ ${dayName}`}
-                    >
-                      <Plus className="h-3 w-3" />
-                    </Button>
+            return (
+              <div
+                key={dayIndex}
+                className={`day-column ${isDragTarget ? 'drag-target' : ''}`}
+                onDragOver={(e) => handleDragOver(e, dayIndex)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, dayIndex)}
+              >
+                {/* Day Header */}
+                <div className="day-header">
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-lg font-semibold">{dayName}</h3>
+                    {!readonly && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleAddVisit(dayIndex)}
+                        className="h-6 w-6 p-0"
+                        title={`إضافة زيارة لـ ${dayName}`}
+                      >
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                  <div className="text-sm text-gray-600 mb-1">
+                    {formatDate(date)}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    {dayVisits.length} زيارات
+                  </div>
+                </div>
+
+                {/* Visit List */}
+                <div className="visit-list">
+                  {dayVisits.map((visit) => (
+                    <WeeklyVisitCard
+                      key={visit.id}
+                      visit={visit}
+                      dayIndex={dayIndex}
+                      isDragging={dragState.draggedVisitId === visit.id}
+                      onDragStart={onDragStart}
+                      onDragEnd={onDragEnd}
+                      onVisitAction={onVisitAction}
+                      readonly={readonly}
+                      isDragSupported={isDragSupported}
+                    />
+                  ))}
+
+                  {/* Empty State */}
+                  {dayVisits.length === 0 && (
+                    <div className="empty-visit-slot">
+                      <span className="text-gray-400 text-sm">
+                        لا توجد زيارات مخططة
+                      </span>
+                    </div>
                   )}
                 </div>
-                <div className="text-sm text-gray-600 mb-1">
-                  {formatDate(date)}
-                </div>
-                <div className="text-sm text-gray-500">
-                  {dayVisits.length} زيارات
-                </div>
               </div>
-
-              {/* Visit List */}
-              <div className="visit-list">
-                {dayVisits.map((visit) => (
-                  <WeeklyVisitCard
-                    key={visit.id}
-                    visit={visit}
-                    dayIndex={dayIndex}
-                    isDragging={dragState.draggedVisitId === visit.id}
-                    onDragStart={onDragStart}
-                    onDragEnd={onDragEnd}
-                    onVisitAction={onVisitAction}
-                    readonly={readonly}
-                    isDragSupported={isDragSupported}
-                  />
-                ))}
-
-                {/* Empty State */}
-                {dayVisits.length === 0 && (
-                  <div className="empty-visit-slot">
-                    <span className="text-gray-400 text-sm">
-                      لا توجد زيارات مخططة
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-
-    {/* Add Visit Dialog */}
-    <Dialog open={showAddVisitDialog} onOpenChange={setShowAddVisitDialog}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>إضافة زيارة جديدة</DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-4">
-          <div className="text-center text-gray-600 mb-4">
-            {selectedDayIndex !== null && selectedDayIndex < weekDays.length && weekDates[selectedDayIndex] && (
-              <p>اختر نوع الزيارة لـ {weekDays[selectedDayIndex]} ({weekDates[selectedDayIndex].toLocaleDateString('ar-SA')})</p>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 gap-3">
-            <Button
-              onClick={() => handleVisitTypeSelection('planned')}
-              className="flex items-center justify-start gap-3 h-12"
-              variant="outline"
-            >
-              <Calendar className="h-5 w-5 text-blue-600" />
-              <div className="text-right">
-                <div className="font-medium">زيارة مخططة</div>
-                <div className="text-sm text-gray-500">إضافة زيارة مخططة جديدة</div>
-              </div>
-            </Button>
-
-            <Button
-              onClick={() => handleVisitTypeSelection('completed')}
-              className="flex items-center justify-start gap-3 h-12"
-              variant="outline"
-            >
-              <CheckCircle className="h-5 w-5 text-green-600" />
-              <div className="text-right">
-                <div className="font-medium">زيارة مكتملة</div>
-                <div className="text-sm text-gray-500">إكمال زيارة موجودة</div>
-              </div>
-            </Button>
-
-            <Button
-              onClick={() => handleVisitTypeSelection('emergency')}
-              className="flex items-center justify-start gap-3 h-12"
-              variant="outline"
-            >
-              <AlertTriangle className="h-5 w-5 text-red-600" />
-              <div className="text-right">
-                <div className="font-medium">زيارة طارئة</div>
-                <div className="text-sm text-gray-500">إنشاء زيارة طارئة جديدة</div>
-              </div>
-            </Button>
-          </div>
+            );
+          })}
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+
+      {/* Add Visit Dialog */}
+      <Dialog open={showAddVisitDialog} onOpenChange={setShowAddVisitDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>إضافة زيارة جديدة</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="text-center text-gray-600 mb-4">
+              {selectedDayIndex !== null && selectedDayIndex < weekDays.length && weekDates[selectedDayIndex] && (
+                <p>اختر نوع الزيارة لـ {weekDays[selectedDayIndex]} ({weekDates[selectedDayIndex].toLocaleDateString('ar-SA')})</p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 gap-3">
+              <Button
+                onClick={() => handleVisitTypeSelection('planned')}
+                className="flex items-center justify-start gap-3 h-12"
+                variant="outline"
+              >
+                <Calendar className="h-5 w-5 text-blue-600" />
+                <div className="text-right">
+                  <div className="font-medium">زيارة مخططة</div>
+                  <div className="text-sm text-gray-500">إضافة زيارة مخططة جديدة</div>
+                </div>
+              </Button>
+
+              <Button
+                onClick={() => handleVisitTypeSelection('completed')}
+                className="flex items-center justify-start gap-3 h-12"
+                variant="outline"
+              >
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                <div className="text-right">
+                  <div className="font-medium">زيارة مكتملة</div>
+                  <div className="text-sm text-gray-500">إكمال زيارة موجودة</div>
+                </div>
+              </Button>
+
+              <Button
+                onClick={() => handleVisitTypeSelection('emergency')}
+                className="flex items-center justify-start gap-3 h-12"
+                variant="outline"
+              >
+                <AlertTriangle className="h-5 w-5 text-red-600" />
+                <div className="text-right">
+                  <div className="font-medium">زيارة طارئة</div>
+                  <div className="text-sm text-gray-500">إنشاء زيارة طارئة جديدة</div>
+                </div>
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

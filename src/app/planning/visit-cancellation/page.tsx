@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Visit } from '@/types/customer';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,7 @@ import { useVisitsFirebase } from '@/hooks/useVisitsFirebase';
 import { useBranchesFirebase } from '@/hooks/useBranchesFirebase';
 import { useCompaniesFirebase } from '@/hooks/useCompaniesFirebase';
 
-export default function VisitCancellationPage() {
+function VisitCancellationContent() {
   const searchParams = useSearchParams();
   const visitId = searchParams.get('visitId');
   
@@ -293,5 +293,19 @@ export default function VisitCancellationPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function VisitCancellationPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto p-6">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-lg">جاري تحميل...</div>
+        </div>
+      </div>
+    }>
+      <VisitCancellationContent />
+    </Suspense>
   );
 } 

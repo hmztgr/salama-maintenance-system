@@ -11,6 +11,7 @@ export interface WeekStatusOverviewProps {
   onApprove: () => void;
   onExport?: () => void;
   onPrint?: () => void;
+  onWeekChange?: (weekNumber: number) => void;
   readonly?: boolean;
   userName?: string;
 }
@@ -21,6 +22,7 @@ export function WeekStatusOverview({
   onApprove,
   onExport,
   onPrint,
+  onWeekChange,
   readonly = false,
   userName = 'مستخدم النظام'
 }: WeekStatusOverviewProps) {
@@ -118,6 +120,26 @@ export function WeekStatusOverview({
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {/* Week Selection Buttons */}
+          {onWeekChange && (
+            <div className="week-selection-compact mb-4">
+              <div className="flex flex-wrap gap-1 justify-center">
+                {Array.from({ length: 52 }, (_, i) => i + 1).map(weekNum => (
+                  <button
+                    key={weekNum}
+                    onClick={() => onWeekChange(weekNum)}
+                    className={`px-2 py-1 text-xs rounded ${
+                      weekData.weekNumber === weekNum 
+                        ? 'bg-blue-500 text-white' 
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {weekNum}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           {/* Statistics Cards */}
           <div className="status-cards grid grid-cols-4 gap-4 mb-6">
             <div className="status-card">

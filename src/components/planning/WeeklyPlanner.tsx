@@ -129,7 +129,8 @@ export function WeeklyPlanner({
         setShowMoveDialog(true);
         break;
       case 'complete':
-        updateVisit(action.visit.id, { status: 'completed' });
+        // Navigate to visit completion form
+        window.location.href = `/planning/visit-completion?visitId=${action.visit.id}`;
         break;
       case 'cancel':
         // Navigate to cancellation form
@@ -300,23 +301,6 @@ export function WeeklyPlanner({
   return (
     <DragDropErrorBoundary>
       <div className="weekly-planner">
-        {/* Week Selection Buttons */}
-        <div className="week-selection mb-4">
-          <div className="flex flex-wrap gap-2 justify-center">
-            {Array.from({ length: 52 }, (_, i) => i + 1).map(weekNum => (
-              <Button
-                key={weekNum}
-                onClick={() => handleWeekChange(weekNum, selectedWeek.year)}
-                variant={selectedWeek.weekNumber === weekNum ? 'default' : 'outline'}
-                size="sm"
-                className="min-w-[60px]"
-              >
-                {weekNum}
-              </Button>
-            ))}
-          </div>
-        </div>
-
         {/* Week Header */}
         <div className="week-header mb-6">
           <div className="flex justify-between items-center">
@@ -334,6 +318,7 @@ export function WeeklyPlanner({
             onApprove={handleWeekApproval}
             onExport={handleWeekExport}
             onPrint={handleWeekPrint}
+            onWeekChange={(weekNum) => handleWeekChange(weekNum, selectedWeek.year)}
             readonly={readonly}
             userName={authState.user?.displayName || authState.user?.email || 'مستخدم النظام'}
           />

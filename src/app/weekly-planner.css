@@ -110,6 +110,14 @@
   @apply bg-white rounded-lg shadow-sm border p-4;
 }
 
+.week-selection-compact {
+  @apply border-b border-gray-200 pb-4;
+}
+
+.week-selection-compact button {
+  @apply transition-colors duration-200;
+}
+
 .visit-dropdown-actions {
   @apply absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-10;
   @apply flex flex-col gap-1;

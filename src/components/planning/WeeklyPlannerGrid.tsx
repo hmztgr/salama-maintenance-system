@@ -84,15 +84,7 @@ export function WeeklyPlannerGrid({
     const fromDay = parseInt(e.dataTransfer.getData('fromDay'));
 
     if (visitId && fromDay !== dayIndex) {
-      // Validate drop target (allow Friday now)
-      const dayVisits = visitsByDay[dayIndex] || [];
-      const maxVisits = 8; // Maximum visits per day
-      
-      if (dayVisits.length >= maxVisits) {
-        console.warn('Day is at maximum capacity');
-        return;
-      }
-      
+      // Allow drops to any day including Friday (removed capacity limit)
       onDrop(visitId, fromDay, dayIndex);
     }
   };

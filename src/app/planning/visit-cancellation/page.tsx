@@ -81,8 +81,16 @@ function VisitCancellationContent() {
       setSaving(true);
       setError(null);
 
+      // Check if visit document exists before updating
+      const visitDocRef = doc(db, 'visits', visit.id);
+      const visitDoc = await getDoc(visitDocRef);
+      
+      if (!visitDoc.exists()) {
+        throw new Error('Visit document does not exist');
+      }
+
       // Update visit status to cancelled
-      await updateDoc(doc(db, 'visits', visit.id), {
+      await updateDoc(visitDocRef, {
         status: 'cancelled',
         notes: `إلغاء الزيارة: ${justification}${suggestedDate ? ` - تاريخ مقترح: ${suggestedDate}` : ''}`,
         updatedAt: new Date()
@@ -106,7 +114,7 @@ function VisitCancellationContent() {
       
       // Redirect back to weekly planner after 2 seconds
       setTimeout(() => {
-        window.location.href = '/planning';
+        window.location.href = '/planning?tab=weekly';
       }, 2000);
 
     } catch (error) {

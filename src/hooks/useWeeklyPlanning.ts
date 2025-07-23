@@ -325,6 +325,9 @@ export function useWeeklyPlanning(weekNumber: number, year: number) {
       };
 
       setMovements(prev => [...prev, movement]);
+
+      // Refresh week data to show updated visit positions
+      await loadWeekData();
     } catch (err) {
       console.error('Failed to move visit:', err);
       throw err;

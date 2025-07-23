@@ -9,11 +9,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowLeft, Save, X } from 'lucide-react';
+import { ArrowLeft, Save, CheckCircle } from 'lucide-react';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 
-function VisitCancellationContent() {
+function VisitCompletionContent() {
   const searchParams = useSearchParams();
   const visitId = searchParams.get('visitId');
   
@@ -24,10 +24,14 @@ function VisitCancellationContent() {
   const [success, setSuccess] = useState(false);
   
   // Form data
-  const [justification, setJustification] = useState('');
-  const [suggestedDate, setSuggestedDate] = useState('');
-  const [cancelledBy, setCancelledBy] = useState('');
-  
+  const [completionDate, setCompletionDate] = useState('');
+  const [completionTime, setCompletionTime] = useState('');
+  const [duration, setDuration] = useState('');
+  const [technicianNotes, setTechnicianNotes] = useState('');
+  const [servicesCompleted, setServicesCompleted] = useState('');
+  const [results, setResults] = useState('');
+  const [completedBy, setCompletedBy] = useState('');
+
   // Load visit data
   useEffect(() => {
     const loadVisit = async () => {
@@ -45,6 +49,10 @@ function VisitCancellationContent() {
             id: visitDoc.id,
             ...visitData
           } as Visit);
+          
+          // Set default completion date to today
+          const today = new Date().toISOString().split('T')[0];
+          setCompletionDate(today);
         } else {
           setError('الزيارة غير موجودة');
         }
@@ -72,8 +80,8 @@ function VisitCancellationContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!visit || !justification.trim()) {
-      setError('يرجى إدخال مبرر الإلغاء');
+    if (!visit || !completionDate || !technicianNotes.trim()) {
+      setError('يرجى إدخال التاريخ وملاحظات الفني');
       return;
     }
 
@@ -86,30 +94,36 @@ function VisitCancellationContent() {
       const visitDoc = await getDoc(visitDocRef);
       
       if (!visitDoc.exists()) {
-        console.error('Visit document not found:', visit.id);
-        throw new Error(`Visit document does not exist: ${visit.id}`);
+        throw new Error('Visit document does not exist');
       }
 
-      // Update visit status to cancelled
+      // Update visit status to completed
       await updateDoc(visitDocRef, {
-        status: 'cancelled',
-        notes: `إلغاء الزيارة: ${justification}${suggestedDate ? ` - تاريخ مقترح: ${suggestedDate}` : ''}`,
-        updatedAt: new Date()
+        status: 'completed',
+        completedDate: completionDate,
+        completedTime: completionTime || null,
+        duration: duration || null,
+        notes: technicianNotes,
+        results: results || null,
+        services: servicesCompleted || null,
+        updatedAt: new Date(),
+        updatedBy: completedBy || 'مستخدم النظام'
       });
 
-      // Log the cancellation (you can implement this based on your logging system)
-      const cancellationLog = {
+      // Log the completion
+      const completionLog = {
         visitId: visit.id,
-        cancelledAt: new Date().toISOString(),
-        cancelledBy: cancelledBy || 'مستخدم النظام',
-        justification,
-        suggestedDate: suggestedDate || null,
-        originalDate: visit.scheduledDate,
-        branchId: visit.branchId,
-        companyId: visit.companyId
+        completedAt: new Date().toISOString(),
+        completedBy: completedBy || 'مستخدم النظام',
+        completionDate,
+        completionTime,
+        duration,
+        notes: technicianNotes,
+        results,
+        services: servicesCompleted
       };
 
-      console.log('Visit cancellation logged:', cancellationLog);
+      console.log('Visit completion logged:', completionLog);
 
       setSuccess(true);
       
@@ -119,8 +133,8 @@ function VisitCancellationContent() {
       }, 2000);
 
     } catch (error) {
-      console.error('Error cancelling visit:', error);
-      setError('فشل في إلغاء الزيارة');
+      console.error('Error completing visit:', error);
+      setError('فشل في إكمال الزيارة');
     } finally {
       setSaving(false);
     }
@@ -145,7 +159,6 @@ function VisitCancellationContent() {
     return (
       <div className="container mx-auto p-6">
         <Alert variant="destructive">
-          <X className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
         <Button onClick={handleGoBack} className="mt-4">
@@ -160,8 +173,9 @@ function VisitCancellationContent() {
     return (
       <div className="container mx-auto p-6">
         <Alert>
+          <CheckCircle className="h-4 w-4" />
           <AlertDescription>
-            تم إلغاء الزيارة بنجاح. سيتم توجيهك إلى صفحة التخطيط...
+            تم إكمال الزيارة بنجاح. سيتم توجيهك إلى صفحة التخطيط...
           </AlertDescription>
         </Alert>
       </div>
@@ -172,7 +186,6 @@ function VisitCancellationContent() {
     return (
       <div className="container mx-auto p-6">
         <Alert variant="destructive">
-          <X className="h-4 w-4" />
           <AlertDescription>الزيارة غير موجودة</AlertDescription>
         </Alert>
         <Button onClick={handleGoBack} className="mt-4">
@@ -191,8 +204,8 @@ function VisitCancellationContent() {
           العودة إلى التخطيط
         </Button>
         
-        <h1 className="text-2xl font-bold text-gray-900">إلغاء زيارة</h1>
-        <p className="text-gray-600 mt-2">إلغاء زيارة مجدولة مع إدخال المبرر</p>
+        <h1 className="text-2xl font-bold text-gray-900">إكمال زيارة</h1>
+        <p className="text-gray-600 mt-2">تسجيل إكمال زيارة مع التقرير</p>
       </div>
 
       {/* Visit Information */}
@@ -226,34 +239,76 @@ function VisitCancellationContent() {
           
           <div>
             <Label className="text-sm font-medium text-gray-700">التاريخ المجدول</Label>
-            <p className="text-lg">{new Date(visit.scheduledDate).toLocaleDateString('ar-SA')}</p>
+            <p className="text-lg">{new Date(visit.scheduledDate).toLocaleDateString('en-GB')}</p>
           </div>
         </CardContent>
       </Card>
 
-      {/* Cancellation Form */}
+      {/* Completion Form */}
       <Card>
         <CardHeader>
-          <CardTitle>تفاصيل الإلغاء</CardTitle>
+          <CardTitle>تقرير الإكمال</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <Alert variant="destructive">
-                <X className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
 
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="completionDate" className="text-sm font-medium text-gray-700">
+                  تاريخ الإكمال *
+                </Label>
+                <Input
+                  id="completionDate"
+                  type="date"
+                  value={completionDate}
+                  onChange={(e) => setCompletionDate(e.target.value)}
+                  className="mt-1"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="completionTime" className="text-sm font-medium text-gray-700">
+                  وقت الإكمال
+                </Label>
+                <Input
+                  id="completionTime"
+                  type="time"
+                  value={completionTime}
+                  onChange={(e) => setCompletionTime(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+
             <div>
-              <Label htmlFor="justification" className="text-sm font-medium text-gray-700">
-                مبرر الإلغاء *
+              <Label htmlFor="duration" className="text-sm font-medium text-gray-700">
+                مدة الزيارة (بالساعات)
+              </Label>
+              <Input
+                id="duration"
+                type="number"
+                step="0.5"
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+                className="mt-1"
+                placeholder="مثال: 2.5"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="technicianNotes" className="text-sm font-medium text-gray-700">
+                ملاحظات الفني *
               </Label>
               <Textarea
-                id="justification"
-                value={justification}
-                onChange={(e) => setJustification(e.target.value)}
-                placeholder="يرجى إدخال مبرر إلغاء الزيارة..."
+                id="technicianNotes"
+                value={technicianNotes}
+                onChange={(e) => setTechnicianNotes(e.target.value)}
+                placeholder="تفاصيل العمل المنجز والملاحظات..."
                 className="mt-1"
                 rows={4}
                 required
@@ -261,32 +316,43 @@ function VisitCancellationContent() {
             </div>
 
             <div>
-              <Label htmlFor="suggestedDate" className="text-sm font-medium text-gray-700">
-                تاريخ مقترح للزيارة (اختياري)
+              <Label htmlFor="servicesCompleted" className="text-sm font-medium text-gray-700">
+                الخدمات المنجزة
               </Label>
-              <Input
-                id="suggestedDate"
-                type="date"
-                value={suggestedDate}
-                onChange={(e) => setSuggestedDate(e.target.value)}
+              <Textarea
+                id="servicesCompleted"
+                value={servicesCompleted}
+                onChange={(e) => setServicesCompleted(e.target.value)}
+                placeholder="قائمة الخدمات التي تم إنجازها..."
                 className="mt-1"
-                min={new Date().toISOString().split('T')[0]}
+                rows={3}
               />
-              <p className="text-sm text-gray-500 mt-1">
-                إذا كنت ترغب في اقتراح تاريخ جديد للزيارة
-              </p>
             </div>
 
             <div>
-              <Label htmlFor="cancelledBy" className="text-sm font-medium text-gray-700">
-                تم الإلغاء بواسطة
+              <Label htmlFor="results" className="text-sm font-medium text-gray-700">
+                النتائج والتوصيات
+              </Label>
+              <Textarea
+                id="results"
+                value={results}
+                onChange={(e) => setResults(e.target.value)}
+                placeholder="النتائج والتوصيات للمتابعة..."
+                className="mt-1"
+                rows={3}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="completedBy" className="text-sm font-medium text-gray-700">
+                تم الإكمال بواسطة
               </Label>
               <Input
-                id="cancelledBy"
+                id="completedBy"
                 type="text"
-                value={cancelledBy}
-                onChange={(e) => setCancelledBy(e.target.value)}
-                placeholder="اسم الشخص الذي قام بالإلغاء"
+                value={completedBy}
+                onChange={(e) => setCompletedBy(e.target.value)}
+                placeholder="اسم الفني أو المسؤول"
                 className="mt-1"
               />
             </div>
@@ -294,11 +360,11 @@ function VisitCancellationContent() {
             <div className="flex gap-4">
               <Button
                 type="submit"
-                disabled={saving || !justification.trim()}
-                className="bg-red-600 hover:bg-red-700"
+                disabled={saving || !completionDate || !technicianNotes.trim()}
+                className="bg-green-600 hover:bg-green-700"
               >
                 <Save className="h-4 w-4 mr-2" />
-                {saving ? 'جاري الإلغاء...' : 'إلغاء الزيارة'}
+                {saving ? 'جاري الإكمال...' : 'إكمال الزيارة'}
               </Button>
               
               <Button
@@ -317,7 +383,7 @@ function VisitCancellationContent() {
   );
 }
 
-export default function VisitCancellationPage() {
+export default function VisitCompletionPage() {
   return (
     <Suspense fallback={
       <div className="container mx-auto p-6">
@@ -326,7 +392,7 @@ export default function VisitCancellationPage() {
         </div>
       </div>
     }>
-      <VisitCancellationContent />
+      <VisitCompletionContent />
     </Suspense>
   );
 } 

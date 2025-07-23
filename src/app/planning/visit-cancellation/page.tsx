@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ArrowLeft, Save, X } from 'lucide-react';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, addDoc, collection } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 
 function VisitCancellationContent() {
@@ -97,7 +97,7 @@ function VisitCancellationContent() {
         updatedAt: new Date()
       });
 
-      // Log the cancellation (you can implement this based on your logging system)
+      // Log the cancellation to Firestore
       const cancellationLog = {
         visitId: visit.id,
         cancelledAt: new Date().toISOString(),
@@ -106,10 +106,17 @@ function VisitCancellationContent() {
         suggestedDate: suggestedDate || null,
         originalDate: visit.scheduledDate,
         branchId: visit.branchId,
-        companyId: visit.companyId
+        companyId: visit.companyId,
+        action: 'cancelled'
       };
 
-      console.log('Visit cancellation logged:', cancellationLog);
+      // Save cancellation log to Firestore
+      try {
+        await addDoc(collection(db, 'visitLogs'), cancellationLog);
+        console.log('Visit cancellation logged to Firestore:', cancellationLog);
+      } catch (error) {
+        console.error('Error logging cancellation:', error);
+      }
 
       setSuccess(true);
       

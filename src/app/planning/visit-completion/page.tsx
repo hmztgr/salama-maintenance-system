@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Save, CheckCircle, Plus, X } from 'lucide-react';
-import { doc, getDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, collection, getDocs, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { FileUpload } from '@/components/common/FileUpload';
 import { UploadedFile } from '@/hooks/useFirebaseStorage';
@@ -39,6 +39,8 @@ function VisitCompletionContent() {
   const [completedBy, setCompletedBy] = useState('');
   const [attachments, setAttachments] = useState<UploadedFile[]>([]);
   const [users, setUsers] = useState<Array<{id: string, fullName: string, email: string}>>([]);
+  const [branchName, setBranchName] = useState<string>('');
+  const [companyName, setCompanyName] = useState<string>('');
 
   // Handle files uploaded
   const handleFilesUploaded = (files: UploadedFile[]) => {
@@ -65,10 +67,21 @@ function VisitCompletionContent() {
         const visitDoc = await getDoc(doc(db, 'visits', visitId));
         if (visitDoc.exists()) {
           const visitData = visitDoc.data();
-          setVisit({
+          const visitWithId = {
             id: visitDoc.id,
             ...visitData
-          } as Visit);
+          } as Visit;
+          setVisit(visitWithId);
+          
+          // Load branch and company names
+          if (visitData.branchId) {
+            const branchName = await getBranchName(visitData.branchId);
+            setBranchName(branchName);
+          }
+          if (visitData.companyId) {
+            const companyName = await getCompanyName(visitData.companyId);
+            setCompanyName(companyName);
+          }
           
           // Set default completion date to today
           const today = new Date().toISOString().split('T')[0];
@@ -87,12 +100,28 @@ function VisitCompletionContent() {
     loadVisit();
   }, [visitId]);
 
-  // Get branch and company names (simplified for now)
-  const getBranchName = (branchId: string) => {
+  // Get branch and company names
+  const getBranchName = async (branchId: string) => {
+    try {
+      const branchDoc = await getDoc(doc(db, 'branches', branchId));
+      if (branchDoc.exists()) {
+        return branchDoc.data().branchName || 'فرع غير محدد';
+      }
+    } catch (error) {
+      console.error('Error loading branch:', error);
+    }
     return 'فرع غير محدد';
   };
 
-  const getCompanyName = (companyId: string) => {
+  const getCompanyName = async (companyId: string) => {
+    try {
+      const companyDoc = await getDoc(doc(db, 'companies', companyId));
+      if (companyDoc.exists()) {
+        return companyDoc.data().companyName || 'شركة غير محددة';
+      }
+    } catch (error) {
+      console.error('Error loading company:', error);
+    }
     return 'شركة غير محددة';
   };
 
@@ -188,7 +217,7 @@ function VisitCompletionContent() {
         updatedBy: completedBy || 'مستخدم النظام'
       });
 
-      // Log the completion
+      // Log the completion to Firestore
       const completionLog = {
         visitId: visit.id,
         completedAt: new Date().toISOString(),
@@ -199,10 +228,17 @@ function VisitCompletionContent() {
         notes: servicesCompleted,
         systemIssues,
         recommendations,
-        internalNotes
+        internalNotes,
+        action: 'completed'
       };
 
-      console.log('Visit completion logged:', completionLog);
+      // Save completion log to Firestore
+      try {
+        await addDoc(collection(db, 'visitLogs'), completionLog);
+        console.log('Visit completion logged to Firestore:', completionLog);
+      } catch (error) {
+        console.error('Error logging completion:', error);
+      }
 
       setSuccess(true);
       
@@ -308,12 +344,12 @@ function VisitCompletionContent() {
           
           <div>
             <Label className="text-sm font-medium text-gray-700">الفرع</Label>
-            <p className="text-lg">{getBranchName(visit.branchId)}</p>
+            <p className="text-lg">{branchName || 'جاري التحميل...'}</p>
           </div>
           
           <div>
             <Label className="text-sm font-medium text-gray-700">الشركة</Label>
-            <p className="text-lg">{getCompanyName(visit.companyId)}</p>
+            <p className="text-lg">{companyName || 'جاري التحميل...'}</p>
           </div>
           
           <div>

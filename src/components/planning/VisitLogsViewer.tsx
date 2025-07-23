@@ -12,8 +12,8 @@ import { Search, Filter, Download, Calendar, User, Building } from 'lucide-react
 
 interface VisitLog {
   id: string;
-  visitId: string;
-  action: 'completed' | 'cancelled';
+  visitId?: string;
+  action?: 'completed' | 'cancelled';
   completedAt?: string;
   cancelledAt?: string;
   completedBy?: string;
@@ -60,6 +60,13 @@ export function VisitLogsViewer() {
 
         for (const doc of querySnapshot.docs) {
           const data = doc.data();
+          
+          // Validate that the log has required fields
+          if (!data.visitId || !data.action) {
+            console.warn('Skipping invalid log:', { id: doc.id, data });
+            continue;
+          }
+          
           const log: VisitLog = {
             id: doc.id,
             ...data
@@ -115,13 +122,13 @@ export function VisitLogsViewer() {
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
         const matchesSearch = 
-          log.visitId?.toLowerCase().includes(searchLower) ||
-          log.branchName?.toLowerCase().includes(searchLower) ||
-          log.companyName?.toLowerCase().includes(searchLower) ||
-          log.completedBy?.toLowerCase().includes(searchLower) ||
-          log.cancelledBy?.toLowerCase().includes(searchLower) ||
-          log.notes?.toLowerCase().includes(searchLower) ||
-          log.justification?.toLowerCase().includes(searchLower);
+          (log.visitId?.toLowerCase().includes(searchLower) || false) ||
+          (log.branchName?.toLowerCase().includes(searchLower) || false) ||
+          (log.companyName?.toLowerCase().includes(searchLower) || false) ||
+          (log.completedBy?.toLowerCase().includes(searchLower) || false) ||
+          (log.cancelledBy?.toLowerCase().includes(searchLower) || false) ||
+          (log.notes?.toLowerCase().includes(searchLower) || false) ||
+          (log.justification?.toLowerCase().includes(searchLower) || false);
         
         if (!matchesSearch) return false;
       }
@@ -166,25 +173,25 @@ export function VisitLogsViewer() {
       'Suggested Date'
     ];
 
-    const csvContent = [
-      headers.join(','),
-      ...filteredLogs.map(log => [
-        log.visitId,
-        log.action,
-        log.completionDate || log.cancelledAt?.split('T')[0] || '',
-        log.completionTime || '',
-        log.completedBy || log.cancelledBy || '',
-        log.branchName || '',
-        log.companyName || '',
-        log.duration || '',
-        log.notes || '',
-        log.systemIssues?.join('; ') || '',
-        log.recommendations?.join('; ') || '',
-        log.internalNotes || '',
-        log.justification || '',
-        log.suggestedDate || ''
-      ].join(','))
-    ].join('\n');
+          const csvContent = [
+        headers.join(','),
+        ...filteredLogs.map(log => [
+          log.visitId || '',
+          log.action || '',
+          log.completionDate || log.cancelledAt?.split('T')[0] || '',
+          log.completionTime || '',
+          log.completedBy || log.cancelledBy || '',
+          log.branchName || '',
+          log.companyName || '',
+          log.duration || '',
+          log.notes || '',
+          log.systemIssues?.join('; ') || '',
+          log.recommendations?.join('; ') || '',
+          log.internalNotes || '',
+          log.justification || '',
+          log.suggestedDate || ''
+        ].join(','))
+      ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');

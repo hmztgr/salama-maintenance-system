@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Visit } from '@/types/customer';
 import { WeeklyPlanningData, DragDropState, VisitAction, WeeklyVisit } from '@/types/weekly-planning';
 import { VisitCard } from './VisitCard';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Calendar, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export interface WeeklyPlannerGridProps {
   weekData: WeeklyPlanningData;
@@ -28,6 +29,8 @@ export function WeeklyPlannerGrid({
   readonly = false,
   isDragSupported
 }: WeeklyPlannerGridProps) {
+  const [showAddVisitDialog, setShowAddVisitDialog] = useState(false);
+  const [selectedDayIndex, setSelectedDayIndex] = useState<number | null>(null);
   const weekDays = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
 
   // Calculate dates for the week
@@ -108,15 +111,35 @@ export function WeeklyPlannerGrid({
 
   // Handle add visit button click
   const handleAddVisit = (dayIndex: number) => {
-    const date = weekDates[dayIndex];
+    setSelectedDayIndex(dayIndex);
+    setShowAddVisitDialog(true);
+  };
+
+  // Handle visit type selection
+  const handleVisitTypeSelection = (type: 'planned' | 'completed' | 'emergency') => {
+    if (selectedDayIndex === null) return;
+
+    const date = weekDates[selectedDayIndex];
     const dateString = date.toLocaleDateString('ar-SA');
-    const dayName = weekDays[dayIndex];
-    
-    // Show alert for now - visit creation form not implemented yet
-    alert(`إضافة زيارة جديدة لـ ${dayName} (${dateString})\n\nهذه الميزة قيد التطوير. سيتم إضافتها قريباً.`);
-    
-    // TODO: Implement visit creation form
-    // window.location.href = `/planning/visit-form?date=${date.toISOString()}&day=${dayIndex}&dayName=${dayName}`;
+    const dayName = weekDays[selectedDayIndex];
+
+    switch (type) {
+      case 'planned':
+        // Add new planned visit to that day
+        alert(`إضافة زيارة مخططة لـ ${dayName} (${dateString})\n\nهذه الميزة قيد التطوير. سيتم إضافتها قريباً.`);
+        break;
+      case 'completed':
+        // Open visit completion form with pre-filled date
+        window.location.href = `/planning/visit-completion?date=${date.toISOString()}&day=${selectedDayIndex}&dayName=${dayName}`;
+        break;
+      case 'emergency':
+        // Open emergency visit form
+        window.location.href = `/planning/emergency-visit?date=${date.toISOString()}&day=${selectedDayIndex}&dayName=${dayName}`;
+        break;
+    }
+
+    setShowAddVisitDialog(false);
+    setSelectedDayIndex(null);
   };
 
   // Format date for display
@@ -198,6 +221,61 @@ export function WeeklyPlannerGrid({
         })}
       </div>
     </div>
+
+    {/* Add Visit Dialog */}
+    <Dialog open={showAddVisitDialog} onOpenChange={setShowAddVisitDialog}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>إضافة زيارة جديدة</DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          <div className="text-center text-gray-600 mb-4">
+            {selectedDayIndex !== null && selectedDayIndex < weekDays.length && weekDates[selectedDayIndex] && (
+              <p>اختر نوع الزيارة لـ {weekDays[selectedDayIndex]} ({weekDates[selectedDayIndex].toLocaleDateString('ar-SA')})</p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 gap-3">
+            <Button
+              onClick={() => handleVisitTypeSelection('planned')}
+              className="flex items-center justify-start gap-3 h-12"
+              variant="outline"
+            >
+              <Calendar className="h-5 w-5 text-blue-600" />
+              <div className="text-right">
+                <div className="font-medium">زيارة مخططة</div>
+                <div className="text-sm text-gray-500">إضافة زيارة مخططة جديدة</div>
+              </div>
+            </Button>
+
+            <Button
+              onClick={() => handleVisitTypeSelection('completed')}
+              className="flex items-center justify-start gap-3 h-12"
+              variant="outline"
+            >
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              <div className="text-right">
+                <div className="font-medium">زيارة مكتملة</div>
+                <div className="text-sm text-gray-500">إكمال زيارة موجودة</div>
+              </div>
+            </Button>
+
+            <Button
+              onClick={() => handleVisitTypeSelection('emergency')}
+              className="flex items-center justify-start gap-3 h-12"
+              variant="outline"
+            >
+              <AlertTriangle className="h-5 w-5 text-red-600" />
+              <div className="text-right">
+                <div className="font-medium">زيارة طارئة</div>
+                <div className="text-sm text-gray-500">إنشاء زيارة طارئة جديدة</div>
+              </div>
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

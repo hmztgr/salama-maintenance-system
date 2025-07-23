@@ -250,7 +250,11 @@ function VisitCompletionContent() {
       }
 
       // Update visit status to completed
-      await updateDoc(visitDocRef, {
+      console.log('📝 Using visit ID for update:', visit.id);
+      
+      // Use the correct document reference with the updated visit ID
+      const correctVisitDocRef = doc(db, 'visits', visit.id);
+      await updateDoc(correctVisitDocRef, {
         status: 'completed',
         completedDate: completionDate,
         completedTime: completionTime || null,
@@ -291,9 +295,9 @@ function VisitCompletionContent() {
 
       setSuccess(true);
       
-      // Redirect back to weekly planner after 2 seconds
+      // Redirect back to main dashboard after 2 seconds
       setTimeout(() => {
-        window.location.href = '/planning?tab=weekly';
+        window.location.href = '/';
       }, 2000);
 
     } catch (error) {
@@ -306,7 +310,8 @@ function VisitCompletionContent() {
 
   // Handle go back
   const handleGoBack = () => {
-    window.location.href = '/planning?tab=weekly';
+    // Navigate back to main dashboard planning tab
+    window.location.href = '/';
   };
 
   if (loading) {

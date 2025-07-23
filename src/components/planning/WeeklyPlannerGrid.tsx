@@ -78,13 +78,14 @@ export function WeeklyPlannerGrid({
   // Handle drop events
   const handleDrop = (e: React.DragEvent, dayIndex: number) => {
     e.preventDefault();
-    e.currentTarget.classList.remove('drag-over');
+    e.currentTarget.classList.remove('drag-over', 'drag-over-invalid');
 
     const visitId = e.dataTransfer.getData('visitId');
     const fromDay = parseInt(e.dataTransfer.getData('fromDay'));
 
     if (visitId && fromDay !== dayIndex) {
-      // Allow drops to any day including Friday (removed capacity limit)
+      // Allow drops to any day including Friday with no restrictions
+      console.log('🔄 Dropping visit:', { visitId, fromDay, toDay: dayIndex });
       onDrop(visitId, fromDay, dayIndex);
     }
   };
@@ -93,17 +94,9 @@ export function WeeklyPlannerGrid({
   const handleDragOver = (e: React.DragEvent, dayIndex: number) => {
     e.preventDefault();
     
-    // Allow drops on all days including Friday
-    const dayVisits = visitsByDay[dayIndex] || [];
-    const maxVisits = 8;
-    
-    if (dayVisits.length >= maxVisits) {
-      e.dataTransfer.dropEffect = 'none';
-      e.currentTarget.classList.add('drag-over-invalid');
-    } else {
-      e.dataTransfer.dropEffect = 'move';
-      e.currentTarget.classList.add('drag-over');
-    }
+    // Allow drops on all days including Friday with no capacity limits
+    e.dataTransfer.dropEffect = 'move';
+    e.currentTarget.classList.add('drag-over');
     
     onDragOver(dayIndex);
   };

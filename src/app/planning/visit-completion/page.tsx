@@ -142,8 +142,8 @@ function VisitCompletionContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!visit || !completionDate || !servicesCompleted.trim()) {
-      setError('يرجى إدخال التاريخ وملاحظات العمل المنجز');
+    if (!visit || !completionDate) {
+      setError('يرجى إدخال تاريخ الإكمال');
       return;
     }
 
@@ -209,7 +209,7 @@ function VisitCompletionContent() {
 
   // Handle go back
   const handleGoBack = () => {
-    window.history.back();
+    window.location.href = '/planning?tab=weekly';
   };
 
   if (loading) {
@@ -368,21 +368,6 @@ function VisitCompletionContent() {
             </div>
 
             <div>
-              <Label htmlFor="servicesCompleted" className="text-sm font-medium text-gray-700">
-                ملاحظات *
-              </Label>
-              <Textarea
-                id="servicesCompleted"
-                value={servicesCompleted}
-                onChange={(e) => setServicesCompleted(e.target.value)}
-                placeholder="تفاصيل العمل المنجز والملاحظات..."
-                className="mt-1"
-                rows={4}
-                required
-              />
-            </div>
-
-            <div>
               <Label className="text-sm font-medium text-gray-700">
                 مشاكل النظام
               </Label>
@@ -421,6 +406,20 @@ function VisitCompletionContent() {
                   ))}
                 </div>
               )}
+            </div>
+
+            <div>
+              <Label htmlFor="servicesCompleted" className="text-sm font-medium text-gray-700">
+                ملاحظات
+              </Label>
+              <Textarea
+                id="servicesCompleted"
+                value={servicesCompleted}
+                onChange={(e) => setServicesCompleted(e.target.value)}
+                placeholder="تفاصيل العمل المنجز والملاحظات..."
+                className="mt-1"
+                rows={4}
+              />
             </div>
 
             <div>
@@ -506,7 +505,7 @@ function VisitCompletionContent() {
                   setAttachments(prev => prev.filter(file => file.path !== filePath));
                 }}
                 existingFiles={[]}
-                folder={`visits/${visit?.id}/completion`}
+                folder={`visits/${visit?.id}`}
                 maxFiles={10}
                 maxSize={25}
                 allowedTypes={['image', 'pdf', 'doc', 'docx']}
@@ -518,7 +517,7 @@ function VisitCompletionContent() {
             <div className="flex gap-4">
               <Button
                 type="submit"
-                disabled={saving || !completionDate || !servicesCompleted.trim()}
+                disabled={saving || !completionDate}
                 className="bg-green-600 hover:bg-green-700"
               >
                 <Save className="h-4 w-4 mr-2" />

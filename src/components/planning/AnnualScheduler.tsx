@@ -537,22 +537,30 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
       }
     }
 
-    // Save all visits at once to prevent race conditions
+    // Save all visits using Firebase addVisit function
     if (newVisits.length > 0) {
       try {
-        const allVisits = [...visits, ...newVisits];
-        const saveSuccess = SafeStorage.set('visits', allVisits);
-
-        if (saveSuccess) {
-          console.log(`🎯 BULK SAVE SUCCESS: Saved ${newVisits.length} visits to storage`);
-        } else {
-          console.log(`❌ BULK SAVE FAILED: Could not save to storage`);
-          successCount = 0;
-          failedBranches.length = 0;
-          failedBranches.push(...branchesToPlan.map(b => b.branch.branchName));
+        console.log(`🎯 BULK SAVE: Starting to save ${newVisits.length} visits to Firebase`);
+        
+        // Add each visit individually using the Firebase addVisit function
+        for (const newVisit of newVisits) {
+          try {
+            await addVisit(newVisit);
+            console.log(`✅ SAVED: Visit ${newVisit.visitId} for ${newVisit.branchId}`);
+          } catch (visitError) {
+            console.error(`❌ FAILED TO SAVE VISIT: ${newVisit.visitId}`, visitError);
+            failedBranches.push(`Visit ${newVisit.visitId}`);
+            successCount--;
+          }
         }
+        
+        console.log(`🎯 BULK SAVE COMPLETED: Successfully saved ${successCount} visits to Firebase`);
+        
+        // Refresh visits to update the UI
+        await refreshVisits();
+        
       } catch (error) {
-        console.log(`❌ BULK SAVE ERROR: ${error}`);
+        console.error(`❌ BULK SAVE ERROR:`, error);
         successCount = 0;
         failedBranches.length = 0;
         failedBranches.push(...branchesToPlan.map(b => b.branch.branchName));

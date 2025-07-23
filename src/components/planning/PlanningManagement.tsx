@@ -66,7 +66,7 @@ export function PlanningManagement() {
 
       {/* Tab Content */}
       {activeTab === 'annual' && <AnnualScheduler />}
-      {activeTab === 'weekly' && <WeeklyPlanner weekNumber={1} year={2025} />}
+      {activeTab === 'weekly' && <WeeklyPlanner />}
       {activeTab === 'visits' && (
         <div className="space-y-6">
           {/* Visit Management Header */}

@@ -2,6 +2,8 @@ import React, { useMemo } from 'react';
 import { Visit } from '@/types/customer';
 import { WeeklyPlanningData, DragDropState, VisitAction, WeeklyVisit } from '@/types/weekly-planning';
 import { VisitCard } from './VisitCard';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 
 export interface WeeklyPlannerGridProps {
   weekData: WeeklyPlanningData;
@@ -27,6 +29,34 @@ export function WeeklyPlannerGrid({
   isDragSupported
 }: WeeklyPlannerGridProps) {
   const weekDays = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
+
+  // Calculate dates for the week
+  const weekDates = useMemo(() => {
+    const dates: Date[] = [];
+    const startOfWeek = getStartOfWeek(weekData.weekNumber, weekData.year);
+    
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(startOfWeek);
+      date.setDate(startOfWeek.getDate() + i);
+      dates.push(date);
+    }
+    
+    return dates;
+  }, [weekData.weekNumber, weekData.year]);
+
+  // Helper function to get start of week
+  function getStartOfWeek(weekNumber: number, year: number): Date {
+    const firstDayOfYear = new Date(year, 0, 1);
+    const startOfWeek = new Date(firstDayOfYear);
+    startOfWeek.setDate(firstDayOfYear.getDate() + (weekNumber - 1) * 7);
+    
+    // Adjust to Saturday (day 6 in our system)
+    const dayOfWeek = startOfWeek.getDay();
+    const daysToSaturday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    startOfWeek.setDate(startOfWeek.getDate() - daysToSaturday);
+    
+    return startOfWeek;
+  }
 
   // Group visits by day
   const visitsByDay = useMemo(() => {
@@ -54,15 +84,9 @@ export function WeeklyPlannerGrid({
     const fromDay = parseInt(e.dataTransfer.getData('fromDay'));
 
     if (visitId && fromDay !== dayIndex) {
-      // Validate drop target
+      // Validate drop target (allow Friday now)
       const dayVisits = visitsByDay[dayIndex] || [];
       const maxVisits = 8; // Maximum visits per day
-      
-      if (dayIndex === 6) {
-        // Friday is holiday - prevent drops
-        console.warn('Cannot drop visits on Friday (holiday)');
-        return;
-      }
       
       if (dayVisits.length >= maxVisits) {
         console.warn('Day is at maximum capacity');
@@ -77,13 +101,7 @@ export function WeeklyPlannerGrid({
   const handleDragOver = (e: React.DragEvent, dayIndex: number) => {
     e.preventDefault();
     
-    // Only allow drops on working days
-    if (dayIndex === 6) {
-      e.dataTransfer.dropEffect = 'none';
-      return;
-    }
-    
-    // Check capacity
+    // Allow drops on all days including Friday
     const dayVisits = visitsByDay[dayIndex] || [];
     const maxVisits = 8;
     
@@ -103,33 +121,63 @@ export function WeeklyPlannerGrid({
     e.currentTarget.classList.remove('drag-over', 'drag-over-invalid');
   };
 
+  // Handle add visit button click
+  const handleAddVisit = (dayIndex: number) => {
+    const date = weekDates[dayIndex];
+    const dateString = date.toLocaleDateString('ar-SA');
+    const dayName = weekDays[dayIndex];
+    
+    // Navigate to visit creation form with pre-filled date
+    window.location.href = `/planning/visit-form?date=${date.toISOString()}&day=${dayIndex}&dayName=${dayName}`;
+  };
+
+  // Format date for display
+  const formatDate = (date: Date): string => {
+    return date.toLocaleDateString('ar-SA', {
+      day: 'numeric',
+      month: 'short'
+    });
+  };
+
   return (
     <div className="weekly-planner-grid">
       <div className="grid grid-cols-7 gap-4">
         {weekDays.map((dayName, dayIndex) => {
-          const isWorkingDay = dayIndex !== 6; // Friday is holiday
+          const date = weekDates[dayIndex];
           const dayVisits = visitsByDay[dayIndex] || [];
           const isDragTarget = dragState.dragTargetDay === dayIndex;
+          const isFriday = dayIndex === 6;
 
           return (
             <div
               key={dayIndex}
-              className={`day-column ${!isWorkingDay ? 'holiday' : ''} ${
-                isDragTarget ? 'drag-target' : ''
-              }`}
-              onDragOver={(e) => isWorkingDay && handleDragOver(e, dayIndex)}
+              className={`day-column ${isDragTarget ? 'drag-target' : ''}`}
+              onDragOver={(e) => handleDragOver(e, dayIndex)}
               onDragLeave={handleDragLeave}
-              onDrop={(e) => isWorkingDay && handleDrop(e, dayIndex)}
+              onDrop={(e) => handleDrop(e, dayIndex)}
             >
               {/* Day Header */}
               <div className="day-header">
-                <h3 className="text-lg font-semibold">{dayName}</h3>
-                <span className="text-sm text-gray-600">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-lg font-semibold">{dayName}</h3>
+                  {!readonly && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleAddVisit(dayIndex)}
+                      className="h-6 w-6 p-0"
+                      title={`إضافة زيارة لـ ${dayName}`}
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+                <div className="text-sm text-gray-600 mb-1">
+                  {formatDate(date)}
+                </div>
+                <div className="text-sm text-gray-500">
                   {dayVisits.length} زيارات
-                </span>
-                {!isWorkingDay && (
-                  <span className="text-sm text-red-600">عطلة</span>
-                )}
+                </div>
               </div>
 
               {/* Visit List */}
@@ -149,7 +197,7 @@ export function WeeklyPlannerGrid({
                 ))}
 
                 {/* Empty State */}
-                {dayVisits.length === 0 && isWorkingDay && (
+                {dayVisits.length === 0 && (
                   <div className="empty-visit-slot">
                     <span className="text-gray-400 text-sm">
                       لا توجد زيارات مخططة
@@ -235,9 +283,28 @@ function WeeklyVisitCard({
     onVisitAction({ type: 'complete', visit });
   };
 
+  const handleCancel = () => {
+    onVisitAction({ type: 'cancel', visit });
+  };
+
   const handleAddNotes = () => {
     onVisitAction({ type: 'add-notes', visit });
   };
+
+  // Get display names with better fallbacks
+  const getDisplayName = (name: string | undefined, fallback: string, id: string) => {
+    if (name && name !== 'Unknown Company' && name !== 'Unknown Branch') {
+      return name;
+    }
+    // If we have an ID but no name, show a more helpful message
+    if (id) {
+      return `${fallback} (ID: ${id})`;
+    }
+    return fallback;
+  };
+
+  const displayBranchName = getDisplayName(visit.branchName, 'فرع غير محدد', visit.branchId);
+  const displayCompanyName = getDisplayName(visit.companyName, 'شركة غير محددة', visit.companyId);
 
   return (
     <div
@@ -251,7 +318,7 @@ function WeeklyVisitCard({
       {/* Visit Header */}
       <div className="visit-header">
         <div className="visit-info">
-          <h4 className="visit-title">{visit.branchName || 'Unknown Branch'}</h4>
+          <h4 className="visit-title">{displayBranchName}</h4>
           <div className="visit-meta">
             <span className={`badge ${visit.type === 'emergency' ? 'badge-emergency' : 'badge-regular'}`}>
               {visit.type === 'emergency' ? '🚨 طارئة' : '📅 عادية'}
@@ -265,25 +332,55 @@ function WeeklyVisitCard({
 
       {/* Visit Details */}
       <div className="visit-details">
-        <p className="visit-company">{visit.companyName || 'Unknown Company'}</p>
+        <p className="visit-company">{displayCompanyName}</p>
         {visit.notes && (
           <p className="visit-notes text-sm text-gray-600">{visit.notes}</p>
         )}
       </div>
 
-      {/* Action Buttons (Fallback for non-drag) */}
-      {!isDragSupported && !readonly && (
+      {/* Action Buttons */}
+      {!readonly && (
         <div className="visit-actions">
+          {visit.status !== 'completed' && visit.status !== 'cancelled' && (
+            <>
+              <button 
+                className="btn btn-sm btn-complete" 
+                onClick={handleComplete}
+                title="إكمال الزيارة"
+              >
+                ✅ إكمال
+              </button>
+              <button 
+                className="btn btn-sm btn-cancel" 
+                onClick={handleCancel}
+                title="إلغاء الزيارة"
+              >
+                ❌ إلغاء
+              </button>
+            </>
+          )}
+          <button 
+            className="btn btn-sm btn-move" 
+            onClick={handleMove}
+            title="نقل الزيارة"
+          >
+            🔄 نقل
+          </button>
+          <button 
+            className="btn btn-sm btn-notes" 
+            onClick={handleAddNotes}
+            title="إضافة ملاحظات"
+          >
+            📝 ملاحظات
+          </button>
+        </div>
+      )}
+
+      {/* Fallback for non-drag browsers */}
+      {!isDragSupported && !readonly && (
+        <div className="visit-actions-fallback">
           <button className="btn btn-sm btn-move" onClick={handleMove}>
             نقل
-          </button>
-          {visit.status !== 'completed' && (
-            <button className="btn btn-sm btn-complete" onClick={handleComplete}>
-              إكمال
-            </button>
-          )}
-          <button className="btn btn-sm btn-notes" onClick={handleAddNotes}>
-            ملاحظات
           </button>
         </div>
       )}

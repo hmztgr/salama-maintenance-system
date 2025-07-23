@@ -36,7 +36,7 @@ export interface DragDropState {
 }
 
 export interface VisitAction {
-  type: 'move' | 'complete' | 'reschedule' | 'add-notes';
+  type: 'move' | 'complete' | 'cancel' | 'reschedule' | 'add-notes';
   visit: Visit;
   data?: any;
 }

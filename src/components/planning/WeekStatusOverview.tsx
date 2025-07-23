@@ -9,14 +9,20 @@ export interface WeekStatusOverviewProps {
   weekData: WeeklyPlanningData;
   onQuickAction: (action: VisitAction) => void;
   onApprove: () => void;
+  onExport?: () => void;
+  onPrint?: () => void;
   readonly?: boolean;
+  userName?: string;
 }
 
 export function WeekStatusOverview({
   weekData,
   onQuickAction,
   onApprove,
-  readonly = false
+  onExport,
+  onPrint,
+  readonly = false,
+  userName = 'مستخدم النظام'
 }: WeekStatusOverviewProps) {
   // Calculate week statistics
   const weekStats = useMemo(() => {
@@ -62,12 +68,10 @@ export function WeekStatusOverview({
         onApprove();
         break;
       case 'export':
-        // Handle export
-        console.log('Export week data');
+        onExport?.();
         break;
       case 'print':
-        // Handle print
-        console.log('Print week data');
+        onPrint?.();
         break;
     }
   };
@@ -169,8 +173,8 @@ export function WeekStatusOverview({
 
           {/* Last Modified Info */}
           <div className="mt-4 text-xs text-gray-500">
-            آخر تعديل: {new Date(weekData.lastModified).toLocaleString('ar-SA')}
-            {weekData.modifiedBy && ` بواسطة ${weekData.modifiedBy}`}
+            آخر تعديل: {new Date(weekData.lastModified).toLocaleString('en-GB')}
+            {` بواسطة ${userName}`}
           </div>
         </CardContent>
       </Card>

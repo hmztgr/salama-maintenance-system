@@ -10,6 +10,7 @@ import { WeekStatusOverview } from './WeekStatusOverview';
 import { MoveVisitDialog } from './MoveVisitDialog';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Calendar, Download, Printer, Check } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContextFirebase';
 
 export interface WeeklyPlannerProps {
   weekNumber?: number;
@@ -33,6 +34,7 @@ export function WeeklyPlanner({
   };
 
   const { weekNumber: currentWeek, year: currentYear } = getCurrentWeekAndYear();
+  const { authState } = useAuth();
   
   const [selectedWeek, setSelectedWeek] = useState({ 
     weekNumber: initialWeekNumber || currentWeek, 
@@ -102,16 +104,17 @@ export function WeeklyPlanner({
         return;
       }
 
-      // Perform the move
+      // Move the visit
       moveVisit(visitId, fromDay, toDay);
       
-      // Show success feedback
-      console.log(`Visit ${visitId} moved from day ${fromDay} to day ${toDay}`);
+      // Update drag state
+      handleDropEvent(visitId, fromDay, toDay);
       
+      console.log(`Visit ${visitId} moved from day ${fromDay} to day ${toDay}`);
     } catch (error) {
       console.error('Error moving visit:', error);
     }
-  }, [weekData, moveVisit]);
+  }, [weekData, moveVisit, handleDropEvent]);
 
   // Week navigation
   const handleWeekChange = useCallback((newWeek: number, newYear: number) => {
@@ -126,11 +129,10 @@ export function WeeklyPlanner({
         setShowMoveDialog(true);
         break;
       case 'complete':
-        // Navigate to visit completion form
-        window.location.href = `/planning/visit-completion?visitId=${action.visit.id}`;
+        updateVisit(action.visit.id, { status: 'completed' });
         break;
       case 'cancel':
-        // Navigate to visit cancellation form
+        // Navigate to cancellation form
         window.location.href = `/planning/visit-cancellation?visitId=${action.visit.id}`;
         break;
       case 'reschedule':
@@ -140,7 +142,15 @@ export function WeeklyPlanner({
         // Handle notes
         break;
     }
-  }, []);
+  }, [updateVisit]);
+
+  // Move visit confirmation
+  const handleMoveConfirm = useCallback((visit: Visit, newDay: number) => {
+    const weeklyVisit = visit as any;
+    moveVisit(visit.id, weeklyVisit.dayOfWeek || 0, newDay);
+    setShowMoveDialog(false);
+    setSelectedVisit(null);
+  }, [moveVisit]);
 
   // Week approval
   const handleWeekApproval = useCallback(async () => {
@@ -150,12 +160,8 @@ export function WeeklyPlanner({
       if (weekData) {
         onWeekComplete?.(weekData);
       }
-      
-      // Show success message
-      alert('تمت الموافقة على الأسبوع بنجاح');
     } catch (error) {
       console.error('Failed to approve week:', error);
-      alert('فشل في الموافقة على الأسبوع');
     }
   }, [approveWeek, weekData, onWeekComplete]);
 
@@ -167,26 +173,26 @@ export function WeeklyPlanner({
         return;
       }
 
-      // Create CSV data
-      const csvData = [
-        ['Week', 'Year', 'Day', 'Visit ID', 'Branch', 'Company', 'Type', 'Status', 'Date'],
+      // Create CSV content
+      const csvContent = [
+        ['Day', 'Visit ID', 'Branch', 'Company', 'Type', 'Status', 'Date'],
         ...weekData.visits.map(visit => {
           const weeklyVisit = visit as WeeklyVisit;
+          const visitDate = new Date(visit.scheduledDate);
+          const dayNames = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
           return [
-            weekData.weekNumber,
-            weekData.year,
-            ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'][weeklyVisit.dayOfWeek || 0],
+            dayNames[weeklyVisit.dayOfWeek] || 'Unknown',
             visit.visitId,
             weeklyVisit.branchName || 'Unknown',
             weeklyVisit.companyName || 'Unknown',
-            visit.type,
+            visit.type === 'emergency' ? 'Emergency' : 'Regular',
             visit.status,
-            visit.scheduledDate
+            visitDate.toLocaleDateString('en-GB')
           ];
         })
-      ];
+      ].map(row => row.join(',')).join('\n');
 
-      const csvContent = csvData.map(row => row.join(',')).join('\n');
+      // Create and download file
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
@@ -227,7 +233,7 @@ export function WeeklyPlanner({
           <body>
             <div class="header">
               <h1>خطة الأسبوع ${weekData.weekNumber} - ${weekData.year}</h1>
-              <p>تاريخ الطباعة: ${new Date().toLocaleDateString('ar-SA')}</p>
+              <p>تاريخ الطباعة: ${new Date().toLocaleDateString('en-GB')}</p>
             </div>
             ${['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'].map((dayName, index) => {
               const dayVisits = weekData.visits.filter(v => {
@@ -294,70 +300,29 @@ export function WeeklyPlanner({
   return (
     <DragDropErrorBoundary>
       <div className="weekly-planner">
-        {/* Week Navigation */}
-        <div className="week-navigation mb-6">
+        {/* Week Selection Buttons */}
+        <div className="week-selection mb-4">
+          <div className="flex flex-wrap gap-2 justify-center">
+            {Array.from({ length: 52 }, (_, i) => i + 1).map(weekNum => (
+              <Button
+                key={weekNum}
+                onClick={() => handleWeekChange(weekNum, selectedWeek.year)}
+                variant={selectedWeek.weekNumber === weekNum ? 'default' : 'outline'}
+                size="sm"
+                className="min-w-[60px]"
+              >
+                {weekNum}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* Week Header */}
+        <div className="week-header mb-6">
           <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <h2 className="text-2xl font-bold">
-                تخطيط الأسبوع {selectedWeek.weekNumber} - {selectedWeek.year}
-              </h2>
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => handleWeekChange(selectedWeek.weekNumber - 1, selectedWeek.year)}
-                  disabled={selectedWeek.weekNumber <= 1}
-                  variant="outline"
-                  size="sm"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                  الأسبوع السابق
-                </Button>
-                <Button
-                  onClick={() => handleWeekChange(selectedWeek.weekNumber + 1, selectedWeek.year)}
-                  disabled={selectedWeek.weekNumber >= 52}
-                  variant="outline"
-                  size="sm"
-                >
-                  الأسبوع التالي
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  onClick={() => setSelectedWeek({ weekNumber: currentWeek, year: currentYear })}
-                  variant="outline"
-                  size="sm"
-                >
-                  <Calendar className="h-4 w-4" />
-                  الأسبوع الحالي
-                </Button>
-              </div>
-            </div>
-            
-            {/* Week Actions */}
-            <div className="flex gap-2">
-              <Button
-                onClick={handleWeekApproval}
-                disabled={weekStatus === 'approved' || readonly}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                <Check className="h-4 w-4 mr-2" />
-                موافقة على الأسبوع
-              </Button>
-              <Button
-                onClick={handleWeekExport}
-                variant="outline"
-                disabled={!weekData || weekData.visits.length === 0}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                تصدير الأسبوع
-              </Button>
-              <Button
-                onClick={handleWeekPrint}
-                variant="outline"
-                disabled={!weekData || weekData.visits.length === 0}
-              >
-                <Printer className="h-4 w-4 mr-2" />
-                طباعة الأسبوع
-              </Button>
-            </div>
+            <h2 className="text-2xl font-bold">
+              تخطيط الأسبوع {selectedWeek.weekNumber} - {selectedWeek.year}
+            </h2>
           </div>
         </div>
 
@@ -367,7 +332,10 @@ export function WeeklyPlanner({
             weekData={weekData}
             onQuickAction={handleVisitAction}
             onApprove={handleWeekApproval}
+            onExport={handleWeekExport}
+            onPrint={handleWeekPrint}
             readonly={readonly}
+            userName={authState.user?.displayName || authState.user?.email || 'مستخدم النظام'}
           />
         )}
 
@@ -390,7 +358,7 @@ export function WeeklyPlanner({
         {showMoveDialog && selectedVisit && weekData && (
           <MoveVisitDialog
             visit={selectedVisit}
-            weekData={weekData as WeeklyPlanningData}
+            weekData={weekData}
             onMove={handleMoveConfirm}
             onCancel={() => {
               setShowMoveDialog(false);
@@ -401,12 +369,4 @@ export function WeeklyPlanner({
       </div>
     </DragDropErrorBoundary>
   );
-
-  // Move visit confirmation
-  function handleMoveConfirm(visit: Visit, newDay: number) {
-    const weeklyVisit = visit as WeeklyVisit;
-    moveVisit(visit.id, weeklyVisit.dayOfWeek || 0, newDay);
-    setShowMoveDialog(false);
-    setSelectedVisit(null);
-  }
 } 

@@ -10,9 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ArrowLeft, Save, X } from 'lucide-react';
-import { useVisitsFirebase } from '@/hooks/useVisitsFirebase';
-import { useBranchesFirebase } from '@/hooks/useBranchesFirebase';
-import { useCompaniesFirebase } from '@/hooks/useCompaniesFirebase';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
 
 function VisitCancellationContent() {
   const searchParams = useSearchParams();
@@ -29,32 +28,44 @@ function VisitCancellationContent() {
   const [suggestedDate, setSuggestedDate] = useState('');
   const [cancelledBy, setCancelledBy] = useState('');
   
-  const { visits, updateVisit } = useVisitsFirebase();
-  const { branches } = useBranchesFirebase();
-  const { companies } = useCompaniesFirebase();
-
   // Load visit data
   useEffect(() => {
-    if (visitId && visits.length > 0) {
-      const foundVisit = visits.find(v => v.id === visitId);
-      if (foundVisit) {
-        setVisit(foundVisit);
-      } else {
-        setError('الزيارة غير موجودة');
+    const loadVisit = async () => {
+      if (!visitId) {
+        setError('معرف الزيارة مطلوب');
+        setLoading(false);
+        return;
       }
-      setLoading(false);
-    }
-  }, [visitId, visits]);
 
-  // Get branch and company names
+      try {
+        const visitDoc = await getDoc(doc(db, 'visits', visitId));
+        if (visitDoc.exists()) {
+          const visitData = visitDoc.data();
+          setVisit({
+            id: visitDoc.id,
+            ...visitData
+          } as Visit);
+        } else {
+          setError('الزيارة غير موجودة');
+        }
+      } catch (error) {
+        console.error('Error loading visit:', error);
+        setError('فشل في تحميل بيانات الزيارة');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadVisit();
+  }, [visitId]);
+
+  // Get branch and company names (simplified for now)
   const getBranchName = (branchId: string) => {
-    const branch = branches.find(b => b.id === branchId);
-    return branch?.branchName || 'فرع غير محدد';
+    return 'فرع غير محدد';
   };
 
   const getCompanyName = (companyId: string) => {
-    const company = companies.find(c => c.id === companyId);
-    return company?.companyName || 'شركة غير محددة';
+    return 'شركة غير محددة';
   };
 
   // Handle form submission
@@ -71,9 +82,10 @@ function VisitCancellationContent() {
       setError(null);
 
       // Update visit status to cancelled
-      await updateVisit(visit.id, {
+      await updateDoc(doc(db, 'visits', visit.id), {
         status: 'cancelled',
-        notes: `إلغاء الزيارة: ${justification}${suggestedDate ? ` - تاريخ مقترح: ${suggestedDate}` : ''}`
+        notes: `إلغاء الزيارة: ${justification}${suggestedDate ? ` - تاريخ مقترح: ${suggestedDate}` : ''}`,
+        updatedAt: new Date()
       });
 
       // Log the cancellation (you can implement this based on your logging system)

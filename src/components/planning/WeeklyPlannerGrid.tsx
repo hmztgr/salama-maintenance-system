@@ -133,7 +133,7 @@ export function WeeklyPlannerGrid({
 
   // Format date for display
   const formatDate = (date: Date): string => {
-    return date.toLocaleDateString('ar-SA', {
+    return date.toLocaleDateString('en-GB', {
       day: 'numeric',
       month: 'short'
     });
@@ -348,14 +348,14 @@ function WeeklyVisitCard({
                 onClick={handleComplete}
                 title="إكمال الزيارة"
               >
-                ✅ إكمال
+                ✅
               </button>
               <button 
                 className="btn btn-sm btn-cancel" 
                 onClick={handleCancel}
                 title="إلغاء الزيارة"
               >
-                ❌ إلغاء
+                ❌
               </button>
             </>
           )}
@@ -364,14 +364,7 @@ function WeeklyVisitCard({
             onClick={handleMove}
             title="نقل الزيارة"
           >
-            🔄 نقل
-          </button>
-          <button 
-            className="btn btn-sm btn-notes" 
-            onClick={handleAddNotes}
-            title="إضافة ملاحظات"
-          >
-            📝 ملاحظات
+            🔄
           </button>
         </div>
       )}

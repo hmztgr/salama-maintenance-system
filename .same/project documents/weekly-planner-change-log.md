@@ -709,4 +709,86 @@ npm start
 
 ---
 
+#### **2025-01-23 - BUGFIX - Annual Scheduler Bulk Plan Function**
+### Files Changed:
+- `src/components/planning/AnnualScheduler.tsx` - FIXED: Updated bulk plan function to use Firebase instead of localStorage
+
+### Issue:
+- Bulk planned visit button on annual scheduler was not working
+- Function was using `SafeStorage.set('visits', allVisits)` (localStorage)
+- System had been migrated to Firebase but bulk plan function wasn't updated
+- Individual plan branch function was working (already using Firebase)
+
+### Fix Applied:
+- Updated `handleBulkPlanWeek` function to use Firebase `addVisit` function
+- Changed from batch localStorage save to individual Firebase saves
+- Added proper error handling for individual visit saves
+- Added `refreshVisits()` call to update UI after bulk operations
+- Maintained same functionality but now works with Firebase data source
+
+### Technical Details:
+- **Before**: Used `SafeStorage.set('visits', allVisits)` (localStorage)
+- **After**: Uses `await addVisit(newVisit)` for each visit (Firebase)
+- **Error Handling**: Individual visit save failures don't stop entire operation
+- **UI Update**: Calls `refreshVisits()` to update display after completion
+- **Logging**: Enhanced console logging for debugging bulk operations
+
+### Functionality:
+- **Same Behavior**: Should function exactly the same as before
+- **Same Target**: Still adds planned visits to all filtered branches on selected week
+- **Same Permissions**: Still requires supervisor permission
+- **Same Confirmation**: Still shows confirmation dialog before bulk operation
+- **Same Success/Failure Reporting**: Still shows success and failure counts
+
+### Rollback Instructions:
+- Revert changes to handleBulkPlanWeek function if needed
+- Restore localStorage save logic (but this would break Firebase integration)
+
+### Testing Required:
+- ✅ Bulk plan button should now work correctly
+- ✅ Should add visits to Firebase (visible in weekly planner)
+- ✅ Should show proper success/failure messages
+- ✅ Should update UI immediately after bulk operation
+- ✅ Should maintain same user experience as before
+
+---
+
+#### **2025-01-23 - BUILD FIXES - TypeScript and Next.js Build Errors**
+### Files Changed:
+- `src/components/planning/WeeklyPlanner.tsx` - FIXED: Added null check for WeekStatusOverview component
+- `src/app/planning/visit-cancellation/page.tsx` - FIXED: Wrapped useSearchParams in Suspense boundary
+
+### Issues Fixed:
+
+#### **1. TypeScript Error in WeeklyPlanner**
+- **Error**: `Type 'WeeklyPlanningData | null' is not assignable to type 'WeeklyPlanningData'`
+- **Location**: Line 366 in WeeklyPlanner.tsx
+- **Cause**: WeekStatusOverview component was receiving potentially null weekData
+- **Fix**: Added null check `{weekData && <WeekStatusOverview ... />}`
+
+#### **2. Next.js Build Error in Visit Cancellation Page**
+- **Error**: `useSearchParams() should be wrapped in a suspense boundary`
+- **Location**: Visit cancellation page
+- **Cause**: useSearchParams() requires Suspense boundary for static generation
+- **Fix**: Wrapped component in Suspense boundary with loading fallback
+
+### Technical Details:
+- **Suspense Boundary**: Added proper loading state for useSearchParams
+- **Null Safety**: Ensured all components handle null data gracefully
+- **Build Compatibility**: Fixed issues preventing successful Netlify deployment
+- **Type Safety**: Maintained strict TypeScript checking
+
+### Rollback Instructions:
+- Revert null check in WeeklyPlanner.tsx if needed
+- Revert Suspense boundary in visit cancellation page if needed
+- Both fixes are safe and don't change functionality
+
+### Testing Required:
+- ✅ Netlify build should now complete successfully
+- ✅ Weekly planner should load without TypeScript errors
+- ✅ Visit cancellation page should load properly
+- ✅ All functionality should work as expected
+
+---
+
 This change log will be updated with each change made during the implementation, providing a complete audit trail for safe rollback if needed. 

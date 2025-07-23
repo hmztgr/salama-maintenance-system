@@ -90,6 +90,26 @@
   @apply flex gap-1 mt-3;
 }
 
+.visit-actions .btn {
+  @apply w-8 h-8 p-0 text-xs flex items-center justify-center;
+}
+
+.visit-actions .btn-complete {
+  @apply bg-green-500 hover:bg-green-600 text-white rounded;
+}
+
+.visit-actions .btn-cancel {
+  @apply bg-red-500 hover:bg-red-600 text-white rounded;
+}
+
+.visit-actions .btn-move {
+  @apply bg-blue-500 hover:bg-blue-600 text-white rounded;
+}
+
+.week-selection {
+  @apply bg-white rounded-lg shadow-sm border p-4;
+}
+
 .visit-dropdown-actions {
   @apply absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-10;
   @apply flex flex-col gap-1;

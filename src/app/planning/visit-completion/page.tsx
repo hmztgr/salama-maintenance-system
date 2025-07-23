@@ -9,9 +9,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowLeft, Save, CheckCircle } from 'lucide-react';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowLeft, Save, CheckCircle, Plus, X } from 'lucide-react';
+import { doc, getDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
+import { FileUpload } from '@/components/common/FileUpload';
+import { UploadedFile } from '@/hooks/useFirebaseStorage';
 
 function VisitCompletionContent() {
   const searchParams = useSearchParams();
@@ -27,10 +30,15 @@ function VisitCompletionContent() {
   const [completionDate, setCompletionDate] = useState('');
   const [completionTime, setCompletionTime] = useState('');
   const [duration, setDuration] = useState('');
-  const [technicianNotes, setTechnicianNotes] = useState('');
   const [servicesCompleted, setServicesCompleted] = useState('');
-  const [results, setResults] = useState('');
+  const [systemIssues, setSystemIssues] = useState<string[]>([]);
+  const [newSystemIssue, setNewSystemIssue] = useState('');
+  const [recommendations, setRecommendations] = useState<string[]>([]);
+  const [newRecommendation, setNewRecommendation] = useState('');
+  const [internalNotes, setInternalNotes] = useState('');
   const [completedBy, setCompletedBy] = useState('');
+  const [attachments, setAttachments] = useState<UploadedFile[]>([]);
+  const [users, setUsers] = useState<Array<{id: string, fullName: string, email: string}>>([]);
 
   // Load visit data
   useEffect(() => {
@@ -76,12 +84,66 @@ function VisitCompletionContent() {
     return 'شركة غير محددة';
   };
 
+  // Load users for dropdown
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const usersSnapshot = await getDocs(collection(db, 'users'));
+        const usersData = usersSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            fullName: data.fullName || data.displayName || 'مستخدم غير محدد',
+            email: data.email || 'unknown@example.com'
+          };
+        }).filter(user => user.fullName !== 'مستخدم غير محدد');
+        setUsers(usersData);
+      } catch (error) {
+        console.error('Error loading users:', error);
+      }
+    };
+    loadUsers();
+  }, []);
+
+  // Set current time when form loads
+  useEffect(() => {
+    const now = new Date();
+    const timeString = now.toTimeString().slice(0, 5); // HH:MM format
+    setCompletionTime(timeString);
+  }, []);
+
+  // Add system issue
+  const addSystemIssue = () => {
+    if (newSystemIssue.trim()) {
+      setSystemIssues(prev => [...prev, newSystemIssue.trim()]);
+      setNewSystemIssue('');
+    }
+  };
+
+  // Remove system issue
+  const removeSystemIssue = (index: number) => {
+    setSystemIssues(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Add recommendation
+  const addRecommendation = () => {
+    if (newRecommendation.trim()) {
+      setRecommendations(prev => [...prev, newRecommendation.trim()]);
+      setNewRecommendation('');
+    }
+  };
+
+  // Remove recommendation
+  const removeRecommendation = (index: number) => {
+    setRecommendations(prev => prev.filter((_, i) => i !== index));
+  };
+
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!visit || !completionDate || !technicianNotes.trim()) {
-      setError('يرجى إدخال التاريخ وملاحظات الفني');
+    if (!visit || !completionDate || !servicesCompleted.trim()) {
+      setError('يرجى إدخال التاريخ وملاحظات العمل المنجز');
       return;
     }
 
@@ -103,9 +165,13 @@ function VisitCompletionContent() {
         completedDate: completionDate,
         completedTime: completionTime || null,
         duration: duration || null,
-        notes: technicianNotes,
-        results: results || null,
-        services: servicesCompleted || null,
+        notes: servicesCompleted,
+        results: {
+          systemIssues: systemIssues.length > 0 ? systemIssues : undefined,
+          recommendations: recommendations.length > 0 ? recommendations : undefined,
+          internalNotes: internalNotes || undefined
+        },
+        attachments: attachments,
         updatedAt: new Date(),
         updatedBy: completedBy || 'مستخدم النظام'
       });
@@ -118,9 +184,10 @@ function VisitCompletionContent() {
         completionDate,
         completionTime,
         duration,
-        notes: technicianNotes,
-        results,
-        services: servicesCompleted
+        notes: servicesCompleted,
+        systemIssues,
+        recommendations,
+        internalNotes
       };
 
       console.log('Visit completion logged:', completionLog);
@@ -301,13 +368,13 @@ function VisitCompletionContent() {
             </div>
 
             <div>
-              <Label htmlFor="technicianNotes" className="text-sm font-medium text-gray-700">
-                ملاحظات الفني *
+              <Label htmlFor="servicesCompleted" className="text-sm font-medium text-gray-700">
+                ملاحظات *
               </Label>
               <Textarea
-                id="technicianNotes"
-                value={technicianNotes}
-                onChange={(e) => setTechnicianNotes(e.target.value)}
+                id="servicesCompleted"
+                value={servicesCompleted}
+                onChange={(e) => setServicesCompleted(e.target.value)}
                 placeholder="تفاصيل العمل المنجز والملاحظات..."
                 className="mt-1"
                 rows={4}
@@ -316,28 +383,96 @@ function VisitCompletionContent() {
             </div>
 
             <div>
-              <Label htmlFor="servicesCompleted" className="text-sm font-medium text-gray-700">
-                الخدمات المنجزة
+              <Label className="text-sm font-medium text-gray-700">
+                مشاكل النظام
               </Label>
-              <Textarea
-                id="servicesCompleted"
-                value={servicesCompleted}
-                onChange={(e) => setServicesCompleted(e.target.value)}
-                placeholder="قائمة الخدمات التي تم إنجازها..."
-                className="mt-1"
-                rows={3}
-              />
+              <div className="flex gap-2 mt-1">
+                <Button
+                  type="button"
+                  onClick={addSystemIssue}
+                  size="sm"
+                  variant="outline"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+                <Input
+                  value={newSystemIssue}
+                  onChange={(e) => setNewSystemIssue(e.target.value)}
+                  placeholder="اكتب مشكلة النظام"
+                  className="flex-1"
+                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSystemIssue())}
+                />
+              </div>
+              {systemIssues.length > 0 && (
+                <div className="space-y-2 mt-2">
+                  {systemIssues.map((issue, index) => (
+                    <div key={index} className="flex items-center justify-between bg-red-50 p-2 rounded">
+                      <Button
+                        type="button"
+                        onClick={() => removeSystemIssue(index)}
+                        size="sm"
+                        variant="ghost"
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                      <span className="text-sm flex-1 mr-2">{issue}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div>
-              <Label htmlFor="results" className="text-sm font-medium text-gray-700">
+              <Label className="text-sm font-medium text-gray-700">
                 النتائج والتوصيات
               </Label>
+              <div className="flex gap-2 mt-1">
+                <Button
+                  type="button"
+                  onClick={addRecommendation}
+                  size="sm"
+                  variant="outline"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+                <Input
+                  value={newRecommendation}
+                  onChange={(e) => setNewRecommendation(e.target.value)}
+                  placeholder="اكتب التوصية"
+                  className="flex-1"
+                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addRecommendation())}
+                />
+              </div>
+              {recommendations.length > 0 && (
+                <div className="space-y-2 mt-2">
+                  {recommendations.map((recommendation, index) => (
+                    <div key={index} className="flex items-center justify-between bg-blue-50 p-2 rounded">
+                      <Button
+                        type="button"
+                        onClick={() => removeRecommendation(index)}
+                        size="sm"
+                        variant="ghost"
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                      <span className="text-sm flex-1 mr-2">{recommendation}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="internalNotes" className="text-sm font-medium text-gray-700">
+                ملاحظات داخلية
+              </Label>
               <Textarea
-                id="results"
-                value={results}
-                onChange={(e) => setResults(e.target.value)}
-                placeholder="النتائج والتوصيات للمتابعة..."
+                id="internalNotes"
+                value={internalNotes}
+                onChange={(e) => setInternalNotes(e.target.value)}
+                placeholder="ملاحظات داخلية للفريق..."
                 className="mt-1"
                 rows={3}
               />
@@ -347,20 +482,43 @@ function VisitCompletionContent() {
               <Label htmlFor="completedBy" className="text-sm font-medium text-gray-700">
                 تم الإكمال بواسطة
               </Label>
-              <Input
-                id="completedBy"
-                type="text"
-                value={completedBy}
-                onChange={(e) => setCompletedBy(e.target.value)}
-                placeholder="اسم الفني أو المسؤول"
-                className="mt-1"
+              <Select value={completedBy} onValueChange={setCompletedBy}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="اختر المستخدم" />
+                </SelectTrigger>
+                <SelectContent>
+                  {users.map((user) => (
+                    <SelectItem key={user.id} value={user.fullName}>
+                      {user.fullName} ({user.email})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium text-gray-700">
+                المرفقات
+              </Label>
+              <FileUpload
+                onFilesUploaded={setAttachments}
+                onFileDeleted={(filePath) => {
+                  setAttachments(prev => prev.filter(file => file.path !== filePath));
+                }}
+                existingFiles={[]}
+                folder={`visits/${visit?.id}/completion`}
+                maxFiles={10}
+                maxSize={25}
+                allowedTypes={['image', 'pdf', 'doc', 'docx']}
+                accept="image/*,.pdf,.doc,.docx"
+                multiple={true}
               />
             </div>
 
             <div className="flex gap-4">
               <Button
                 type="submit"
-                disabled={saving || !completionDate || !technicianNotes.trim()}
+                disabled={saving || !completionDate || !servicesCompleted.trim()}
                 className="bg-green-600 hover:bg-green-700"
               >
                 <Save className="h-4 w-4 mr-2" />

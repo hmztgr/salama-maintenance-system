@@ -128,7 +128,7 @@ function VisitCancellationContent() {
 
   // Handle go back
   const handleGoBack = () => {
-    window.history.back();
+    window.location.href = '/planning?tab=weekly';
   };
 
   if (loading) {

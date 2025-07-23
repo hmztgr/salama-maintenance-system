@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Save, CheckCircle, Plus, X } from 'lucide-react';
-import { doc, getDoc, updateDoc, collection, getDocs, addDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, collection, getDocs, addDoc, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { FileUpload } from '@/components/common/FileUpload';
 import { UploadedFile } from '@/hooks/useFirebaseStorage';
@@ -198,6 +198,8 @@ function VisitCompletionContent() {
 
       // Check if visit document exists before updating
       console.log('🔍 Checking visit document existence for ID:', visit.id);
+      console.log('🔍 Visit object:', visit);
+      
       const visitDocRef = doc(db, 'visits', visit.id);
       const visitDoc = await getDoc(visitDocRef);
       
@@ -205,7 +207,18 @@ function VisitCompletionContent() {
       
       if (!visitDoc.exists()) {
         console.error('❌ Visit document does not exist for ID:', visit.id);
-        throw new Error(`Visit document with ID ${visit.id} does not exist`);
+        console.error('❌ Visit object:', visit);
+        
+        // Try to find the visit by other means
+        try {
+          const visitsQuery = query(collection(db, 'visits'), where('visitId', '==', visit.visitId || visit.id));
+          const visitsSnapshot = await getDocs(visitsQuery);
+          console.log('🔍 Found visits with similar ID:', visitsSnapshot.docs.map(doc => ({ id: doc.id, data: doc.data() })));
+        } catch (error) {
+          console.error('❌ Error searching for similar visits:', error);
+        }
+        
+        throw new Error(`Visit document with ID ${visit.id} does not exist. Please check if the visit was deleted or moved.`);
       }
 
       console.log('✅ Visit document exists, proceeding with update...');

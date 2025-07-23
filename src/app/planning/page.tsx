@@ -6,7 +6,16 @@ import { PlanningGrid } from '@/components/planning/PlanningGrid';
 import { VisitLogsViewer } from '@/components/planning/VisitLogsViewer';
 
 export default function PlanningPage() {
-  const [activeTab, setActiveTab] = useState<'annual' | 'weekly' | 'logs'>('annual');
+  // Check URL parameters for tab selection
+  const [activeTab, setActiveTab] = useState<'annual' | 'weekly' | 'logs'>(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tab = urlParams.get('tab');
+      if (tab === 'logs') return 'logs';
+      if (tab === 'weekly') return 'weekly';
+    }
+    return 'annual';
+  });
 
   const tabs = [
     {
@@ -31,6 +40,19 @@ export default function PlanningPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Header with direct links */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">نظام تخطيط الصيانة</h1>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setActiveTab('logs')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            📋 سجلات الزيارات
+          </button>
+        </div>
+      </div>
+
       {/* Tab Navigation */}
       <div className="border-b border-gray-200 mb-6">
         <nav className="-mb-px flex space-x-8 space-x-reverse">

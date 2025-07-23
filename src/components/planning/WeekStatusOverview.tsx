@@ -32,13 +32,24 @@ export function WeekStatusOverview({
     const completedVisits = weekData.visits.filter(v => v.status === 'completed').length;
     const pendingVisits = weekData.visits.filter(v => v.status === 'scheduled').length;
     const emergencyVisits = weekData.visits.filter(v => v.type === 'emergency').length;
+    const completionRate = totalVisits > 0 ? Math.round((completedVisits / totalVisits) * 100) : 0;
+
+    console.log('📊 Week Stats Calculation:', {
+      weekNumber: weekData.weekNumber,
+      totalVisits,
+      completedVisits,
+      pendingVisits,
+      emergencyVisits,
+      completionRate,
+      visitStatuses: weekData.visits.map(v => ({ id: v.id, status: v.status, dayOfWeek: (v as any).dayOfWeek }))
+    });
 
     return {
       totalVisits,
       completedVisits,
       pendingVisits,
       emergencyVisits,
-      completionRate: totalVisits > 0 ? Math.round((completedVisits / totalVisits) * 100) : 0
+      completionRate
     };
   }, [weekData.visits]);
 

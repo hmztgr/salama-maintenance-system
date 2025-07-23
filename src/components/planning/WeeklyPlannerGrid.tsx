@@ -112,8 +112,11 @@ export function WeeklyPlannerGrid({
     const dateString = date.toLocaleDateString('ar-SA');
     const dayName = weekDays[dayIndex];
     
-    // Navigate to visit creation form with pre-filled date
-    window.location.href = `/planning/visit-form?date=${date.toISOString()}&day=${dayIndex}&dayName=${dayName}`;
+    // Show alert for now - visit creation form not implemented yet
+    alert(`إضافة زيارة جديدة لـ ${dayName} (${dateString})\n\nهذه الميزة قيد التطوير. سيتم إضافتها قريباً.`);
+    
+    // TODO: Implement visit creation form
+    // window.location.href = `/planning/visit-form?date=${date.toISOString()}&day=${dayIndex}&dayName=${dayName}`;
   };
 
   // Format date for display

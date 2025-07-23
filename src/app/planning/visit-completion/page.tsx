@@ -220,6 +220,16 @@ function VisitCompletionContent() {
             const similarVisit = visitsSnapshot.docs[0];
             console.log('✅ Using similar visit ID:', similarVisit.id);
             visit.id = similarVisit.id;
+            
+            // Re-check the document existence with the correct ID
+            const correctVisitDocRef = doc(db, 'visits', visit.id);
+            const correctVisitDoc = await getDoc(correctVisitDocRef);
+            
+            if (!correctVisitDoc.exists()) {
+              throw new Error(`Similar visit found but document still doesn't exist with ID: ${visit.id}`);
+            }
+            
+            console.log('✅ Correct visit document exists, proceeding with update...');
           } else {
             // Create the visit document if it doesn't exist
             console.log('🆕 Creating missing visit document...');
@@ -235,9 +245,9 @@ function VisitCompletionContent() {
           console.error('❌ Error handling missing visit:', error);
           throw new Error(`Visit document with ID ${visit.id} does not exist and could not be created. Please check if the visit was deleted or moved.`);
         }
+      } else {
+        console.log('✅ Visit document exists, proceeding with update...');
       }
-
-      console.log('✅ Visit document exists, proceeding with update...');
 
       // Update visit status to completed
       await updateDoc(visitDocRef, {

@@ -6,12 +6,13 @@ import { PlanningGrid } from './PlanningGrid';
 import { WeeklyPlanner } from './WeeklyPlanner';
 import { VisitImportTemplate } from './VisitImportTemplate';
 import { VisitExportTemplate } from './VisitExportTemplate';
+import { VisitLogsViewer } from './VisitLogsViewer';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContextFirebase';
 import { useVisitsFirebase } from '@/hooks/useVisitsFirebase';
 
 export function PlanningManagement() {
-  const [activeTab, setActiveTab] = useState<'annual' | 'weekly' | 'visits'>('annual');
+  const [activeTab, setActiveTab] = useState<'annual' | 'weekly' | 'visits' | 'logs'>('annual');
   const [showVisitImport, setShowVisitImport] = useState(false);
   const [showVisitExport, setShowVisitExport] = useState(false);
 
@@ -36,6 +37,12 @@ export function PlanningManagement() {
       label: 'إدارة الزيارات',
       icon: '📋',
       description: 'استيراد وتصدير بيانات الزيارات'
+    },
+    {
+      id: 'logs' as const,
+      label: 'سجلات الزيارات',
+      icon: '📋',
+      description: 'عرض سجلات الإكمال والإلغاء'
     }
   ];
 
@@ -67,6 +74,7 @@ export function PlanningManagement() {
       {/* Tab Content */}
       {activeTab === 'annual' && <AnnualScheduler />}
       {activeTab === 'weekly' && <WeeklyPlanner />}
+      {activeTab === 'logs' && <VisitLogsViewer />}
       {activeTab === 'visits' && (
         <div className="space-y-6">
           {/* Visit Management Header */}

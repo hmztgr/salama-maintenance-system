@@ -214,11 +214,27 @@ function VisitCompletionContent() {
           const visitsQuery = query(collection(db, 'visits'), where('visitId', '==', visit.visitId || visit.id));
           const visitsSnapshot = await getDocs(visitsQuery);
           console.log('🔍 Found visits with similar ID:', visitsSnapshot.docs.map(doc => ({ id: doc.id, data: doc.data() })));
+          
+          // If we found a similar visit, use that ID instead
+          if (!visitsSnapshot.empty) {
+            const similarVisit = visitsSnapshot.docs[0];
+            console.log('✅ Using similar visit ID:', similarVisit.id);
+            visit.id = similarVisit.id;
+          } else {
+            // Create the visit document if it doesn't exist
+            console.log('🆕 Creating missing visit document...');
+            const newVisitRef = await addDoc(collection(db, 'visits'), {
+              ...visit,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            });
+            console.log('✅ Created new visit with ID:', newVisitRef.id);
+            visit.id = newVisitRef.id;
+          }
         } catch (error) {
-          console.error('❌ Error searching for similar visits:', error);
+          console.error('❌ Error handling missing visit:', error);
+          throw new Error(`Visit document with ID ${visit.id} does not exist and could not be created. Please check if the visit was deleted or moved.`);
         }
-        
-        throw new Error(`Visit document with ID ${visit.id} does not exist. Please check if the visit was deleted or moved.`);
       }
 
       console.log('✅ Visit document exists, proceeding with update...');

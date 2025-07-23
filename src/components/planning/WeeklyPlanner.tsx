@@ -362,12 +362,14 @@ export function WeeklyPlanner({
         </div>
 
         {/* Week Status Overview */}
-        <WeekStatusOverview
-          weekData={weekData}
-          onQuickAction={handleVisitAction}
-          onApprove={handleWeekApproval}
-          readonly={readonly}
-        />
+        {weekData && (
+          <WeekStatusOverview
+            weekData={weekData}
+            onQuickAction={handleVisitAction}
+            onApprove={handleWeekApproval}
+            readonly={readonly}
+          />
+        )}
 
         {/* Main Planning Grid */}
         {weekData && (

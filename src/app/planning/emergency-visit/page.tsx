@@ -448,7 +448,7 @@ function EmergencyVisitContent() {
                 onFilesUploaded={handleFilesUploaded}
                 onFileDeleted={handleFileDeleted}
                 maxFiles={5}
-                acceptedTypes={['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx']}
+                allowedTypes={['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx']}
               />
             </CardContent>
           </Card>

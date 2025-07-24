@@ -125,12 +125,12 @@ export function WeeklyPlannerGrid({
 
     switch (type) {
       case 'planned':
-        // Add new planned visit to that day
-        alert(`إضافة زيارة مخططة لـ ${dayName} (${dateString})\n\nهذه الميزة قيد التطوير. سيتم إضافتها قريباً.`);
+        // Open planned visit form
+        window.location.href = `/planning/planned-visit?date=${date.toISOString()}&day=${selectedDayIndex}&dayName=${dayName}`;
         break;
       case 'completed':
-        // Open visit completion form with pre-filled date
-        window.location.href = `/planning/visit-completion?date=${date.toISOString()}&day=${selectedDayIndex}&dayName=${dayName}`;
+        // Show message that completed visits need to be selected from existing visits
+        alert(`إكمال زيارة\n\nلا يمكن إكمال زيارة جديدة. يرجى اختيار زيارة موجودة من القائمة لإكمالها.`);
         break;
       case 'emergency':
         // Open emergency visit form

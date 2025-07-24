@@ -14,6 +14,8 @@ import { doc, addDoc, collection, getDocs, query, where } from 'firebase/firesto
 import { db } from '@/lib/firebase/config';
 import { FileUpload } from '@/components/common/FileUpload';
 import { UploadedFile } from '@/hooks/useFirebaseStorage';
+import { useCompaniesFirebase } from '@/hooks/useCompaniesFirebase';
+import { useBranchesFirebase } from '@/hooks/useBranchesFirebase';
 
 function EmergencyVisitContent() {
   const searchParams = useSearchParams();
@@ -36,11 +38,13 @@ function EmergencyVisitContent() {
   const [contactNumber, setContactNumber] = useState('');
   const [attachments, setAttachments] = useState<UploadedFile[]>([]);
   const [users, setUsers] = useState<Array<{id: string, fullName: string, email: string}>>([]);
-  const [branches, setBranches] = useState<Array<{id: string, name: string}>>([]);
-  const [companies, setCompanies] = useState<Array<{id: string, name: string}>>([]);
   const [selectedBranch, setSelectedBranch] = useState('');
   const [selectedCompany, setSelectedCompany] = useState('');
   const [emergencyTicketNumber, setEmergencyTicketNumber] = useState('');
+
+  // Use Firebase hooks for data
+  const { companies, loading: companiesLoading } = useCompaniesFirebase();
+  const { branches, loading: branchesLoading } = useBranchesFirebase();
 
   // Handle files uploaded
   const handleFilesUploaded = (files: UploadedFile[]) => {
@@ -54,11 +58,14 @@ function EmergencyVisitContent() {
     setAttachments(prev => prev.filter(file => file.path !== filePath));
   };
 
-  // Generate emergency ticket number
+  // Generate emergency ticket number with city code
   const generateEmergencyTicketNumber = () => {
     const timestamp = Date.now();
     const random = Math.floor(Math.random() * 1000);
-    return `EMG-${timestamp}-${random}`;
+    // Extract last 5 digits from timestamp and random
+    const shortTimestamp = timestamp.toString().slice(-5);
+    const shortRandom = random.toString().padStart(3, '0');
+    return `EMG-JED-${shortTimestamp}${shortRandom}`;
   };
 
   // Load initial data
@@ -82,23 +89,7 @@ function EmergencyVisitContent() {
         // Generate emergency ticket number
         setEmergencyTicketNumber(generateEmergencyTicketNumber());
 
-        // Load branches
-        const branchesQuery = query(collection(db, 'branches'));
-        const branchesSnapshot = await getDocs(branchesQuery);
-        const branchesData = branchesSnapshot.docs.map(doc => ({
-          id: doc.id,
-          name: doc.data().name || 'Unknown Branch'
-        }));
-        setBranches(branchesData);
-
-        // Load companies
-        const companiesQuery = query(collection(db, 'companies'));
-        const companiesSnapshot = await getDocs(companiesQuery);
-        const companiesData = companiesSnapshot.docs.map(doc => ({
-          id: doc.id,
-          name: doc.data().name || 'Unknown Company'
-        }));
-        setCompanies(companiesData);
+        // Data is now loaded via Firebase hooks
 
         // Load users
         const usersQuery = query(collection(db, 'users'));
@@ -138,7 +129,7 @@ function EmergencyVisitContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!emergencyDate || !selectedBranch || !selectedCompany || customerComplaints.length === 0) {
+    if (!emergencyDate || !selectedBranch || !selectedCompany || customerComplaints.length === 0 || !reportedBy || !contactNumber) {
       setError('يرجى ملء جميع الحقول المطلوبة');
       return;
     }
@@ -200,9 +191,9 @@ function EmergencyVisitContent() {
 
       setSuccess(true);
       
-      // Redirect back to main dashboard after 2 seconds
+      // Redirect back to main dashboard planning tab after 2 seconds
       setTimeout(() => {
-        window.location.href = '/';
+        window.location.href = '/?tab=planning';
       }, 2000);
 
     } catch (error) {
@@ -215,10 +206,10 @@ function EmergencyVisitContent() {
 
   // Handle go back
   const handleGoBack = () => {
-    window.location.href = '/';
+    window.location.href = '/?tab=planning';
   };
 
-  if (loading) {
+  if (loading || companiesLoading || branchesLoading) {
     return (
       <div className="container mx-auto p-6">
         <div className="flex justify-center items-center h-64">
@@ -299,7 +290,7 @@ function EmergencyVisitContent() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="emergencyDate">تاريخ الطوارئ *</Label>
+                  <Label htmlFor="emergencyDate">التاريخ والوقت *</Label>
                   <Input
                     id="emergencyDate"
                     type="date"
@@ -341,21 +332,23 @@ function EmergencyVisitContent() {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="reportedBy">أبلغ عن طريق</Label>
+                  <Label htmlFor="reportedBy">أبلغ عن طريق *</Label>
                   <Input
                     id="reportedBy"
                     value={reportedBy}
                     onChange={(e) => setReportedBy(e.target.value)}
                     placeholder="اسم الشخص الذي أبلغ عن الطوارئ"
+                    required
                   />
                 </div>
                 <div>
-                  <Label htmlFor="contactNumber">رقم الاتصال</Label>
+                  <Label htmlFor="contactNumber">رقم الاتصال *</Label>
                   <Input
                     id="contactNumber"
                     value={contactNumber}
                     onChange={(e) => setContactNumber(e.target.value)}
                     placeholder="رقم الهاتف للاتصال"
+                    required
                   />
                 </div>
               </CardContent>
@@ -377,8 +370,8 @@ function EmergencyVisitContent() {
                     </SelectTrigger>
                     <SelectContent>
                       {companies.map(company => (
-                        <SelectItem key={company.id} value={company.id}>
-                          {company.name}
+                        <SelectItem key={company.companyId} value={company.companyId}>
+                          {company.companyName}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -392,8 +385,8 @@ function EmergencyVisitContent() {
                     </SelectTrigger>
                     <SelectContent>
                       {branches.map(branch => (
-                        <SelectItem key={branch.id} value={branch.id}>
-                          {branch.name}
+                        <SelectItem key={branch.branchId} value={branch.branchId}>
+                          {branch.branchName}
                         </SelectItem>
                       ))}
                     </SelectContent>

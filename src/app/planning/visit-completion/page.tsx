@@ -187,7 +187,12 @@ function VisitCompletionContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!visit || !completionDate) {
+    if (!visit) {
+      setError('بيانات الزيارة غير متوفرة');
+      return;
+    }
+
+    if (!completionDate) {
       setError('يرجى إدخال تاريخ الإكمال');
       return;
     }
@@ -295,9 +300,9 @@ function VisitCompletionContent() {
 
       setSuccess(true);
       
-      // Redirect back to main dashboard after 2 seconds
+      // Redirect back to main dashboard planning tab after 2 seconds
       setTimeout(() => {
-        window.location.href = '/';
+        window.location.href = '/?tab=planning';
       }, 2000);
 
     } catch (error) {
@@ -311,7 +316,7 @@ function VisitCompletionContent() {
   // Handle go back
   const handleGoBack = () => {
     // Navigate back to main dashboard planning tab
-    window.location.href = '/';
+    window.location.href = '/?tab=planning';
   };
 
   if (loading) {

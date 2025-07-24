@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContextFirebase';
 import { CustomerManagement } from './customers/CustomerManagement';
 import { NewCustomerManagement } from './customers/NewCustomerManagement';
@@ -17,6 +18,7 @@ import { FirebaseSimpleTest } from './admin/FirebaseSimpleTest';
 import { DataMigration } from './admin/DataMigration';
 import { UserProfile } from './profile/UserProfile';
 import { ReportsDashboard } from './reports/ReportsDashboard';
+import EmergencyTicketsPage from '@/app/emergency-tickets/page';
 
 export interface MainDashboardProps {
   className?: string;
@@ -24,8 +26,17 @@ export interface MainDashboardProps {
 
 export function MainDashboard({ className = '' }: MainDashboardProps) {
   const { authState, logout, hasPermission } = useAuth();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState('customers');
   const [adminSubTab, setAdminSubTab] = useState('demo-data');
+
+  // Handle URL tab parameter
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && ['customers', 'planning', 'reports', 'emergency-tickets', 'profile', 'admin'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   if (!authState.user) {
     return <div>غير مصرح بالدخول</div>;
@@ -49,6 +60,12 @@ export function MainDashboard({ className = '' }: MainDashboardProps) {
       label: 'التقارير',
       icon: '📊',
       requiredRole: 'supervisor' as const,
+    },
+    {
+      id: 'emergency-tickets',
+      label: 'التذاكر الطارئة',
+      icon: '🚨',
+      requiredRole: 'viewer' as const,
     },
     {
       id: 'checklists',
@@ -147,6 +164,8 @@ export function MainDashboard({ className = '' }: MainDashboardProps) {
         {activeTab === 'profile' && <UserProfile />}
 
         {activeTab === 'reports' && <ReportsDashboard />}
+
+        {activeTab === 'emergency-tickets' && <EmergencyTicketsPage />}
 
         {activeTab === 'admin' && (
           <div className="space-y-6">

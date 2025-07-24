@@ -1,24 +1,37 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { ChevronLeft, ChevronRight, Plus, Calendar, Filter, Trash2, Edit, X } from 'lucide-react';
-import { Visit, WeeklyPlanningGrid } from '@/types/customer';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Visit, WeeklyPlanningGrid, DailyPlan, PlanningFilters } from '@/types/customer';
+import { useAuth } from '@/contexts/AuthContextFirebase';
 import { useVisitsFirebase } from '@/hooks/useVisitsFirebase';
 import { useCompaniesFirebase } from '@/hooks/useCompaniesFirebase';
 import { useContractsFirebase } from '@/hooks/useContractsFirebase';
 import { useBranchesFirebase } from '@/hooks/useBranchesFirebase';
-import { useAuth } from '@/contexts/AuthContextFirebase';
-import { useSearch } from '@/hooks/useSearch';
-import { SearchAndFilter } from '@/components/common/SearchAndFilter';
-import { addWeeksToDate, getCurrentWeekStart, formatDateForDisplay } from '@/lib/date-handler';
-import { VisitCard } from './VisitCard';
 import { VisitForm } from './VisitForm';
 import { VisitCompletionForm } from './VisitCompletionForm';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  Calendar, 
+  Search, 
+  Filter, 
+  Plus, 
+  Trash2, 
+  Edit, 
+  CheckCircle, 
+  XCircle,
+  AlertTriangle,
+  Download,
+  Upload
+} from 'lucide-react';
+import { getCurrentWeekStart, addWeeksToDate, getWeekNumber, getWeekEndDate } from '@/lib/date-handler';
+import { useWeekNavigation } from '@/contexts/WeekNavigationContext';
 
 export interface PlanningGridProps {
   className?: string;
@@ -26,7 +39,7 @@ export interface PlanningGridProps {
 
 export function PlanningGrid({ className = '' }: PlanningGridProps) {
   const { hasPermission } = useAuth();
-  const [currentWeekStart, setCurrentWeekStart] = useState(getCurrentWeekStart());
+  const { currentWeek, setCurrentWeek, currentWeekNumber, currentYear } = useWeekNavigation();
   const [selectedVisit, setSelectedVisit] = useState<Visit | null>(null);
   const [showVisitForm, setShowVisitForm] = useState(false);
   const [showCompletionForm, setShowCompletionForm] = useState(false);
@@ -54,7 +67,7 @@ export function PlanningGrid({ className = '' }: PlanningGridProps) {
   const { branches } = useBranchesFirebase();
 
   // Get current week data
-  const originalWeeklyPlan: WeeklyPlanningGrid = getWeeklyPlan(currentWeekStart);
+  const originalWeeklyPlan: WeeklyPlanningGrid = getWeeklyPlan(currentWeek);
 
   // Helper function to check multi-select filters
   const matchesFilter = (filterValue: string | string[], actualValue: string, allValue: string): boolean => {
@@ -143,11 +156,11 @@ export function PlanningGrid({ className = '' }: PlanningGridProps) {
 
   const navigateWeek = (direction: 'prev' | 'next') => {
     const weeksToAdd = direction === 'next' ? 1 : -1;
-    setCurrentWeekStart(addWeeksToDate(currentWeekStart, weeksToAdd));
+    setCurrentWeek(addWeeksToDate(currentWeek, weeksToAdd));
   };
 
   const goToCurrentWeek = () => {
-    setCurrentWeekStart(getCurrentWeekStart());
+    setCurrentWeek(getCurrentWeekStart());
   };
 
   const handleAddVisit = () => {
@@ -564,7 +577,7 @@ export function PlanningGrid({ className = '' }: PlanningGridProps) {
                     const yearStart = new Date(currentYear, 0, 1);
                     const targetWeekStart = new Date(yearStart);
                     targetWeekStart.setDate(yearStart.getDate() + (targetWeek - 1) * 7);
-                    setCurrentWeekStart(formatDateForDisplay(targetWeekStart));
+                    setCurrentWeek(formatDateForDisplay(targetWeekStart));
                   }}
                   dir="rtl"
                 >

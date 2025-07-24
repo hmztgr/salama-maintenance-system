@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,9 +16,13 @@ import { FileUpload } from '@/components/common/FileUpload';
 import { UploadedFile } from '@/hooks/useFirebaseStorage';
 import { useCompaniesFirebase } from '@/hooks/useCompaniesFirebase';
 import { useBranchesFirebase } from '@/hooks/useBranchesFirebase';
+import { useWeekNavigation } from '@/contexts/WeekNavigationContext';
 
 function EmergencyVisitContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { currentWeek, currentWeekNumber, currentYear } = useWeekNavigation();
+  
   const preFilledDate = searchParams.get('date');
   const preFilledDay = searchParams.get('day');
   const preFilledDayName = searchParams.get('dayName');
@@ -78,12 +82,16 @@ function EmergencyVisitContent() {
         if (preFilledDate) {
           const date = new Date(preFilledDate);
           setEmergencyDate(date.toISOString().split('T')[0]);
-          setEmergencyTime(date.toTimeString().split(' ')[0].substring(0, 5));
+          // Set current time instead of 12:00 AM
+          const now = new Date();
+          setEmergencyTime(now.toTimeString().split(' ')[0].substring(0, 5));
         } else {
           // Set default to today
           const today = new Date().toISOString().split('T')[0];
           setEmergencyDate(today);
-          setEmergencyTime(new Date().toTimeString().split(' ')[0].substring(0, 5));
+          // Set current time instead of 12:00 AM
+          const now = new Date();
+          setEmergencyTime(now.toTimeString().split(' ')[0].substring(0, 5));
         }
 
         // Generate emergency ticket number
@@ -191,14 +199,14 @@ function EmergencyVisitContent() {
 
       setSuccess(true);
       
-      // Redirect back to main dashboard planning tab after 2 seconds
+      // Redirect back to planning tab with current week
       setTimeout(() => {
-        window.location.href = '/?tab=planning';
+        router.push(`/?tab=planning&week=${currentWeekNumber}&year=${currentYear}`);
       }, 2000);
 
     } catch (error) {
       console.error('Error creating emergency visit:', error);
-      setError('فشل في إنشاء الزيارة الطارئة');
+      setError('فشل في إنشاء البلاغ الطارئ');
     } finally {
       setSaving(false);
     }
@@ -206,7 +214,7 @@ function EmergencyVisitContent() {
 
   // Handle go back
   const handleGoBack = () => {
-    window.location.href = '/?tab=planning';
+    router.push(`/?tab=planning&week=${currentWeekNumber}&year=${currentYear}`);
   };
 
   if (loading || companiesLoading || branchesLoading) {
@@ -239,7 +247,7 @@ function EmergencyVisitContent() {
         <Alert>
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            تم إنشاء الزيارة الطارئة بنجاح. رقم التذكرة: {emergencyTicketNumber}
+            تم إنشاء البلاغ الطارئ بنجاح. رقم التذكرة: {emergencyTicketNumber}
             <br />
             سيتم توجيهك إلى الصفحة الرئيسية...
           </AlertDescription>
@@ -254,9 +262,9 @@ function EmergencyVisitContent() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">إنشاء زيارة طارئة</h1>
+            <h1 className="text-3xl font-bold text-gray-900">إنشاء بلاغ طارئ</h1>
             <p className="text-gray-600 mt-2">
-              إنشاء زيارة طارئة جديدة مع رقم تذكرة تلقائي
+              إنشاء بلاغ طارئ جديد مع رقم تذكرة تلقائي
             </p>
           </div>
           <Button onClick={handleGoBack} variant="outline">
@@ -455,7 +463,7 @@ function EmergencyVisitContent() {
               إلغاء
             </Button>
             <Button type="submit" disabled={saving} className="bg-red-600 hover:bg-red-700">
-              {saving ? 'جاري الإنشاء...' : 'إنشاء الزيارة الطارئة'}
+              {saving ? 'جاري الإنشاء...' : 'إنشاء البلاغ الطارئ'}
             </Button>
           </div>
         </form>

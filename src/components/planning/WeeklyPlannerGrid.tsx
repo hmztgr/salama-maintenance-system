@@ -269,8 +269,8 @@ export function WeeklyPlannerGrid({
               >
                 <AlertTriangle className="h-5 w-5 text-red-600" />
                 <div className="text-right">
-                  <div className="font-medium">زيارة طارئة</div>
-                  <div className="text-sm text-gray-500">إنشاء زيارة طارئة جديدة</div>
+                  <div className="font-medium">بلاغ طارئ</div>
+                  <div className="text-sm text-gray-500">إنشاء بلاغ طارئ جديد</div>
                 </div>
               </Button>
             </div>

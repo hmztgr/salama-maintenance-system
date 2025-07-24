@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,15 +9,19 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Save, AlertTriangle, Calendar, Clock } from 'lucide-react';
+import { ArrowLeft, Save, AlertTriangle, Calendar, Clock, Plus, X } from 'lucide-react';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useCompaniesFirebase } from '@/hooks/useCompaniesFirebase';
 import { useBranchesFirebase } from '@/hooks/useBranchesFirebase';
 import { FileUpload } from '@/components/common/FileUpload';
 import { UploadedFile } from '@/hooks/useFirebaseStorage';
+import { useWeekNavigation } from '@/contexts/WeekNavigationContext';
 
 function CompletedVisitNewContent() {
+  const router = useRouter();
+  const { currentWeekNumber, currentYear } = useWeekNavigation();
+  
   const [selectedCompany, setSelectedCompany] = useState<string>('');
   const [selectedBranch, setSelectedBranch] = useState<string>('');
   const [completionDate, setCompletionDate] = useState<string>('');
@@ -24,6 +29,8 @@ function CompletedVisitNewContent() {
   const [overallStatus, setOverallStatus] = useState<'passed' | 'failed' | 'partial'>('passed');
   const [issues, setIssues] = useState<string[]>([]);
   const [recommendations, setRecommendations] = useState<string[]>([]);
+  const [newIssue, setNewIssue] = useState<string>('');
+  const [newRecommendation, setNewRecommendation] = useState<string>('');
   const [nextVisitDate, setNextVisitDate] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
   const [attachments, setAttachments] = useState<UploadedFile[]>([]);
@@ -77,8 +84,9 @@ function CompletedVisitNewContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Only require company, branch, and completion date
     if (!selectedCompany || !selectedBranch || !completionDate) {
-      setError('يرجى ملء جميع الحقول المطلوبة');
+      setError('يرجى ملء الحقول المطلوبة: الشركة، الفرع، وتاريخ الإكمال');
       return;
     }
 
@@ -126,9 +134,9 @@ function CompletedVisitNewContent() {
 
       setSuccess(true);
       
-      // Redirect back to weekly planner after 2 seconds
+      // Redirect back to planning tab with current week
       setTimeout(() => {
-        window.location.href = '/?tab=planning';
+        router.push(`/?tab=planning&week=${currentWeekNumber}&year=${currentYear}`);
       }, 2000);
 
     } catch (error) {
@@ -141,14 +149,14 @@ function CompletedVisitNewContent() {
 
   // Handle go back
   const handleGoBack = () => {
-    window.location.href = '/?tab=planning';
+    router.push(`/?tab=planning&week=${currentWeekNumber}&year=${currentYear}`);
   };
 
   // Add issue
   const addIssue = () => {
-    const newIssue = prompt('أدخل المشكلة المكتشفة:');
-    if (newIssue && newIssue.trim()) {
+    if (newIssue.trim()) {
       setIssues(prev => [...prev, newIssue.trim()]);
+      setNewIssue('');
     }
   };
 
@@ -159,9 +167,9 @@ function CompletedVisitNewContent() {
 
   // Add recommendation
   const addRecommendation = () => {
-    const newRecommendation = prompt('أدخل التوصية:');
-    if (newRecommendation && newRecommendation.trim()) {
+    if (newRecommendation.trim()) {
       setRecommendations(prev => [...prev, newRecommendation.trim()]);
+      setNewRecommendation('');
     }
   };
 
@@ -201,7 +209,7 @@ function CompletedVisitNewContent() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">إكمال زيارة جديدة</h1>
             <p className="text-gray-600 mt-2">
-              إكمال زيارة جديدة مع تفاصيل الشركة والفرع
+              تسجيل زيارة مكتملة مع تفاصيل الإكمال والنتائج
             </p>
           </div>
           <Button onClick={handleGoBack} variant="outline">
@@ -212,17 +220,11 @@ function CompletedVisitNewContent() {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Company and Branch Selection */}
+            {/* Company and Branch */}
             <Card>
               <CardHeader>
-                <CardTitle>معلومات الشركة والفرع</CardTitle>
+                <CardTitle>الشركة والفرع</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
@@ -258,10 +260,10 @@ function CompletedVisitNewContent() {
               </CardContent>
             </Card>
 
-            {/* Completion Details */}
+            {/* Completion Date and Time */}
             <Card>
               <CardHeader>
-                <CardTitle>تفاصيل الإكمال</CardTitle>
+                <CardTitle>تاريخ ووقت الإكمال</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
@@ -283,25 +285,42 @@ function CompletedVisitNewContent() {
                     onChange={(e) => setCompletionTime(e.target.value)}
                   />
                 </div>
-                <div>
-                  <Label htmlFor="overallStatus">الحالة العامة</Label>
-                  <Select value={overallStatus} onValueChange={(value: 'passed' | 'failed' | 'partial') => setOverallStatus(value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="passed">✅ تم بنجاح</SelectItem>
-                      <SelectItem value="failed">❌ فشل</SelectItem>
-                      <SelectItem value="partial">⚠️ جزئي</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Issues and Recommendations */}
+          {/* Overall Status and Next Visit */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>حالة الزيارة</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="overallStatus">الحالة العامة</Label>
+                  <Select value={overallStatus} onValueChange={(value: any) => setOverallStatus(value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="passed">ناجحة</SelectItem>
+                      <SelectItem value="failed">فاشلة</SelectItem>
+                      <SelectItem value="partial">جزئية</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="nextVisitDate">تاريخ الزيارة القادمة</Label>
+                  <Input
+                    id="nextVisitDate"
+                    type="date"
+                    value={nextVisitDate}
+                    onChange={(e) => setNextVisitDate(e.target.value)}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Issues */}
             <Card>
               <CardHeader>
@@ -310,17 +329,18 @@ function CompletedVisitNewContent() {
               <CardContent className="space-y-4">
                 <div className="flex gap-2">
                   <Input
-                    placeholder="أضف مشكلة جديدة"
+                    value={newIssue}
+                    onChange={(e) => setNewIssue(e.target.value)}
+                    placeholder="أضف مشكلة مكتشفة"
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addIssue())}
                   />
                   <Button type="button" onClick={addIssue} size="sm">
-                    إضافة
+                    <Plus className="h-4 w-4" />
                   </Button>
                 </div>
                 <div className="space-y-2">
                   {issues.map((issue, index) => (
-                    <div key={index} className="flex items-center gap-2 p-2 bg-red-50 rounded">
-                      <span className="text-red-600">⚠️</span>
+                    <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
                       <span className="flex-1 text-sm">{issue}</span>
                       <Button
                         type="button"
@@ -328,41 +348,7 @@ function CompletedVisitNewContent() {
                         size="sm"
                         variant="ghost"
                       >
-                        حذف
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Recommendations */}
-            <Card>
-              <CardHeader>
-                <CardTitle>التوصيات</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="أضف توصية جديدة"
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addRecommendation())}
-                  />
-                  <Button type="button" onClick={addRecommendation} size="sm">
-                    إضافة
-                  </Button>
-                </div>
-                <div className="space-y-2">
-                  {recommendations.map((recommendation, index) => (
-                    <div key={index} className="flex items-center gap-2 p-2 bg-blue-50 rounded">
-                      <span className="text-blue-600">💡</span>
-                      <span className="flex-1 text-sm">{recommendation}</span>
-                      <Button
-                        type="button"
-                        onClick={() => removeRecommendation(index)}
-                        size="sm"
-                        variant="ghost"
-                      >
-                        حذف
+                        <X className="h-4 w-4" />
                       </Button>
                     </div>
                   ))}
@@ -371,31 +357,53 @@ function CompletedVisitNewContent() {
             </Card>
           </div>
 
-          {/* Additional Information */}
+          {/* Recommendations */}
           <Card>
             <CardHeader>
-              <CardTitle>معلومات إضافية</CardTitle>
+              <CardTitle>التوصيات</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="nextVisitDate">تاريخ الزيارة القادمة</Label>
+              <div className="flex gap-2">
                 <Input
-                  id="nextVisitDate"
-                  type="date"
-                  value={nextVisitDate}
-                  onChange={(e) => setNextVisitDate(e.target.value)}
+                  value={newRecommendation}
+                  onChange={(e) => setNewRecommendation(e.target.value)}
+                  placeholder="أضف توصية"
+                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addRecommendation())}
                 />
+                <Button type="button" onClick={addRecommendation} size="sm">
+                  <Plus className="h-4 w-4" />
+                </Button>
               </div>
-              <div>
-                <Label htmlFor="notes">ملاحظات</Label>
-                <Textarea
-                  id="notes"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="أي ملاحظات إضافية حول الزيارة"
-                  rows={3}
-                />
+              <div className="space-y-2">
+                {recommendations.map((recommendation, index) => (
+                  <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                    <span className="flex-1 text-sm">{recommendation}</span>
+                    <Button
+                      type="button"
+                      onClick={() => removeRecommendation(index)}
+                      size="sm"
+                      variant="ghost"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Notes */}
+          <Card>
+            <CardHeader>
+              <CardTitle>تفاصيل الإكمال</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="أدخل تفاصيل إكمال الزيارة..."
+                rows={4}
+              />
             </CardContent>
           </Card>
 
@@ -421,7 +429,7 @@ function CompletedVisitNewContent() {
               إلغاء
             </Button>
             <Button type="submit" disabled={saving} className="bg-green-600 hover:bg-green-700">
-              {saving ? 'جاري الإنشاء...' : 'إنشاء الزيارة المكتملة'}
+              {saving ? 'جاري الحفظ...' : 'حفظ الزيارة المكتملة'}
             </Button>
           </div>
         </form>

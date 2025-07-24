@@ -11,6 +11,7 @@ import { MoveVisitDialog } from './MoveVisitDialog';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Calendar, Download, Printer, Check } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContextFirebase';
+import { useWeekNavigation } from '@/contexts/WeekNavigationContext';
 
 export interface WeeklyPlannerProps {
   weekNumber?: number;
@@ -25,19 +26,11 @@ export function WeeklyPlanner({
   onWeekComplete,
   readonly = false
 }: WeeklyPlannerProps) {
-  // Get current week and year as default
-  const getCurrentWeekAndYear = () => {
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentWeek = getWeekNumber(now);
-    return { weekNumber: currentWeek, year: currentYear };
-  };
-
-  const { weekNumber: currentWeek, year: currentYear } = getCurrentWeekAndYear();
+  const { currentWeekNumber, currentYear, setCurrentWeek } = useWeekNavigation();
   const { authState } = useAuth();
   
   const [selectedWeek, setSelectedWeek] = useState({ 
-    weekNumber: initialWeekNumber || currentWeek, 
+    weekNumber: initialWeekNumber || currentWeekNumber, 
     year: initialYear || currentYear 
   });
   const [showMoveDialog, setShowMoveDialog] = useState(false);
@@ -50,6 +43,15 @@ export function WeeklyPlanner({
     const pastDaysOfYear = (date.getTime() - firstDayOfYear.getTime()) / 86400000;
     return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
   }
+
+  // Update selected week when context changes
+  useEffect(() => {
+    if (initialWeekNumber && initialYear) {
+      setSelectedWeek({ weekNumber: initialWeekNumber, year: initialYear });
+    } else {
+      setSelectedWeek({ weekNumber: currentWeekNumber, year: currentYear });
+    }
+  }, [initialWeekNumber, initialYear, currentWeekNumber, currentYear]);
 
   // Custom hooks
   const {

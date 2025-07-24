@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from '@/contexts/AuthContextFirebase';
+import { WeekNavigationProvider } from '@/contexts/WeekNavigationContext';
 
 export const metadata: Metadata = {
   title: "شركة سلامة السعودية - نظام إدارة الصيانة",
@@ -16,7 +17,9 @@ export default function RootLayout({
     <html lang="ar" dir="rtl">
       <body className="antialiased">
         <AuthProvider>
-          {children}
+          <WeekNavigationProvider>
+            {children}
+          </WeekNavigationProvider>
         </AuthProvider>
       </body>
     </html>

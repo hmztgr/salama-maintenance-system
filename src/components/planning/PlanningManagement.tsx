@@ -10,6 +10,7 @@ import { VisitLogsViewer } from './VisitLogsViewer';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContextFirebase';
 import { useVisitsFirebase } from '@/hooks/useVisitsFirebase';
+import { useWeekNavigation } from '@/contexts/WeekNavigationContext';
 
 export function PlanningManagement() {
   const [activeTab, setActiveTab] = useState<'annual' | 'weekly' | 'visits' | 'logs'>('weekly');
@@ -18,6 +19,7 @@ export function PlanningManagement() {
 
   const { hasPermission } = useAuth();
   const { visits } = useVisitsFirebase();
+  const { currentWeekNumber, currentYear } = useWeekNavigation();
 
   const tabs = [
     {
@@ -73,7 +75,7 @@ export function PlanningManagement() {
 
       {/* Tab Content */}
       {activeTab === 'annual' && <AnnualScheduler />}
-      {activeTab === 'weekly' && <WeeklyPlanner />}
+      {activeTab === 'weekly' && <WeeklyPlanner weekNumber={currentWeekNumber} year={currentYear} />}
       {activeTab === 'logs' && <VisitLogsViewer />}
       {activeTab === 'visits' && (
         <div className="space-y-6">
@@ -99,120 +101,53 @@ export function PlanningManagement() {
               {/* Export Button */}
               <Button
                 onClick={() => setShowVisitExport(true)}
-                variant="outline"
-                className="gap-2"
+                className="gap-2 bg-blue-600 hover:bg-blue-700"
               >
-                📤 تصدير تقرير الزيارات
+                📤 تصدير الزيارات
               </Button>
             </div>
           </div>
 
           {/* Visit Statistics */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-              <div className="flex items-center">
-                <div className="text-3xl mr-4">📊</div>
-                <div>
-                  <div className="text-2xl font-bold text-blue-600">{visits.length}</div>
-                  <div className="text-sm text-blue-800">إجمالي الزيارات</div>
-                </div>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-white p-4 rounded-lg shadow border">
+              <div className="text-2xl font-bold text-blue-600">{visits.length}</div>
+              <div className="text-sm text-gray-600">إجمالي الزيارات</div>
             </div>
-
-            <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-              <div className="flex items-center">
-                <div className="text-3xl mr-4">✅</div>
-                <div>
-                  <div className="text-2xl font-bold text-green-600">
-                    {visits.filter(v => v.status === 'completed').length}
-                  </div>
-                  <div className="text-sm text-green-800">زيارات مكتملة</div>
-                </div>
+            <div className="bg-white p-4 rounded-lg shadow border">
+              <div className="text-2xl font-bold text-green-600">
+                {visits.filter(v => v.status === 'completed').length}
               </div>
+              <div className="text-sm text-gray-600">الزيارات المكتملة</div>
             </div>
-
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-              <div className="flex items-center">
-                <div className="text-3xl mr-4">⏰</div>
-                <div>
-                  <div className="text-2xl font-bold text-yellow-600">
-                    {visits.filter(v => v.status === 'scheduled').length}
-                  </div>
-                  <div className="text-sm text-yellow-800">زيارات مجدولة</div>
-                </div>
+            <div className="bg-white p-4 rounded-lg shadow border">
+              <div className="text-2xl font-bold text-yellow-600">
+                {visits.filter(v => v.status === 'scheduled').length}
               </div>
+              <div className="text-sm text-gray-600">الزيارات المجدولة</div>
             </div>
-
-            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-              <div className="flex items-center">
-                <div className="text-3xl mr-4">🚨</div>
-                <div>
-                  <div className="text-2xl font-bold text-red-600">
-                    {visits.filter(v => v.type === 'emergency').length}
-                  </div>
-                  <div className="text-sm text-red-800">زيارات طارئة</div>
-                </div>
+            <div className="bg-white p-4 rounded-lg shadow border">
+              <div className="text-2xl font-bold text-red-600">
+                {visits.filter(v => v.type === 'emergency').length}
               </div>
+              <div className="text-sm text-gray-600">الزيارات الطارئة</div>
             </div>
           </div>
 
-          {/* Import/Export Information */}
-          <div className="bg-white rounded-lg shadow border">
-            <div className="p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">إدارة بيانات الزيارات</h3>
+          {/* Import/Export Modals */}
+          {showVisitImport && (
+            <VisitImportTemplate
+              onClose={() => setShowVisitImport(false)}
+            />
+          )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Import Section */}
-                <div className="border rounded-lg p-4 bg-green-50">
-                  <h4 className="font-medium text-green-800 mb-2">📥 استيراد الزيارات التاريخية</h4>
-                  <ul className="text-sm text-green-700 space-y-1">
-                    <li>• استيراد بيانات الزيارات من ملفات CSV أو Excel</li>
-                    <li>• التحقق من صحة البيانات ضد العقود والفروع</li>
-                    <li>• مراجعة وموافقة على كل زيارة قبل الاستيراد</li>
-                    <li>• دعم جميع أنواع الزيارات (دورية، طارئة، متابعة)</li>
-                  </ul>
-                </div>
-
-                {/* Export Section */}
-                <div className="border rounded-lg p-4 bg-blue-50">
-                  <h4 className="font-medium text-blue-800 mb-2">📤 تصدير تقارير الزيارات</h4>
-                  <ul className="text-sm text-blue-700 space-y-1">
-                    <li>• تصدير تقارير شاملة لجميع الزيارات</li>
-                    <li>• تصفية حسب التاريخ ونوع الزيارة والحالة</li>
-                    <li>• تضمين تفاصيل النتائج والتوصيات</li>
-                    <li>• تنسيق CSV متوافق مع Excel</li>
-                  </ul>
-                </div>
-              </div>
-
-              {/* Requirements */}
-              <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded p-4">
-                <h4 className="font-medium text-yellow-800 mb-2">متطلبات الاستيراد:</h4>
-                <ul className="text-sm text-yellow-700 space-y-1">
-                  <li>• يجب أن تكون الشركات والعقود والفروع موجودة في النظام</li>
-                  <li>• تواريخ الزيارات يجب أن تكون ضمن فترة العقد</li>
-                  <li>• خدمات السلامة يجب أن تتطابق مع خدمات العقد</li>
-                  <li>• استخدام التنسيقات الصحيحة للتواريخ والأوقات</li>
-                </ul>
-              </div>
-            </div>
-          </div>
+          {showVisitExport && (
+            <VisitExportTemplate
+              onClose={() => setShowVisitExport(false)}
+              visits={visits}
+            />
+          )}
         </div>
-      )}
-
-      {/* Visit Import Modal */}
-      {showVisitImport && (
-        <VisitImportTemplate
-          onClose={() => setShowVisitImport(false)}
-        />
-      )}
-
-      {/* Visit Export Modal */}
-      {showVisitExport && (
-        <VisitExportTemplate
-          visits={visits}
-          onClose={() => setShowVisitExport(false)}
-        />
       )}
     </div>
   );

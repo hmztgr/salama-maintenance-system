@@ -1,6 +1,9 @@
 [
   {
     "origin": [
+      "https://salama-restructured-contract-system.netlify.app",
+      "https://salama-maintenance-system.netlify.app",
+      "https://salama-maintenance-prod.netlify.app",
       "https://sparkling-beignet-8f54c9.netlify.app",
       "http://localhost:3000",
       "http://localhost:3001",

@@ -217,12 +217,21 @@ function EmergencyTicketsContent() {
           العودة إلى التخطيط
         </Button>
         
-        <div className="flex items-center gap-3 mb-4">
-          <AlertTriangle className="h-8 w-8 text-red-600" />
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">إدارة التذاكر الطارئة</h1>
-            <p className="text-gray-600">عرض وإدارة جميع التذاكر الطارئة</p>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="h-8 w-8 text-red-600" />
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">إدارة التذاكر الطارئة</h1>
+              <p className="text-gray-600">عرض وإدارة جميع التذاكر الطارئة</p>
+            </div>
           </div>
+          <Button 
+            onClick={() => window.location.href = '/planning/emergency-visit'}
+            className="bg-red-600 hover:bg-red-700"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            إنشاء بلاغ طارئ
+          </Button>
         </div>
 
         {/* Summary Cards */}

@@ -161,7 +161,7 @@ function EmergencyVisitContent() {
       // Create emergency visit document
       const emergencyVisitData = {
         type: 'emergency',
-        status: 'scheduled',
+        status: 'open',
         emergencyTicketNumber,
         scheduledDate: emergencyDate,
         scheduledTime: emergencyTime,

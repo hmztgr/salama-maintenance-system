@@ -15,8 +15,9 @@ const WeekNavigationContext = createContext<WeekNavigationContextType | undefine
 
 export function WeekNavigationProvider({ children }: { children: ReactNode }) {
   const [currentWeek, setCurrentWeek] = useState(getCurrentWeekStart());
+  
+  // Get search params safely
   let searchParams: any = null;
-
   try {
     searchParams = useSearchParams();
   } catch (error) {

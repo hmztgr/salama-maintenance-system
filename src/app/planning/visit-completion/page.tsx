@@ -73,6 +73,11 @@ function VisitCompletionContent() {
           } as Visit;
           setVisit(visitWithId);
           
+          // Set existing attachments if any
+          if (visitData.attachments && Array.isArray(visitData.attachments)) {
+            setAttachments(visitData.attachments);
+          }
+          
           // Load branch and company names
           console.log('🔍 Loading visit data:', { branchId: visitData.branchId, companyId: visitData.companyId });
           
@@ -87,9 +92,13 @@ function VisitCompletionContent() {
             setCompanyName(companyName);
           }
           
-          // Set default completion date to today
-          const today = new Date().toISOString().split('T')[0];
-          setCompletionDate(today);
+          // Set default completion date to today (local timezone)
+          const today = new Date();
+          const year = today.getFullYear();
+          const month = String(today.getMonth() + 1).padStart(2, '0');
+          const day = String(today.getDate()).padStart(2, '0');
+          const todayString = `${year}-${month}-${day}`;
+          setCompletionDate(todayString);
         } else {
           setError('الزيارة غير موجودة');
         }
@@ -403,12 +412,12 @@ function VisitCompletionContent() {
           
           <div>
             <Label className="text-sm font-medium text-gray-700">الفرع</Label>
-            <p className="text-lg">{branchName || 'جاري التحميل...'}</p>
+            <p className="text-lg">{branchName || 'فرع غير محدد'}</p>
           </div>
           
           <div>
             <Label className="text-sm font-medium text-gray-700">الشركة</Label>
-            <p className="text-lg">{companyName || 'جاري التحميل...'}</p>
+            <p className="text-lg">{companyName || 'شركة غير محددة'}</p>
           </div>
           
           <div>

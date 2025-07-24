@@ -219,18 +219,18 @@ function CompletedVisitViewContent() {
             </div>
           )}
 
-          {visit.results?.internalNotes && (
+          {visit.notes && (
             <div>
-              <Label className="text-sm font-medium text-gray-700">ملاحظات داخلية</Label>
-              <p className="text-lg mt-1 p-3 bg-blue-50 rounded-lg">{visit.results.internalNotes}</p>
+              <Label className="text-sm font-medium text-gray-700">ملاحظات الزيارة</Label>
+              <p className="text-lg mt-1 p-3 bg-blue-50 rounded-lg">{visit.notes}</p>
             </div>
           )}
 
-          {visit.results?.systemIssues && visit.results.systemIssues.length > 0 && (
+          {visit.results?.issues && visit.results.issues.length > 0 && (
             <div>
-              <Label className="text-sm font-medium text-gray-700">مشاكل النظام</Label>
+              <Label className="text-sm font-medium text-gray-700">المشاكل المكتشفة</Label>
               <div className="mt-2 space-y-2">
-                {visit.results.systemIssues.map((issue, index) => (
+                {visit.results.issues.map((issue: string, index: number) => (
                   <div key={index} className="flex items-center gap-2 p-2 bg-red-50 rounded">
                     <span className="text-red-600">⚠️</span>
                     <span className="text-sm">{issue}</span>

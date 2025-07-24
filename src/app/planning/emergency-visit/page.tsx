@@ -137,8 +137,20 @@ function EmergencyVisitContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!emergencyDate || !selectedBranch || !selectedCompany || customerComplaints.length === 0 || !reportedBy || !contactNumber) {
-      setError('يرجى ملء جميع الحقول المطلوبة');
+    // Clear previous errors
+    setError(null);
+    
+    // Validate required fields
+    const missingFields = [];
+    if (!emergencyDate) missingFields.push('تاريخ البلاغ');
+    if (!selectedCompany) missingFields.push('الشركة');
+    if (!selectedBranch) missingFields.push('الفرع');
+    if (customerComplaints.length === 0) missingFields.push('شكاوى العميل');
+    if (!reportedBy) missingFields.push('أبلغ عن طريق');
+    if (!contactNumber) missingFields.push('رقم الاتصال');
+    
+    if (missingFields.length > 0) {
+      setError(`يرجى ملء جميع الحقول المطلوبة: ${missingFields.join('، ')}`);
       return;
     }
 
@@ -273,20 +285,30 @@ function EmergencyVisitContent() {
           </Button>
         </div>
 
-        {/* Emergency Ticket Number */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-red-600" />
-              رقم التذكرة الطارئة
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-mono text-red-600 bg-red-50 p-4 rounded-lg text-center">
-              {emergencyTicketNumber}
-            </div>
-          </CardContent>
-        </Card>
+        {/* Emergency Ticket Number - Only show after form completion */}
+        {success && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-red-600" />
+                رقم تذكرة البلاغ
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-mono text-red-600 bg-red-50 p-4 rounded-lg text-center">
+                {emergencyTicketNumber}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Error Display */}
+        {error && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -387,7 +409,12 @@ function EmergencyVisitContent() {
                 </div>
                 <div>
                   <Label htmlFor="branch">الفرع *</Label>
-                  <Select value={selectedBranch} onValueChange={setSelectedBranch}>
+                  <Select 
+                    value={selectedBranch} 
+                    onValueChange={(value) => {
+                      setSelectedBranch(value);
+                    }}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="اختر الفرع" />
                     </SelectTrigger>

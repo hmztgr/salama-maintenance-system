@@ -63,13 +63,39 @@ function EmergencyTicketsContent() {
           orderBy('createdAt', 'desc')
         );
 
-        const ticketsSnapshot = await getDocs(ticketsQuery);
-        const ticketsData = ticketsSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as EmergencyTicket[];
+        try {
+          const ticketsSnapshot = await getDocs(ticketsQuery);
+          const ticketsData = ticketsSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          })) as EmergencyTicket[];
 
-        setTickets(ticketsData);
+          setTickets(ticketsData);
+        } catch (indexError: any) {
+          // If index error, try without ordering
+          console.log('Index not ready, trying without ordering:', indexError);
+          const simpleQuery = query(
+            collection(db, 'visits'),
+            where('type', '==', 'emergency')
+          );
+          
+          const ticketsSnapshot = await getDocs(simpleQuery);
+          const ticketsData = ticketsSnapshot.docs
+            .map(doc => {
+              const data = doc.data();
+              return {
+                id: doc.id,
+                ...data
+              } as EmergencyTicket;
+            })
+            .sort((a, b) => {
+              const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+              const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+              return dateB - dateA;
+            });
+
+          setTickets(ticketsData);
+        }
       } catch (error) {
         console.error('Error loading emergency tickets:', error);
         setError(`فشل في تحميل التذاكر الطارئة: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);

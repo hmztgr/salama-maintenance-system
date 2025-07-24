@@ -29,8 +29,7 @@ import {
   XCircle,
   AlertTriangle,
   Download,
-  Upload,
-  X
+  Upload
 } from 'lucide-react';
 import { getCurrentWeekStart, addWeeksToDate, getWeekNumber, getWeekEndDate, formatDateForDisplay } from '@/lib/date-handler';
 import { useWeekNavigation } from '@/contexts/WeekNavigationContext';
@@ -416,7 +415,7 @@ export function PlanningGrid({ className = '' }: PlanningGridProps) {
             <div className="flex justify-between items-center">
               <CardTitle className="text-right">تصفية الزيارات</CardTitle>
               <Button variant="outline" size="sm" onClick={clearFilters} className="gap-2">
-                <X className="w-4 h-4" />
+                <XCircle className="w-4 h-4" />
                 مسح المرشحات
               </Button>
             </div>

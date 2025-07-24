@@ -15,6 +15,14 @@ const WeekNavigationContext = createContext<WeekNavigationContextType | undefine
 
 export function WeekNavigationProvider({ children }: { children: ReactNode }) {
   const [currentWeek, setCurrentWeek] = useState(getCurrentWeekStart());
+  let searchParams: any = null;
+
+  try {
+    searchParams = useSearchParams();
+  } catch (error) {
+    // Ignore errors during build time
+    console.log('WeekNavigationContext: useSearchParams not available during build');
+  }
 
   // Get week number and year from current week
   const currentWeekNumber = (() => {
@@ -28,8 +36,9 @@ export function WeekNavigationProvider({ children }: { children: ReactNode }) {
 
   // Handle URL parameters for week navigation
   useEffect(() => {
+    if (!searchParams) return;
+    
     try {
-      const searchParams = useSearchParams();
       const weekParam = searchParams.get('week');
       const yearParam = searchParams.get('year');
       
@@ -51,7 +60,7 @@ export function WeekNavigationProvider({ children }: { children: ReactNode }) {
       // Ignore errors during build time
       console.log('WeekNavigationContext: Error reading search params during build');
     }
-  }, []);
+  }, [searchParams]);
 
   const value = {
     currentWeek,

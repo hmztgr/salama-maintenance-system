@@ -3,8 +3,22 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
+// Determine environment
+const isTestEnvironment = process.env.NEXT_PUBLIC_FIREBASE_ENV === 'test' || 
+                         process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_TEST_FIREBASE === 'true';
+
 // Firebase configuration - loaded from environment variables or use actual project config
-const firebaseConfig = {
+const firebaseConfig = isTestEnvironment ? {
+  // Test environment config
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_TEST_API_KEY || "AIzaSyBIyQYGTyB0v8ERXDUAB5-9IPlZda9P7Bw",
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_TEST_AUTH_DOMAIN || "salama-maintenance-test.firebaseapp.com",
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_TEST_PROJECT_ID || "salama-maintenance-test",
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_TEST_STORAGE_BUCKET || "salama-maintenance-test.firebasestorage.app",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_TEST_MESSAGING_SENDER_ID || "147270460266",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_TEST_APP_ID || "1:147270460266:web:0f8decd600a927e52d7b13",
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_TEST_MEASUREMENT_ID || "G-HB1VBJN9HD",
+} : {
+  // Production environment config
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyBIyQYGTyB0v8ERXDUAB5-9IPlZda9P7Bw",
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "salama-maintenance-prod.firebaseapp.com",
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "salama-maintenance-prod",
@@ -15,8 +29,14 @@ const firebaseConfig = {
 };
 
 // Validate configuration
-if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY && !isTestEnvironment) {
   console.warn('⚠️ Firebase configuration missing from environment variables. Using project default configuration.');
+}
+
+if (isTestEnvironment) {
+  console.log('🧪 Using Firebase TEST environment');
+} else {
+  console.log('🚀 Using Firebase PRODUCTION environment');
 }
 
 // Initialize Firebase only if we have the required configuration
@@ -39,5 +59,4 @@ if (typeof window !== 'undefined') {
 
 // Export services (will be null if Firebase is not initialized)
 export { auth, db, storage };
-
 export default app;

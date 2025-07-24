@@ -290,7 +290,7 @@ function EmergencyVisitContent() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="emergencyDate">التاريخ والوقت *</Label>
+                  <Label htmlFor="emergencyDate">تاريخ ووقت البلاغ *</Label>
                   <Input
                     id="emergencyDate"
                     type="date"
@@ -300,7 +300,7 @@ function EmergencyVisitContent() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="emergencyTime">وقت الطوارئ</Label>
+                  <Label htmlFor="emergencyTime">وقت البلاغ</Label>
                   <Input
                     id="emergencyTime"
                     type="time"
@@ -384,11 +384,13 @@ function EmergencyVisitContent() {
                       <SelectValue placeholder="اختر الفرع" />
                     </SelectTrigger>
                     <SelectContent>
-                      {branches.map(branch => (
-                        <SelectItem key={branch.branchId} value={branch.branchId}>
-                          {branch.branchName}
-                        </SelectItem>
-                      ))}
+                      {branches
+                        .filter(branch => selectedCompany ? branch.companyId === selectedCompany : false)
+                        .map(branch => (
+                          <SelectItem key={branch.branchId} value={branch.branchId}>
+                            {branch.branchName}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>

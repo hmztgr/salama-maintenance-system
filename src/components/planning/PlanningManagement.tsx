@@ -12,7 +12,7 @@ import { useAuth } from '@/contexts/AuthContextFirebase';
 import { useVisitsFirebase } from '@/hooks/useVisitsFirebase';
 
 export function PlanningManagement() {
-  const [activeTab, setActiveTab] = useState<'annual' | 'weekly' | 'visits' | 'logs'>('annual');
+  const [activeTab, setActiveTab] = useState<'annual' | 'weekly' | 'visits' | 'logs'>('weekly');
   const [showVisitImport, setShowVisitImport] = useState(false);
   const [showVisitExport, setShowVisitExport] = useState(false);
 

@@ -129,8 +129,8 @@ export function WeeklyPlannerGrid({
         window.location.href = `/planning/planned-visit?date=${date.toISOString()}&day=${selectedDayIndex}&dayName=${dayName}`;
         break;
       case 'completed':
-        // Show message that completed visits need to be selected from existing visits
-        alert(`إكمال زيارة\n\nلا يمكن إكمال زيارة جديدة. يرجى اختيار زيارة موجودة من القائمة لإكمالها.`);
+        // Open new completed visit form
+        window.location.href = `/planning/completed-visit-new?date=${date.toISOString()}&day=${selectedDayIndex}&dayName=${dayName}`;
         break;
       case 'emergency':
         // Open emergency visit form

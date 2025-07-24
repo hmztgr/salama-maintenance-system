@@ -72,7 +72,7 @@ function EmergencyTicketsContent() {
         setTickets(ticketsData);
       } catch (error) {
         console.error('Error loading emergency tickets:', error);
-        setError('فشل في تحميل التذاكر الطارئة');
+        setError(`فشل في تحميل التذاكر الطارئة: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
       } finally {
         setLoading(false);
       }

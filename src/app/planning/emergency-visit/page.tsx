@@ -442,6 +442,7 @@ function EmergencyVisitContent() {
                 onFileDeleted={handleFileDeleted}
                 maxFiles={5}
                 allowedTypes={['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx']}
+                folder="emergency-visits/attachments"
               />
             </CardContent>
           </Card>

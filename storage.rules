@@ -78,6 +78,27 @@ service firebase.storage {
       allow delete: if canDelete();
     }
     
+    // Allow access to emergency visit files (more permissive)
+    match /emergency-visits/{visitId}/{fileName} {
+      allow read: if canRead();
+      allow write: if isAuthenticated();
+      allow delete: if canDelete();
+    }
+    
+    // Allow access to emergency visit attachments (very permissive for emergency situations)
+    match /emergency-visits/{folder}/{fileName} {
+      allow read: if canRead();
+      allow write: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
+    
+    // Allow access to documents folder (for emergency visits)
+    match /documents/{folder}/{fileName} {
+      allow read: if canRead();
+      allow write: if isAuthenticated();
+      allow delete: if canDelete();
+    }
+    
     // Allow access to user profile files
     match /users/{userId}/{fileName} {
       allow read: if canRead();

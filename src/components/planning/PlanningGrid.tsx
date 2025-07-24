@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -28,9 +29,10 @@ import {
   XCircle,
   AlertTriangle,
   Download,
-  Upload
+  Upload,
+  X
 } from 'lucide-react';
-import { getCurrentWeekStart, addWeeksToDate, getWeekNumber, getWeekEndDate } from '@/lib/date-handler';
+import { getCurrentWeekStart, addWeeksToDate, getWeekNumber, getWeekEndDate, formatDateForDisplay } from '@/lib/date-handler';
 import { useWeekNavigation } from '@/contexts/WeekNavigationContext';
 
 export interface PlanningGridProps {

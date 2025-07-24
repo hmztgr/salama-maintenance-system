@@ -14,7 +14,6 @@ interface WeekNavigationContextType {
 const WeekNavigationContext = createContext<WeekNavigationContextType | undefined>(undefined);
 
 export function WeekNavigationProvider({ children }: { children: ReactNode }) {
-  const searchParams = useSearchParams();
   const [currentWeek, setCurrentWeek] = useState(getCurrentWeekStart());
 
   // Get week number and year from current week
@@ -29,24 +28,30 @@ export function WeekNavigationProvider({ children }: { children: ReactNode }) {
 
   // Handle URL parameters for week navigation
   useEffect(() => {
-    const weekParam = searchParams.get('week');
-    const yearParam = searchParams.get('year');
-    
-    if (weekParam && yearParam) {
-      const week = parseInt(weekParam);
-      const year = parseInt(yearParam);
+    try {
+      const searchParams = useSearchParams();
+      const weekParam = searchParams.get('week');
+      const yearParam = searchParams.get('year');
       
-      if (week >= 1 && week <= 52 && year >= 2020 && year <= 2030) {
-        const yearStart = new Date(year, 0, 1);
-        const targetWeekStart = new Date(yearStart);
-        targetWeekStart.setDate(yearStart.getDate() + (week - 1) * 7);
+      if (weekParam && yearParam) {
+        const week = parseInt(weekParam);
+        const year = parseInt(yearParam);
         
-        // Format as YYYY-MM-DD
-        const formattedWeek = targetWeekStart.toISOString().split('T')[0];
-        setCurrentWeek(formattedWeek);
+        if (week >= 1 && week <= 52 && year >= 2020 && year <= 2030) {
+          const yearStart = new Date(year, 0, 1);
+          const targetWeekStart = new Date(yearStart);
+          targetWeekStart.setDate(yearStart.getDate() + (week - 1) * 7);
+          
+          // Format as YYYY-MM-DD
+          const formattedWeek = targetWeekStart.toISOString().split('T')[0];
+          setCurrentWeek(formattedWeek);
+        }
       }
+    } catch (error) {
+      // Ignore errors during build time
+      console.log('WeekNavigationContext: Error reading search params during build');
     }
-  }, [searchParams]);
+  }, []);
 
   const value = {
     currentWeek,

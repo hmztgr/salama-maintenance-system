@@ -146,8 +146,8 @@ export function useWeeklyPlanning(weekNumber: number, year: number) {
       // Enhance visits with company and branch names
       const enhancedVisits: WeeklyVisit[] = weekVisits.map(visit => {
         try {
-          const branch = branches.find(b => b.id === visit.branchId);
-          const company = companies.find(c => c.id === visit.companyId);
+          const branch = branches.find(b => b.branchId === visit.branchId);
+          const company = companies.find(c => c.companyId === visit.companyId);
           
           // Parse date using the same logic as above
           let visitDate: Date;

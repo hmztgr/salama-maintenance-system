@@ -20,8 +20,18 @@ service firebase.storage {
       allow read, write: if request.auth != null;
     }
     
-    // Allow access to visit attachments
+    // Allow access to visit attachments (for all visit types)
     match /visits/{visitId}/{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Allow access to emergency visit attachments (specific path)
+    match /emergency-visits/{visitId}/{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Allow access to completed visit attachments (specific path)
+    match /completed-visits/{visitId}/{allPaths=**} {
       allow read, write: if request.auth != null;
     }
     

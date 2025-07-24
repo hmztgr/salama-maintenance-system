@@ -81,14 +81,20 @@ function EmergencyVisitContent() {
         // Set pre-filled date if provided
         if (preFilledDate) {
           const date = new Date(preFilledDate);
-          setEmergencyDate(date.toISOString().split('T')[0]);
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          setEmergencyDate(`${year}-${month}-${day}`);
           // Set current time instead of 12:00 AM
           const now = new Date();
           setEmergencyTime(now.toTimeString().split(' ')[0].substring(0, 5));
         } else {
-          // Set default to today
-          const today = new Date().toISOString().split('T')[0];
-          setEmergencyDate(today);
+          // Set default to today (local timezone)
+          const today = new Date();
+          const year = today.getFullYear();
+          const month = String(today.getMonth() + 1).padStart(2, '0');
+          const day = String(today.getDate()).padStart(2, '0');
+          setEmergencyDate(`${year}-${month}-${day}`);
           // Set current time instead of 12:00 AM
           const now = new Date();
           setEmergencyTime(now.toTimeString().split(' ')[0].substring(0, 5));

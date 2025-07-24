@@ -275,9 +275,9 @@ function VisitCompletionContent() {
         duration: duration || null,
         notes: servicesCompleted,
         results: {
-          systemIssues: systemIssues.length > 0 ? systemIssues : undefined,
-          recommendations: recommendations.length > 0 ? recommendations : undefined,
-          internalNotes: internalNotes || undefined
+          systemIssues: systemIssues.length > 0 ? systemIssues : null,
+          recommendations: recommendations.length > 0 ? recommendations : null,
+          internalNotes: internalNotes || null
         },
         attachments: attachments,
         updatedAt: new Date(),

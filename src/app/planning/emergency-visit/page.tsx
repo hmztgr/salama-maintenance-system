@@ -232,7 +232,7 @@ function EmergencyVisitContent() {
 
   // Handle go back
   const handleGoBack = () => {
-    router.push(`/?tab=planning&week=${currentWeekNumber}&year=${currentYear}`);
+    router.push(`/?tab=emergency-tickets`);
   };
 
   if (loading || companiesLoading || branchesLoading) {

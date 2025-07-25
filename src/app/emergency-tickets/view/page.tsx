@@ -11,6 +11,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { useCompaniesFirebase } from '@/hooks/useCompaniesFirebase';
 import { useBranchesFirebase } from '@/hooks/useBranchesFirebase';
+import { FileViewer } from '@/components/ui/file-viewer';
 
 interface EmergencyTicket {
   id: string;
@@ -47,6 +48,7 @@ function EmergencyTicketViewContent() {
   const [error, setError] = useState<string | null>(null);
   const [branchName, setBranchName] = useState<string>('');
   const [companyName, setCompanyName] = useState<string>('');
+  const [viewingFile, setViewingFile] = useState<any | null>(null);
 
   // Data hooks
   const { companies, loading: companiesLoading } = useCompaniesFirebase();
@@ -125,16 +127,24 @@ function EmergencyTicketViewContent() {
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateValue: any) => {
     try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('ar-SA', {
+      if (!dateValue) return 'غير متوفر';
+      let date: Date;
+      // Firestore Timestamp object
+      if (typeof dateValue === 'object' && dateValue.toDate) {
+        date = dateValue.toDate();
+      } else {
+        date = new Date(dateValue);
+      }
+      if (isNaN(date.getTime())) return 'غير متوفر';
+      return date.toLocaleDateString('ar-EG', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
       });
     } catch {
-      return dateString;
+      return 'غير متوفر';
     }
   };
 
@@ -268,13 +278,18 @@ function EmergencyTicketViewContent() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => window.open(attachment.url, '_blank')}
+                        onClick={() => setViewingFile(attachment)}
                       >
                         عرض
                       </Button>
                     </div>
                   ))}
                 </div>
+                <FileViewer
+                  file={viewingFile}
+                  isOpen={!!viewingFile}
+                  onClose={() => setViewingFile(null)}
+                />
               </CardContent>
             </Card>
           )}
@@ -346,7 +361,7 @@ function EmergencyTicketViewContent() {
               )}
               <div>
                 <span className="text-sm text-gray-600">أنشئ بواسطة:</span>
-                <p className="font-medium">{ticket.createdBy}</p>
+                <p className="font-medium">{!ticket.createdBy || ticket.createdBy === 'مستخدم النظام' ? 'غير متوفر' : ticket.createdBy}</p>
               </div>
             </CardContent>
           </Card>

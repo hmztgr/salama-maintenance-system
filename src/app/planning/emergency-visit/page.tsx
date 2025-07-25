@@ -417,9 +417,8 @@ function EmergencyVisitContent() {
                   <Label htmlFor="branch">الفرع *</Label>
                   <Select 
                     value={selectedBranch} 
-                    onValueChange={(value) => {
-                      setSelectedBranch(value);
-                    }}
+                    onValueChange={setSelectedBranch}
+                    dir="rtl"
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="اختر الفرع" />

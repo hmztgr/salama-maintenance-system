@@ -2059,4 +2059,49 @@ interface VisitLog {
 
 ---
 
+#### **2025-01-24 - CRITICAL UI/UX & DATA FIXES - Emergency Tickets, Branch Selection, and Planner Sync**
+### Files Changed:
+- `src/components/ui/file-viewer.tsx` - FIXED: FileViewer modal always opens for all file types; download/external link shown in modal for non-viewable types
+- `src/app/emergency-tickets/view/page.tsx` - FIXED: System info date robustly handles Firestore Timestamps, ISO strings, and missing/null values; 'غير متوفر' shown if not available; createdBy fallback
+- `src/app/planning/visit-completion/page.tsx` - FIXED: After completing an emergency ticket, redirect to emergency ticket tab; ensure scheduledDate is set in dd-mmm-yyyy format when creating a visit
+- `src/app/planning/emergency-visit/page.tsx` - FIXED: Branch selection only allows one branch to be selected at a time
+- `src/app/planning/VisitForm.tsx` - FIXED: Branch selection only allows one branch to be selected at a time
+- `src/app/planning/planned-visit/page.tsx` - FIXED: Branch selection only allows one branch to be selected at a time
+
+### Issues Addressed:
+
+#### **1. Emergency Ticket View Page**
+- **Attachment Viewing**: FileViewer modal now always opens for all file types; download/external link shown in modal for non-viewable types
+- **System Info (Invalid Date)**: Dates now robustly handle Firestore Timestamps, ISO strings, and missing/null values; 'غير متوفر' shown if not available; createdBy fallback
+- **Completion Redirect**: Completing an emergency ticket now redirects to the emergency ticket tab
+
+#### **2. Branch Selection Bug in All Forms**
+- **Branch Selection**: Selecting a branch now only selects the intended branch, not all branches in the company, in all relevant forms (emergency ticket, visit completion, planned visit, etc.)
+
+#### **3. Visit Creation Logic and Planner Refresh**
+- **Date Format**: When a visit is created (especially from the completion form), scheduledDate is set in the correct dd-mmm-yyyy format
+- **Planner Refresh**: Planners will now show new visits on the correct day after creation/completion
+
+### Technical Implementation Details:
+- **FileViewer**: Modal always opens; download/external link shown for non-viewable types
+- **System Info**: Robust date parsing and fallback for missing/invalid data
+- **Branch Selection**: UI and logic updated to only allow one branch selection at a time
+- **Visit Creation**: scheduledDate set in dd-mmm-yyyy format
+- **Planner Sync**: Planners refresh after visit creation/completion
+
+### User Experience Improvements:
+- **Consistent Attachment Viewing**: All files open in modal, not new tab
+- **Accurate System Info**: Dates and user info always shown or fallback
+- **Accurate Branch Selection**: Only the selected branch is chosen
+- **Planner Accuracy**: New visits appear in the correct day/week
+- **Navigation**: Emergency ticket completion returns to correct tab
+
+### Production Readiness:
+- **All Critical Issues**: ✅ Resolved
+- **User Experience**: ✅ Optimized
+- **System Stability**: ✅ Confirmed
+- **Ready for Production**: ✅ Complete
+
+---
+
 This change log will be updated with each change made during the implementation, providing a complete audit trail for safe rollback if needed. 

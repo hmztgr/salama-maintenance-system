@@ -80,17 +80,15 @@ export function FileViewer({ file, isOpen, onClose }: FileViewerProps) {
               <Download className="w-4 h-4" />
               تحميل
             </Button>
-            {!isViewable && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExternalView}
-                className="flex items-center gap-2"
-              >
-                <ExternalLink className="w-4 h-4" />
-                عرض خارجي
-              </Button>
-            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExternalView}
+              className="flex items-center gap-2"
+            >
+              <ExternalLink className="w-4 h-4" />
+              عرض خارجي
+            </Button>
             <Button
               variant="ghost"
               size="sm"
@@ -101,72 +99,28 @@ export function FileViewer({ file, isOpen, onClose }: FileViewerProps) {
             </Button>
           </div>
         </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-hidden">
-          {isViewable ? (
-            <div className="w-full h-full flex items-center justify-center bg-gray-100">
-              {isImage ? (
-                <img
-                  src={file.url}
-                  alt={file.name}
-                  className="max-w-full max-h-full object-contain"
-                  onLoad={() => setIsLoading(false)}
-                  onError={() => {
-                    setIsLoading(false);
-                    setError('فشل في تحميل الصورة');
-                  }}
-                />
-                             ) : isPDF ? (
-                 <iframe
-                   src={`${file.url}#toolbar=1&navpanes=1&scrollbar=1&view=FitH`}
-                   className="w-full h-full border-0"
-                   onLoad={() => setIsLoading(false)}
-                   onError={() => {
-                    console.error('📄 FileViewer - PDF load error');
-                     setIsLoading(false);
-                     setError('فشل في تحميل ملف PDF');
-                   }}
-                   style={{ minHeight: '80vh' }}
-                 />
-              ) : null}
-              
-              {isLoading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                    <p className="text-gray-600">جاري التحميل...</p>
-                  </div>
-                </div>
-              )}
-              
-              {error && (
-                <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">
-                  <div className="text-center">
-                    <p className="text-red-600 mb-4">{error}</p>
-                    <Button onClick={handleExternalView} variant="outline">
-                      فتح في نافذة جديدة
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-64 bg-gray-100">
-              <div className="text-center">
-                <div className="text-6xl text-gray-400 mb-4">📄</div>
-                <p className="text-gray-600 mb-4">لا يمكن عرض هذا النوع من الملفات</p>
-                <div className="flex gap-2 justify-center">
-                  <Button onClick={handleDownload} variant="outline">
-                    <Download className="w-4 h-4 mr-2" />
-                    تحميل
-                  </Button>
-                  <Button onClick={handleExternalView} variant="outline">
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    عرض خارجي
-                  </Button>
-                </div>
-              </div>
+        {/* File Content */}
+        <div className="w-full h-[calc(95vh-60px)] flex items-center justify-center bg-gray-50">
+          {isImage && (
+            <img
+              src={file.url}
+              alt={file.name}
+              className="max-w-full max-h-full object-contain"
+              onLoad={() => setIsLoading(false)}
+              onError={() => setError('حدث خطأ في عرض الصورة')}
+            />
+          )}
+          {isPDF && (
+            <iframe
+              src={file.url}
+              title={file.name}
+              className="w-full h-full border-0"
+              onLoad={() => setIsLoading(false)}
+            />
+          )}
+          {!isViewable && (
+            <div className="text-center w-full">
+              <p className="text-gray-600 mb-4">لا يمكن عرض هذا النوع من الملفات مباشرة. يمكنك تحميل الملف أو عرضه خارجيًا.</p>
             </div>
           )}
         </div>

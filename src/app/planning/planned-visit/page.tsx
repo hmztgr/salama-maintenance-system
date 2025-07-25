@@ -194,17 +194,19 @@ function PlannedVisitContent() {
               <Select 
                 value={selectedBranch} 
                 onValueChange={setSelectedBranch}
-                disabled={!selectedCompany}
+                dir="rtl"
               >
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder={selectedCompany ? "اختر الفرع" : "اختر الشركة أولاً"} />
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر الفرع" />
                 </SelectTrigger>
                 <SelectContent>
-                  {availableBranches.map(branch => (
-                    <SelectItem key={branch.branchId} value={branch.branchId}>
-                      {branch.branchName}
-                    </SelectItem>
-                  ))}
+                  {branches
+                    .filter(branch => selectedCompany ? branch.companyId === selectedCompany : false)
+                    .map(branch => (
+                      <SelectItem key={branch.branchId} value={branch.branchId}>
+                        {branch.branchName}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>

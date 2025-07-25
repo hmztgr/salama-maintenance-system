@@ -249,6 +249,7 @@ function VisitCompletionContent() {
             console.log('🆕 Creating missing visit document...');
             const newVisitRef = await addDoc(collection(db, 'visits'), {
               ...visit,
+              scheduledDate: formatDateDDMMMYYYY(new Date()),
               createdAt: new Date(),
               updatedAt: new Date()
             });
@@ -328,6 +329,14 @@ function VisitCompletionContent() {
     window.location.href = '/?tab=planning';
   };
 
+  // Helper to format date as dd-mmm-yyyy
+  function formatDateDDMMMYYYY(date: Date) {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = date.toLocaleString('en-GB', { month: 'short' });
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  }
+
   if (loading) {
     return (
       <div className="container mx-auto p-6">
@@ -353,16 +362,13 @@ function VisitCompletionContent() {
   }
 
   if (success) {
-    return (
-      <div className="container mx-auto p-6">
-        <Alert>
-          <CheckCircle className="h-4 w-4" />
-          <AlertDescription>
-            تم إكمال الزيارة بنجاح. سيتم توجيهك إلى صفحة التخطيط...
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
+    // If the visit is an emergency, redirect to emergency tickets tab
+    if (visit.type === 'emergency') {
+      window.location.href = '/?tab=emergency-tickets';
+    } else {
+      window.location.href = '/?tab=planning';
+    }
+    return;
   }
 
   if (!visit) {

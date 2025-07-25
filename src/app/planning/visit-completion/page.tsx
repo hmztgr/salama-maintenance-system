@@ -361,16 +361,6 @@ function VisitCompletionContent() {
     );
   }
 
-  if (success) {
-    // If the visit is an emergency, redirect to emergency tickets tab
-    if (visit.type === 'emergency') {
-      window.location.href = '/?tab=emergency-tickets';
-    } else {
-      window.location.href = '/?tab=planning';
-    }
-    return;
-  }
-
   if (!visit) {
     return (
       <div className="container mx-auto p-6">
@@ -383,6 +373,16 @@ function VisitCompletionContent() {
         </Button>
       </div>
     );
+  }
+
+  if (success) {
+    // If the visit is an emergency, redirect to emergency tickets tab
+    if (visit.type === 'emergency') {
+      window.location.href = '/?tab=emergency-tickets';
+    } else {
+      window.location.href = '/?tab=planning';
+    }
+    return;
   }
 
   return (

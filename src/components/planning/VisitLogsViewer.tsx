@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { collection, query, orderBy, getDocs, where, Timestamp } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, where, Timestamp, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -58,26 +58,28 @@ export function VisitLogsViewer() {
         const querySnapshot = await getDocs(logsQuery);
         const logsData: VisitLog[] = [];
 
-        for (const doc of querySnapshot.docs) {
-          const data = doc.data();
+        for (const docSnapshot of querySnapshot.docs) {
+          const data = docSnapshot.data();
           
           // Validate that the log has required fields
           if (!data.visitId || !data.action) {
-            console.warn('Skipping invalid log:', { id: doc.id, data });
+            console.warn('Skipping invalid log:', { id: docSnapshot.id, data });
             continue;
           }
           
           const log: VisitLog = {
-            id: doc.id,
+            id: docSnapshot.id,
             ...data
           };
 
           // Load branch and company names if not already present
           if (data.branchId && !data.branchName) {
             try {
-              const branchDoc = await getDocs(query(collection(db, 'branches'), where('__name__', '==', data.branchId)));
-              if (!branchDoc.empty) {
-                log.branchName = branchDoc.docs[0].data().branchName;
+              const branchDocRef = doc(db, 'branches', data.branchId);
+              const branchDoc = await getDoc(branchDocRef);
+              if (branchDoc.exists()) {
+                const branchData = branchDoc.data() as { branchName?: string };
+                log.branchName = branchData?.branchName;
               }
             } catch (error) {
               console.error('Error loading branch name:', error);
@@ -86,9 +88,11 @@ export function VisitLogsViewer() {
 
           if (data.companyId && !data.companyName) {
             try {
-              const companyDoc = await getDocs(query(collection(db, 'companies'), where('__name__', '==', data.companyId)));
-              if (!companyDoc.empty) {
-                log.companyName = companyDoc.docs[0].data().companyName;
+              const companyDocRef = doc(db, 'companies', data.companyId);
+              const companyDoc = await getDoc(companyDocRef);
+              if (companyDoc.exists()) {
+                const companyData = companyDoc.data() as { companyName?: string };
+                log.companyName = companyData?.companyName;
               }
             } catch (error) {
               console.error('Error loading company name:', error);
@@ -205,7 +209,7 @@ export function VisitLogsViewer() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ar-SA');
+    return new Date(dateString).toLocaleDateString('en-GB');
   };
 
   const formatTime = (timeString: string) => {

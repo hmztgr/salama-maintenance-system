@@ -164,12 +164,31 @@ function EmergencyVisitContent() {
       setSaving(true);
       setError(null);
 
+      // Format date to dd-mmm-yyyy format for consistency with weekly planner
+      const formatDateForPlanner = (dateString: string) => {
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const month = monthNames[date.getMonth()];
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+      };
+
+      // Calculate day of week (0-6, Saturday to Friday)
+      const getDayOfWeek = (dateString: string) => {
+        const date = new Date(dateString);
+        const day = date.getDay();
+        // Convert Sunday=0 to Saturday=0
+        return day === 0 ? 6 : day - 1;
+      };
+
       // Create emergency visit document
       const emergencyVisitData = {
         type: 'emergency',
         status: 'open',
         emergencyTicketNumber,
-        scheduledDate: emergencyDate,
+        scheduledDate: formatDateForPlanner(emergencyDate),
+        dayOfWeek: getDayOfWeek(emergencyDate),
         scheduledTime: emergencyTime,
         priority,
         customerComplaints,
@@ -232,7 +251,14 @@ function EmergencyVisitContent() {
 
   // Handle go back
   const handleGoBack = () => {
-    router.push(`/?tab=emergency-tickets`);
+    console.log('🔄 Emergency Visit - handleGoBack called');
+    try {
+      router.push(`/?tab=emergency-tickets`);
+    } catch (error) {
+      console.error('❌ Router navigation failed:', error);
+      // Fallback to window.location
+      window.location.href = `/?tab=emergency-tickets`;
+    }
   };
 
   if (loading || companiesLoading || branchesLoading) {
@@ -417,7 +443,10 @@ function EmergencyVisitContent() {
                   <Label htmlFor="branch">الفرع *</Label>
                   <Select 
                     value={selectedBranch} 
-                    onValueChange={setSelectedBranch}
+                    onValueChange={(value) => {
+                      console.log('🏪 Emergency Visit - Branch selected:', value);
+                      setSelectedBranch(value);
+                    }}
                     dir="rtl"
                   >
                     <SelectTrigger>

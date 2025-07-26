@@ -20,6 +20,8 @@ import { UserProfile } from './profile/UserProfile';
 import { ReportsDashboard } from './reports/ReportsDashboard';
 import EmergencyTicketsPage from '@/app/emergency-tickets/page';
 import IssuesPage from '@/app/issues/page';
+import { GlobalIssueButton } from './issues/GlobalIssueButton';
+import { FloatingIssueButton } from './issues/FloatingIssueButton';
 
 export interface MainDashboardProps {
   className?: string;
@@ -116,6 +118,11 @@ export function MainDashboard({ className = '' }: MainDashboardProps) {
             </div>
 
             <div className="flex items-center space-x-4 space-x-reverse">
+              <GlobalIssueButton 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center gap-2"
+              />
               <div className="text-sm text-gray-600">
                 مرحباً، {authState.user.displayName || 'مستخدم'}
               </div>
@@ -348,6 +355,9 @@ export function MainDashboard({ className = '' }: MainDashboardProps) {
           </div>
         )}
       </main>
+
+      {/* Floating Issue Button for Mobile */}
+      <FloatingIssueButton />
 
       {/* Footer */}
       <footer className="bg-white border-t mt-12">

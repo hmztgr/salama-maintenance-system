@@ -27,7 +27,7 @@ export function useIssues() {
   // Create new issue
   const createIssue = useCallback(async (issueData: IssueFormData): Promise<string> => {
     try {
-      if (!authState.user) {
+      if (!authState.user || !authState.user.uid) {
         throw new Error('يجب تسجيل الدخول أولاً');
       }
 
@@ -38,13 +38,13 @@ export function useIssues() {
         priority: issueData.priority,
         status: 'open' as const,
         reportedBy: authState.user.uid,
-        reportedByName: authState.user.displayName || 'مستخدم',
-        assignedTo: undefined,
-        assignedByName: undefined,
+        reportedByName: authState.user.displayName || authState.user.email || 'مستخدم',
+        assignedTo: null,
+        assignedByName: null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        resolvedAt: undefined,
-        closedAt: undefined,
+        resolvedAt: null,
+        closedAt: null,
         tags: issueData.tags,
         attachments: issueData.attachments,
         customFields: issueData.customFields,

@@ -5,6 +5,47 @@ All notable changes to the Salama Maintenance Scheduler project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Version 57] - 2025-01-18
+### 🐛 **GLOBAL ISSUE TRACKING SYSTEM - CONSOLE LOG CAPTURE**
+- 🚀 **GLOBAL ISSUE SUBMISSION** - Added issue reporting from any page with floating action button
+- 📊 **CONSOLE LOG CAPTURE** - Automatic capture of console errors, warnings, and logs for debugging
+- 🔧 **AUTHENTICATION FIX** - Fixed undefined user.uid issue in issue creation
+- 📱 **MOBILE-FIRST DESIGN** - Floating action button for mobile users, header button for desktop
+- 🎯 **SMART ERROR DETECTION** - Real-time error counting with visual badges
+- 📋 **AUTOMATIC LOG INCLUSION** - Console logs automatically included in issue descriptions
+
+### Technical Implementation
+```typescript
+// NEW: Global issue submission with console capture
+const GlobalIssueButton = () => {
+  // Override console methods to capture logs
+  console.error = (...args) => {
+    const logEntry = `[ERROR] ${new Date().toISOString()}: ${args.join(' ')}`;
+    setConsoleLogs(prev => [...prev.slice(-50), logEntry]);
+    setErrorCount(prev => prev + 1);
+    originalConsoleError.apply(console, args);
+  };
+  
+  // Auto-include logs in issue description
+  const description = `**المشكلة**: [وصف المشكلة]\n\n**سجلات وحدة التحكم**:\n\`\`\`\n${getRecentLogs()}\n\`\`\``;
+};
+```
+
+### Features Added
+- **Global Issue Button**: Available in header on all pages
+- **Floating Action Button**: Mobile-optimized floating button
+- **Console Log Capture**: Automatic capture of last 50 console entries
+- **Error Badges**: Visual indicators showing error count
+- **Smart Pre-filling**: Issue form pre-filled with console logs
+- **Real-time Monitoring**: Live error counting and log tracking
+
+### User Experience
+- **Desktop**: Header button with error count badge
+- **Mobile**: Floating action button (bottom-left)
+- **Error Detection**: Automatic error counting with visual feedback
+- **Debug Information**: Console logs automatically included in reports
+- **Seamless Integration**: Works from any page without navigation
+
 ## [Version 56] - 2025-01-18
 ### 🚀 **ENHANCED HISTORICAL VISIT IMPORT SYSTEM - FIREBASE INTEGRATION**
 - 🔄 **COMPLETE VISIT IMPORT REWRITE** - Modernized visit import system to align with current Visit interface

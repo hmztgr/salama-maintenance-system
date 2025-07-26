@@ -11,6 +11,14 @@ import { standardizeDate } from '@/lib/date-handler';
 import { useCompaniesFirebase } from '@/hooks/useCompaniesFirebase';
 import { useContractsFirebase } from '@/hooks/useContractsFirebase';
 import { useBranchesFirebase } from '@/hooks/useBranchesFirebase';
+import { 
+  normalizeImportValue, 
+  validateNormalizedValue, 
+  processImportRow, 
+  getFieldConfig,
+  generateImportGuide,
+  ImportFieldConfig 
+} from '@/lib/import-utils';
 
 interface ImportReviewProps {
   file: File;
@@ -330,84 +338,100 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
     return result.filter(row => row.some(cell => cell.length > 0));
   };
 
-  // Validate individual field
+  // Get field configurations for normalization
+  const fieldConfigs = useMemo(() => getFieldConfig(entityType), [entityType]);
+
+  // Validate individual field with normalization
   const validateField = useCallback((fieldName: string, value: string, rowNumber: number, rowData: Record<string, string>): ValidationError[] => {
     const errors: ValidationError[] = [];
-    const config = currentConfig.validations[fieldName as keyof typeof currentConfig.validations] as any;
+    
+    // Find field configuration
+    const fieldConfig = fieldConfigs.find(config => config.fieldName === fieldName);
+    if (!fieldConfig) return errors;
 
-    if (!config) return errors;
-
-    // Required field validation
-    if (currentConfig.required.includes(fieldName) && (!value || value.trim() === '')) {
+    // Normalize the value
+    const normalized = normalizeImportValue(value, fieldConfig);
+    
+    // Validate the normalized value
+    const validation = validateNormalizedValue(normalized.normalizedValue, fieldConfig);
+    
+    // Add normalization warnings
+    normalized.warnings.forEach(warning => {
       errors.push({
         row: rowNumber,
         field: fieldName,
-        value,
-        error: `الحقل "${fieldName}" مطلوب`,
-        suggestion: 'يرجى إدخال قيمة صحيحة',
-        severity: 'error'
-      });
-      return errors;
-    }
-
-    // Skip validation for empty optional fields
-    if (!value || value.trim() === '') return errors;
-
-    // Pattern validation
-    if (config.pattern && !config.pattern.test(value)) {
-      let suggestion = '';
-      if (fieldName.includes('Date')) {
-        suggestion = 'استخدم تنسيق d-mmm-yyyy أو dd-mmm-yyyy أو d-mmm-yy أو dd-mmm-yy (مثال: 1-Sep-2024 أو 01-Sep-2024 أو 1-Sep-24 أو 01-Sep-24)';
-      } else if (fieldName.includes('Time')) {
-        suggestion = 'استخدم تنسيق HH:mm (مثال: 09:30)';
-      } else if (fieldName === 'branchId') {
-        suggestion = 'استخدم تنسيق معرف الفرع (مثال: 0001-RIY-001-0001)';
-      } else if (fieldName === 'contractId') {
-        suggestion = 'استخدم تنسيق معرف العقد (مثال: CON-0001-001)';
-      } else if (fieldName === 'companyId') {
-        suggestion = 'استخدم تنسيق معرف الشركة (مثال: 0001)';
-      }
-
-      errors.push({
-        row: rowNumber,
-        field: fieldName,
-        value,
-        error: 'تنسيق القيمة غير صحيح',
-        suggestion,
-        severity: 'error'
-      });
-    }
-
-    // Enum validation
-    if (config.enum && !config.enum.some((option: string) =>
-      option.toLowerCase() === value.toLowerCase() ||
-      option === value
-    )) {
-        errors.push({
-          row: rowNumber,
-          field: fieldName,
-          value,
-        error: 'القيمة غير صحيحة',
-        suggestion: 'استخدم: ' + config.enum.join(' أو '),
-          severity: 'error'
-        });
-    }
-
-    // Length validation
-    if (config.maxLength && value.length > config.maxLength) {
-      errors.push({
-        row: rowNumber,
-        field: fieldName,
-        value,
-        error: `القيمة طويلة جداً (الحد الأقصى ${config.maxLength} حرف)`,
-        suggestion: `اختصر النص إلى ${config.maxLength} حرف أو أقل`,
+        value: normalized.originalValue,
+        error: warning,
+        suggestion: 'تم تطبيع القيمة تلقائياً',
         severity: 'warning'
       });
+    });
+
+    // Add validation errors
+    validation.errors.forEach(error => {
+      errors.push({
+        row: rowNumber,
+        field: fieldName,
+        value: normalized.originalValue,
+        error: error,
+        suggestion: 'يرجى تصحيح القيمة',
+        severity: 'error'
+      });
+    });
+
+    // Business logic validation for companies
+    if (entityType === 'companies') {
+      if (fieldName === 'companyName') {
+        const existingCompany = companies.find(c => 
+          c.companyName.toLowerCase() === normalized.normalizedValue.toLowerCase()
+        );
+        if (existingCompany) {
+          errors.push({
+            row: rowNumber,
+            field: fieldName,
+            value: normalized.originalValue,
+            error: 'اسم الشركة موجود مسبقاً في النظام',
+            suggestion: 'استخدم اسم مختلف أو تحقق من الشركة الموجودة',
+            severity: 'warning'
+          });
+        }
+      }
     }
 
-    // Business logic validation for branches
+    // Business logic validation for contracts with enhanced companyId lookup
+    if (entityType === 'contracts' || entityType === 'contractsAdvanced') {
+      if (fieldName === 'companyId') {
+        // Try multiple approaches to find the company
+        let company = null;
+        const searchValues = [
+          normalized.normalizedValue, // Normalized value
+          value, // Original value
+          value.replace(/[^0-9]/g, '').padStart(4, '0'), // Padded numeric value
+          value.replace(/^'/, ''), // Remove leading quote
+          value.replace(/^'/, '').padStart(4, '0') // Remove quote and pad
+        ];
+
+        for (const searchValue of searchValues) {
+          company = companies.find(c => c.companyId === searchValue);
+          if (company) break;
+        }
+
+        if (!company) {
+          const triedValues = searchValues.filter(v => v !== value).join(', ');
+          errors.push({
+            row: rowNumber,
+            field: fieldName,
+            value: normalized.originalValue,
+            error: 'معرف الشركة غير موجود في النظام',
+            suggestion: `تأكد من إضافة الشركة أولاً في إدارة العملاء. القيم المحاولة: ${triedValues}`,
+            severity: 'error'
+          });
+        }
+      }
+    }
+
+    // Business logic validation for branches with enhanced company lookup
     if (entityType === 'branches') {
-      // Company validation - either companyId OR companyName must be valid
       if (fieldName === 'companyId' || fieldName === 'companyName') {
         const companyId = rowData.companyId;
         const companyName = rowData.companyName;
@@ -417,45 +441,58 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
           errors.push({
             row: rowNumber,
             field: fieldName,
-            value,
+            value: normalized.originalValue,
             error: 'يجب إدخال معرف الشركة أو اسم الشركة',
             suggestion: 'أدخل معرف الشركة (مثال: 0001) أو اسم الشركة',
             severity: 'error'
           });
         } else {
-          // Check if the provided values match existing companies
+          // Enhanced company lookup
           let companyFound = false;
           
           if (companyId && companyId.trim() !== '') {
-            const companyById = companies.find(c => c.companyId === companyId.trim());
+            // Try multiple approaches to find company by ID
+            const searchValues = [
+              companyId.trim(),
+              companyId.trim().padStart(4, '0'),
+              companyId.trim().replace(/^'/, ''),
+              companyId.trim().replace(/^'/, '').padStart(4, '0')
+            ];
+
+            let companyById = null;
+            for (const searchValue of searchValues) {
+              companyById = companies.find(c => c.companyId === searchValue);
+              if (companyById) break;
+            }
+
             if (companyById) {
               // If companyName is also provided, check if it matches
               if (companyName && companyName.trim() !== '') {
                 if (companyById.companyName.toLowerCase() === companyName.trim().toLowerCase()) {
                   companyFound = true;
                 } else {
-          errors.push({
-            row: rowNumber,
-            field: fieldName,
-            value,
+                  errors.push({
+                    row: rowNumber,
+                    field: fieldName,
+                    value: normalized.originalValue,
                     error: 'اسم الشركة لا يتطابق مع معرف الشركة',
                     suggestion: `اسم الشركة يجب أن يكون: ${companyById.companyName}`,
-            severity: 'error'
-          });
+                    severity: 'error'
+                  });
                 }
               } else {
                 companyFound = true;
               }
-        } else {
-          errors.push({
-            row: rowNumber,
-            field: fieldName,
-            value,
+            } else {
+              errors.push({
+                row: rowNumber,
+                field: fieldName,
+                value: normalized.originalValue,
                 error: 'معرف الشركة غير موجود في النظام',
                 suggestion: 'تأكد من إضافة الشركة أولاً أو استخدم اسم الشركة',
-            severity: 'error'
-          });
-        }
+                severity: 'error'
+              });
+            }
           } else if (companyName && companyName.trim() !== '') {
             const companyByName = companies.find(c => 
               c.companyName.toLowerCase() === companyName.trim().toLowerCase()
@@ -463,39 +500,22 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
             if (companyByName) {
               companyFound = true;
             } else {
-      errors.push({
-        row: rowNumber,
-        field: fieldName,
-        value,
+              errors.push({
+                row: rowNumber,
+                field: fieldName,
+                value: normalized.originalValue,
                 error: 'اسم الشركة غير موجود في النظام',
                 suggestion: 'تأكد من إضافة الشركة أولاً أو استخدم معرف الشركة',
-        severity: 'error'
-      });
+                severity: 'error'
+              });
             }
           }
         }
       }
     }
 
-    // Business logic validation for contracts
-    if (entityType === 'contracts' || entityType === 'contractsAdvanced') {
-      if (fieldName === 'companyId') {
-        const company = companies.find(c => c.companyId === value);
-        if (!company) {
-      errors.push({
-        row: rowNumber,
-        field: fieldName,
-        value,
-            error: 'معرف الشركة غير موجود في النظام',
-            suggestion: 'تأكد من إضافة الشركة أولاً في إدارة العملاء',
-        severity: 'error'
-      });
-        }
-      }
-    }
-
     return errors;
-  }, [companies, contracts, branches, entityType, currentConfig]);
+  }, [companies, contracts, branches, entityType, fieldConfigs]);
 
   // Process uploaded file
   const processFile = useCallback(async () => {

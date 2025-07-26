@@ -74,8 +74,10 @@ export function WeeklyPlanner({
   } = useDragAndDrop();
 
   // Enhanced drop handler with validation and feedback
-  const handleDrop = useCallback((visitId: string, fromDay: number, toDay: number) => {
+  const handleDrop = useCallback(async (visitId: string, fromDay: number, toDay: number) => {
     try {
+      console.log('🔄 Dropping visit:', { visitId, fromDay, toDay });
+      
       // Validate the move
       const visit = weekData?.visits.find(v => v.id === visitId);
       if (!visit) {
@@ -106,15 +108,21 @@ export function WeeklyPlanner({
         return;
       }
 
-      // Move the visit
-      moveVisit(visitId, fromDay, toDay);
+      // Move the visit (handle async properly)
+      await moveVisit(visitId, fromDay, toDay);
       
       // Update drag state
       handleDropEvent(visitId, fromDay, toDay);
       
       console.log(`Visit ${visitId} moved from day ${fromDay} to day ${toDay}`);
     } catch (error) {
-      console.error('Error moving visit:', error);
+      console.error('Failed to move visit:', error);
+      // Show user-friendly error message
+      if (error instanceof Error) {
+        alert(`فشل في نقل الزيارة: ${error.message}`);
+      } else {
+        alert('فشل في نقل الزيارة');
+      }
     }
   }, [weekData, moveVisit, handleDropEvent]);
 

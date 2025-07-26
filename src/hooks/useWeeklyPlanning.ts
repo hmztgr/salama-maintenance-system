@@ -68,17 +68,30 @@ export function useWeeklyPlanning(weekNumber: number, year: number) {
           }
           
           if (visit.scheduledDate.includes('-') && visit.scheduledDate.length === 10) {
-            // Format: dd-mmm-yyyy (e.g., "01-Jan-2025")
-            const [day, monthName, year] = visit.scheduledDate.split('-');
-            const monthNames: Record<string, number> = {
-              'jan': 0, 'feb': 1, 'mar': 2, 'apr': 3, 'may': 4, 'jun': 5,
-              'jul': 6, 'aug': 7, 'sep': 8, 'oct': 9, 'nov': 10, 'dec': 11
-            };
-            const monthIndex = monthNames[monthName.toLowerCase()];
+            // Format: dd-mmm-yyyy (e.g., "01-Jan-2025") or dd-mm-yyyy (e.g., "01-07-2025")
+            const [day, monthPart, year] = visit.scheduledDate.split('-');
             
-            if (monthIndex === undefined) {
-              console.warn('Invalid month name:', monthName, 'in visit:', visit.id);
-              return false;
+            let monthIndex: number;
+            
+            // Check if month is numeric (e.g., "07" for July)
+            if (/^\d{1,2}$/.test(monthPart)) {
+              monthIndex = parseInt(monthPart) - 1; // Convert to 0-based index
+              if (monthIndex < 0 || monthIndex > 11) {
+                console.warn('Invalid numeric month:', monthPart, 'in visit:', visit.id);
+                return false;
+              }
+            } else {
+              // Handle text month names (e.g., "Jan", "Jul")
+              const monthNames: Record<string, number> = {
+                'jan': 0, 'feb': 1, 'mar': 2, 'apr': 3, 'may': 4, 'jun': 5,
+                'jul': 6, 'aug': 7, 'sep': 8, 'oct': 9, 'nov': 10, 'dec': 11
+              };
+              monthIndex = monthNames[monthPart.toLowerCase()];
+              
+              if (monthIndex === undefined) {
+                console.warn('Invalid month name:', monthPart, 'in visit:', visit.id);
+                return false;
+              }
             }
             
             visitDate = new Date(parseInt(year), monthIndex, parseInt(day));
@@ -259,47 +272,29 @@ export function useWeeklyPlanning(weekNumber: number, year: number) {
       const parsedMonth = monthNamesArray.indexOf(dateParts[1]);
       const parsedYear = parseInt(dateParts[2]);
       
+      if (parsedMonth === -1 || isNaN(parsedDay) || isNaN(parsedYear)) {
+        throw new Error('Invalid date format in visit');
+      }
+      
       const currentDate = new Date(parsedYear, parsedMonth, parsedDay);
       const daysDiff = toDay - fromDay;
       const newDate = new Date(currentDate);
       newDate.setDate(currentDate.getDate() + daysDiff);
 
-      // Validate that the new date is within reasonable bounds
-      const minDate = new Date('2024-01-01');
-      const maxDate = new Date('2030-12-31');
-      
-      if (newDate < minDate) {
-        console.warn('⚠️ Cannot move visit before 2024:', {
-          visitId,
-          newDate: newDate.toISOString(),
-          minDate: minDate.toISOString()
-        });
-        throw new Error('Cannot move visit before 2024');
-      }
-      
-      if (newDate > maxDate) {
-        console.warn('⚠️ Cannot move visit after 2030:', {
-          visitId,
-          newDate: newDate.toISOString(),
-          maxDate: maxDate.toISOString()
-        });
-        throw new Error('Cannot move visit after 2030');
-      }
-      
-      // Check if the new date would move the visit to a different year
-      const currentYear = new Date(visit.scheduledDate).getFullYear();
+      // Validate that the new date is reasonable (within 2 years of current date)
+      const currentYear = new Date().getFullYear();
       const newYear = newDate.getFullYear();
       
-      if (newYear !== currentYear) {
-        console.warn('⚠️ Cannot move visit to different year:', {
+      if (newYear < currentYear - 1 || newYear > currentYear + 1) {
+        console.warn('⚠️ Cannot move visit too far in time:', {
           visitId,
+          newDate: newDate.toISOString(),
           currentYear,
-          newYear,
-          newDate: newDate.toISOString()
+          newYear
         });
-        throw new Error('Cannot move visit to different year');
+        throw new Error('Cannot move visit more than 1 year from current date');
       }
-
+      
       // Format date in dd-mmm-yyyy format to match the system
       const day = newDate.getDate().toString().padStart(2, '0');
       const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

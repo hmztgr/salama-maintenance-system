@@ -120,7 +120,15 @@ export function useFirebaseStorage() {
             (error) => {
               // Error handling
               console.error('❌ Upload failed:', error);
-              setError('فشل في رفع الملف: ' + error.message);
+              
+              // Check if it's a CORS error
+              if (error.code === 'storage/unauthorized' || error.message.includes('CORS')) {
+                setError('خطأ في إعدادات Firebase Storage. يرجى التحقق من إعدادات CORS.');
+                console.error('🔧 CORS Error - Firebase Storage needs CORS configuration for:', window.location.origin);
+              } else {
+                setError('فشل في رفع الملف: ' + error.message);
+              }
+              
               setUploading(false);
               reject(error);
             },

@@ -20,6 +20,7 @@ export interface SearchFilters {
     start: string;
     end: string;
   };
+  visitStatus: 'all' | 'hasPlanned' | 'hasEmergency' | 'hasCompleted' | 'noVisits' | 'hasAnyVisits';
   sortBy: string;
   sortDirection: 'asc' | 'desc';
 }
@@ -37,6 +38,7 @@ export function useSearch<T>(data: T[], searchConfig: {
   cityField?: keyof T;
   teamMemberField?: keyof T;
   dateField?: keyof T;
+  defaultSortField?: string;
   contractFields?: {
     fireExtinguisher?: keyof T;
     alarmSystem?: keyof T;
@@ -55,9 +57,12 @@ export function useSearch<T>(data: T[], searchConfig: {
     regularVisits: { min: '', max: '' },
     emergencyVisits: { min: '', max: '' },
     dateRange: { start: '', end: '' },
-    sortBy: 'name',
+    visitStatus: 'all',
+    sortBy: searchConfig.defaultSortField || 'id',
     sortDirection: 'asc'
   });
+
+
 
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
 
@@ -89,15 +94,25 @@ export function useSearch<T>(data: T[], searchConfig: {
     // Text search across specified fields
     if (filters.searchTerm.trim()) {
       const searchTerm = filters.searchTerm.toLowerCase();
+      console.log('🔍 useSearch: Searching for:', searchTerm, 'in fields:', searchConfig.searchFields);
+      console.log('🔍 useSearch: Total items before search:', result.length);
+      
       result = result.filter(item => {
-        return searchConfig.searchFields.some(field => {
+        const matches = searchConfig.searchFields.some(field => {
           const value = item[field];
           if (typeof value === 'string') {
-            return value.toLowerCase().includes(searchTerm);
+            const fieldMatches = value.toLowerCase().includes(searchTerm);
+            if (fieldMatches) {
+              console.log('🔍 useSearch: Match found in field', field, ':', value);
+            }
+            return fieldMatches;
           }
           return false;
         });
+        return matches;
       });
+      
+      console.log('🔍 useSearch: Items after search:', result.length);
     }
 
     // Status filter
@@ -248,6 +263,31 @@ export function useSearch<T>(data: T[], searchConfig: {
       });
     }
 
+    // Visit status filter
+    if (filters.visitStatus !== 'all') {
+      result = result.filter(item => {
+        const hasPlannedVisits = Boolean(item['hasPlannedVisits' as keyof T]);
+        const hasEmergencyVisits = Boolean(item['hasEmergencyVisits' as keyof T]);
+        const hasCompletedVisits = Boolean(item['hasCompletedVisits' as keyof T]);
+        const hasAnyVisits = hasPlannedVisits || hasEmergencyVisits || hasCompletedVisits;
+
+        switch (filters.visitStatus) {
+          case 'hasPlanned':
+            return hasPlannedVisits;
+          case 'hasEmergency':
+            return hasEmergencyVisits;
+          case 'hasCompleted':
+            return hasCompletedVisits;
+          case 'noVisits':
+            return !hasAnyVisits;
+          case 'hasAnyVisits':
+            return hasAnyVisits;
+          default:
+            return true;
+        }
+      });
+    }
+
     // Date range filter
     if ((filters.dateRange.start || filters.dateRange.end) && searchConfig.dateField) {
       result = result.filter(item => {
@@ -356,6 +396,7 @@ export function useSearch<T>(data: T[], searchConfig: {
       regularVisits: { min: '', max: '' },
       emergencyVisits: { min: '', max: '' },
       dateRange: { start: '', end: '' },
+      visitStatus: 'all',
       sortBy: 'name',
       sortDirection: 'asc'
     });

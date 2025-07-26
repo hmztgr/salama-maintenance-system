@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Upload, X, FileIcon, ImageIcon, FileTextIcon, Trash2 } from 'lucide-react';
+import { Upload, X, FileIcon, ImageIcon, FileTextIcon, Trash2, Eye } from 'lucide-react';
 import { useFirebaseStorage, UploadedFile, UploadOptions, FileUploadProgress } from '@/hooks/useFirebaseStorage';
+import { FileViewer } from '@/components/ui/file-viewer';
 
 export interface FileUploadProps {
   onFilesUploaded?: (files: UploadedFile[]) => void;
@@ -39,7 +40,13 @@ export function FileUpload({
   const [dragActive, setDragActive] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(existingFiles);
+
+  // Update uploadedFiles when existingFiles prop changes
+  useEffect(() => {
+    setUploadedFiles(existingFiles);
+  }, [existingFiles]);
   const [uploadProgress, setUploadProgress] = useState<{ [fileName: string]: number }>({});
+  const [viewingFile, setViewingFile] = useState<UploadedFile | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -143,12 +150,13 @@ export function FileUpload({
       const uploaded = await uploadFiles(selectedFiles, uploadOptions);
       
       // Update state
-      setUploadedFiles(prev => [...prev, ...uploaded]);
+      const newUploadedFiles = [...uploadedFiles, ...uploaded];
+      setUploadedFiles(newUploadedFiles);
       setSelectedFiles([]);
       setUploadProgress({});
       
-      // Notify parent component
-      onFilesUploaded?.(uploaded);
+      // Notify parent component with ALL files (existing + new)
+      onFilesUploaded?.(newUploadedFiles);
       
       console.log('✅ All files uploaded successfully');
     } catch (err) {
@@ -203,6 +211,9 @@ export function FileUpload({
             الحد الأقصى: {maxFiles} ملفات، {maxSize}MB لكل ملف
           </p>
           <p className="text-xs text-gray-400 mt-1">
+            {multiple ? 'يمكن اختيار عدة ملفات مرة واحدة' : 'ملف واحد فقط'}
+          </p>
+          <p className="text-xs text-gray-400">
             الأنواع المدعومة: {allowedTypes.join(', ')}
           </p>
         </CardContent>
@@ -222,7 +233,17 @@ export function FileUpload({
       {/* Error Display */}
       {error && (
         <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>
+            {error}
+            {error.includes('CORS') && (
+              <div className="mt-2 text-sm">
+                <p>🔧 <strong>CORS Configuration Required:</strong></p>
+                <p>Firebase Storage needs CORS configuration for your domain.</p>
+                <p>Please follow the instructions in FIREBASE_CORS_SETUP.md</p>
+                <p>For now, you can test file uploads locally (localhost:3000)</p>
+              </div>
+            )}
+          </AlertDescription>
         </Alert>
       )}
 
@@ -288,7 +309,7 @@ export function FileUpload({
                     <p className="font-medium text-sm">{file.name}</p>
                     <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
                     <Badge variant="secondary" className="text-xs mt-1">
-                      {new Date(file.uploadedAt).toLocaleDateString('ar-SA')}
+                      {new Date(file.uploadedAt).toLocaleDateString('en-GB')}
                     </Badge>
                   </div>
                 </div>
@@ -296,8 +317,9 @@ export function FileUpload({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => window.open(file.url, '_blank')}
+                    onClick={() => setViewingFile(file)}
                   >
+                    <Eye className="w-4 h-4" />
                     عرض
                   </Button>
                   <Button
@@ -313,6 +335,15 @@ export function FileUpload({
             ))}
           </div>
         </div>
+      )}
+
+      {/* File Viewer Modal */}
+      {viewingFile && (
+        <FileViewer
+          file={viewingFile}
+          isOpen={!!viewingFile}
+          onClose={() => setViewingFile(null)}
+        />
       )}
     </div>
   );

@@ -10,6 +10,7 @@ export interface UserInvitation {
   type: InvitationType;
   email?: string; // For email invitations
   role: UserRole;
+  permissionGroups?: string[]; // Permission group IDs
   invitedBy: string; // User ID of who sent the invitation
   invitedByName: string; // Display name of who sent the invitation
   customMessage?: string;
@@ -43,7 +44,8 @@ export interface UserInvitation {
 export interface InvitationFormData {
   type: InvitationType;
   email?: string;
-  role: UserRole;
+  role?: UserRole; // Made optional since we're using permission groups
+  permissionGroups?: string[];
   customMessage?: string;
   expirationDays: number;
   usageLimit?: number;

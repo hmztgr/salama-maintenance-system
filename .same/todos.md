@@ -158,3 +158,23 @@
 - Password: admin123456
 
 **Status: Phase 1 nearly complete - Firebase CRUD migration 75% done!** 🔥
+
+## 🎯 **AUTOMATED VISIT PLANNER ENHANCEMENTS** (PENDING)
+
+### **Current Status**: ✅ Basic functionality working, needs enhancements
+- ✅ **Core Algorithm**: Visit planning algorithm working correctly
+- ✅ **Multi-branch Selection**: Search, sort, and filter working
+- ✅ **Visit Generation**: Successfully creates planned visits
+- ✅ **Integration**: Works with Annual Scheduler
+
+### **Enhancements Needed**:
+- [ ] **Algorithm Optimization**: Improve visit distribution logic
+- [ ] **Conflict Resolution**: Better handling of overlapping visits
+- [ ] **Performance**: Optimize for large datasets (1000+ branches)
+- [ ] **User Feedback**: Add progress indicators and detailed results
+- [ ] **Validation**: Better validation of contract dates and visit requirements
+- [ ] **Customization**: Allow users to set planning preferences
+- [ ] **Bulk Operations**: Support for planning across multiple companies
+- [ ] **Export Results**: Export planning results to Excel/PDF
+
+### **Priority**: Medium - Functional but needs refinement for production use

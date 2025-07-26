@@ -13,6 +13,8 @@ import { AlertCircle, CheckCircle, Save, X, Plus, Trash2, Building, MapPin } fro
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Contract, Company, Branch, ContractServiceBatch } from '@/types/customer';
 import { convertInputDateToStandard, parseStandardDate } from '@/lib/date-handler';
+import { FileUpload } from '@/components/common/FileUpload';
+import { UploadedFile } from '@/hooks/useFirebaseStorage';
 
 interface EnhancedContractFormProps {
   contract?: Contract;
@@ -38,11 +40,23 @@ export function EnhancedContractForm({
     contractPeriodMonths: contract?.contractPeriodMonths || 12,
     contractValue: contract?.contractValue || 0,
     notes: contract?.notes || '',
-    contractDocument: undefined as File | undefined,
   });
 
   const [serviceBatches, setServiceBatches] = useState<ContractServiceBatch[]>(
     contract?.serviceBatches || []
+  );
+
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(
+    contract?.contractDocument && typeof contract.contractDocument === 'string'
+      ? [{
+          name: 'Contract Document',
+          url: contract.contractDocument,
+          path: 'contracts/' + contract.contractId,
+          size: 0,
+          type: 'application/pdf',
+          uploadedAt: new Date().toISOString(),
+        }]
+      : []
   );
 
   const [currentBatch, setCurrentBatch] = useState<Partial<ContractServiceBatch>>({
@@ -84,13 +98,24 @@ export function EnhancedContractForm({
         contractPeriodMonths: contract.contractPeriodMonths || 12,
         contractValue: contract.contractValue || 0,
         notes: contract.notes || '',
-        contractDocument: undefined, // File objects can't be restored
       });
 
       // Update service batches
       if (contract.serviceBatches) {
         console.log('📦 Setting service batches from contract:', contract.serviceBatches);
         setServiceBatches(contract.serviceBatches);
+      }
+
+      // Set uploaded files if contract has documents
+      if (contract.contractDocument && typeof contract.contractDocument === 'string') {
+        setUploadedFiles([{
+          name: 'Contract Document',
+          url: contract.contractDocument,
+          path: 'contracts/' + contract.contractId,
+          size: 0,
+          type: 'application/pdf',
+          uploadedAt: new Date().toISOString(),
+        }]);
       }
     }
   }, [contract]);
@@ -198,29 +223,14 @@ export function EnhancedContractForm({
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
-
-    // Reset batches when company changes
-    if (field === 'companyId') {
-      setServiceBatches([]);
-      setCurrentBatch({
-        branchIds: [],
-        services: {
-          fireExtinguisherMaintenance: false,
-          alarmSystemMaintenance: false,
-          fireSuppressionMaintenance: false,
-          gasFireSuppression: false,
-          foamFireSuppression: false,
-        },
-        regularVisitsPerYear: 12,
-        emergencyVisitsPerYear: 0, // Reset to 0 for emergency visits
-        emergencyVisitCost: 0, // Reset cost for additional emergency visits
-        notes: '',
-      });
-    }
   };
 
-  const handleFileChange = (file: File | null) => {
-    setFormData(prev => ({ ...prev, contractDocument: file || undefined }));
+  const handleFilesUploaded = (files: UploadedFile[]) => {
+    setUploadedFiles(prev => [...prev, ...files]);
+  };
+
+  const handleFileDeleted = (filePath: string) => {
+    setUploadedFiles(prev => prev.filter(file => file.path !== filePath));
   };
 
   const handleBranchToggle = (branchId: string) => {
@@ -303,13 +313,15 @@ export function EnhancedContractForm({
     const contractData = {
       ...formData,
       serviceBatches,
+      ...(uploadedFiles.length > 0 && { contractDocument: uploadedFiles[0].url }),
     };
 
     console.log('🚀 EnhancedContractForm - Submitting contract data:', {
       isEditing,
       contractData,
       serviceBatchesCount: serviceBatches.length,
-      serviceBatches
+      serviceBatches,
+      uploadedFiles: uploadedFiles.length
     });
 
     try {
@@ -417,18 +429,18 @@ export function EnhancedContractForm({
                       )}
                     </div>
                   ) : (
-                    <div>
-                      <Label htmlFor="contractEndDate">تاريخ نهاية العقد *</Label>
-                      <Input
-                        id="contractEndDate"
-                        type="date"
-                        value={formData.contractEndDate ? parseStandardDate(formData.contractEndDate)?.toISOString().split('T')[0] : ''}
-                        onChange={(e) => handleInputChange('contractEndDate', e.target.value)}
-                        className={errors.contractEndDate ? 'border-red-500' : ''}
+                <div>
+                  <Label htmlFor="contractEndDate">تاريخ نهاية العقد *</Label>
+                  <Input
+                    id="contractEndDate"
+                    type="date"
+                    value={formData.contractEndDate ? parseStandardDate(formData.contractEndDate)?.toISOString().split('T')[0] : ''}
+                    onChange={(e) => handleInputChange('contractEndDate', e.target.value)}
+                    className={errors.contractEndDate ? 'border-red-500' : ''}
                         disabled={isLoading}
-                      />
-                      {errors.contractEndDate && (
-                        <p className="text-red-500 text-xs mt-1">{errors.contractEndDate}</p>
+                  />
+                  {errors.contractEndDate && (
+                    <p className="text-red-500 text-xs mt-1">{errors.contractEndDate}</p>
                       )}
                     </div>
                   )}
@@ -450,9 +462,12 @@ export function EnhancedContractForm({
                   <Label htmlFor="contractValue">قيمة العقد (ريال سعودي)</Label>
                   <Input
                     id="contractValue"
-                    type="number"
-                    value={formData.contractValue}
-                    onChange={(e) => handleInputChange('contractValue', parseFloat(e.target.value) || 0)}
+                    type="text"
+                    value={formData.contractValue || ''}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9]/g, '');
+                      handleInputChange('contractValue', value ? parseInt(value, 10) : 0);
+                    }}
                     placeholder="0"
                     disabled={isLoading}
                   />
@@ -461,11 +476,13 @@ export function EnhancedContractForm({
                 {/* File Upload */}
                 <div>
                   <Label htmlFor="contractDocument">وثيقة العقد</Label>
-                  <Input
-                    id="contractDocument"
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    onChange={(e) => handleFileChange(e.target.files?.[0] || null)}
+                  <FileUpload
+                    onFilesUploaded={handleFilesUploaded}
+                    onFileDeleted={handleFileDeleted}
+                    existingFiles={uploadedFiles}
+                    maxFiles={1}
+                    allowedTypes={['pdf', 'doc', 'docx']}
+                    folder={contract ? `contracts/${contract.contractId}/documents` : 'contracts/temp'}
                     disabled={isLoading}
                   />
                 </div>
@@ -791,4 +808,4 @@ export function EnhancedContractForm({
       </Card>
     </div>
   );
-}
+} 

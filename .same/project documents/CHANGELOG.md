@@ -5,6 +5,106 @@ All notable changes to the Salama Maintenance Scheduler project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Version 56] - 2025-01-18
+### 🚀 **ENHANCED HISTORICAL VISIT IMPORT SYSTEM - FIREBASE INTEGRATION**
+- 🔄 **COMPLETE VISIT IMPORT REWRITE** - Modernized visit import system to align with current Visit interface
+- 🔥 **FIREBASE INTEGRATION** - Full integration with useVisitsFirebase hook for real-time data persistence
+- 📊 **ENHANCED VALIDATION ENGINE** - Comprehensive validation against companies, contracts, branches, and service batches
+- 🎯 **CONTRACT SERVICE BATCH VALIDATION** - Validates visit services against contract service batches
+- 📈 **IMPORT PROGRESS TRACKING** - Real-time progress tracking with detailed status messages
+- 🗑️ **EMPTY ROW FILTERING** - Automatically skips empty rows to prevent processing errors
+- 📋 **ENHANCED ERROR REPORTING** - Detailed error classification with actionable suggestions
+
+### Technical Implementation
+```typescript
+// NEW: Firebase-integrated visit import
+const visitData: Omit<Visit, 'id' | 'visitId' | 'isArchived' | 'createdAt' | 'updatedAt'> = {
+  branchId: row.data.branchId,
+  contractId: row.data.contractId,
+  companyId: row.data.companyId,
+  type: row.data.visitType as 'regular' | 'emergency' | 'followup',
+  status: row.data.status as 'scheduled' | 'in_progress' | 'completed' | 'cancelled' | 'rescheduled',
+  scheduledDate: row.data.scheduledDate,
+  services: {
+    fireExtinguisher: row.data.fireExtinguisher === 'نعم' || row.data.fireExtinguisher === 'yes',
+    alarmSystem: row.data.alarmSystem === 'نعم' || row.data.alarmSystem === 'yes',
+    // ... other services
+  },
+  results: row.data.overallStatus ? {
+    overallStatus: row.data.overallStatus as 'passed' | 'failed' | 'partial',
+    issues: row.data.issues ? [row.data.issues] : undefined,
+    // ... other results
+  } : undefined,
+  createdBy: row.data.createdBy || 'system-import'
+};
+
+const result = await addVisit(visitData);
+```
+
+### Enhanced Features
+- **Modern Visit Interface**: Aligned with current Visit type structure
+- **Service Batch Validation**: Ensures visit services match contract service batches
+- **Relationship Validation**: Validates branch-company-contract relationships
+- **Business Logic Validation**: Enforces rules like "completed visits must have results"
+- **Progress Tracking**: Real-time import progress with status messages
+- **Error Recovery**: Detailed error reporting with specific row and field information
+- **Bulk Import**: Efficient batch processing with Firebase rate limiting
+
+### Files Modified
+- **VisitImportTemplate.tsx**: Complete rewrite with modern field structure
+- **VisitImportReview.tsx**: Complete rewrite with Firebase integration
+- **Import Validation**: Enhanced validation engine with business logic
+- **Template Generation**: Updated CSV template with current field structure
+
+### Benefits Achieved
+- ✅ **Firebase Integration**: Real-time data persistence with proper error handling
+- ✅ **Modern Architecture**: Aligned with current weekly planner system
+- ✅ **Comprehensive Validation**: Validates all relationships and business rules
+- ✅ **User Experience**: Progress tracking and detailed error reporting
+- ✅ **Data Integrity**: Ensures imported visits match existing system structure
+- ✅ **Scalability**: Efficient bulk import with proper rate limiting
+
+## [Version 55] - 2025-01-18
+### 🗓️ **COMPREHENSIVE DATE VALIDATION ENHANCEMENT**
+- 🐛 **FIXED DATE FORMAT VALIDATION** - Enhanced import validation to support flexible date formats
+- 📅 **SUPPORT FOR 2-DIGIT AND 4-DIGIT YEARS** - Fixed CSV year conversion issue where yyyy becomes yy
+- 🔢 **SUPPORT FOR SINGLE AND DOUBLE-DIGIT DAYS** - Fixed validation to accept both d and dd day formats
+- 📋 **ENHANCED ERROR MESSAGES** - Updated validation messages with comprehensive format examples
+- 🎯 **CONTRACT IMPORT FIXES** - Both simple and advanced contract imports now support flexible dates
+- 🏢 **VISIT IMPORT FIXES** - All visit date fields now support flexible date formats
+
+### Technical Implementation
+```typescript
+// ENHANCED: Date validation patterns for maximum flexibility
+// Before: /^\d{2}-[A-Za-z]{3}-\d{4}$/ (only dd-mmm-yyyy)
+// After:  /^\d{1,2}-[A-Za-z]{3}-\d{2,4}$/ (supports d/dd-mmm-yy/yyyy)
+
+// Supported formats:
+// Single-digit days: 1-Sep-2024, 5-Aug-25
+// Double-digit days: 01-Sep-2024, 15-Aug-25
+// 4-digit years: 1-Sep-2024, 01-Sep-2024
+// 2-digit years: 1-Sep-24, 01-Sep-24
+```
+
+### Files Modified
+- **Import Validation**: `ImportReview.tsx` - Enhanced contract date validation
+- **Visit Validation**: `VisitImportReview.tsx` - Enhanced visit date validation  
+- **Template Documentation**: `ImportTemplate.tsx` - Updated format descriptions
+- **Visit Template Documentation**: `VisitImportTemplate.tsx` - Updated format descriptions
+
+### Benefits Achieved
+- ✅ **CSV Compatibility**: Works with Excel/CSV automatic date format conversion
+- ✅ **User Flexibility**: No need to manually format dates - system accepts common variations
+- ✅ **16 Valid Formats**: Supports all common date format combinations
+- ✅ **Clear Guidance**: Comprehensive error messages with specific examples
+- ✅ **Backward Compatible**: Still accepts all previously supported formats
+
+### Supported Date Formats (16 total)
+- `1-Sep-2024`, `01-Sep-2024`, `1-Sep-24`, `01-Sep-24`
+- `15-Jan-2024`, `15-Jan-24`, `5-Jan-2024`, `5-Jan-24`
+- `31-Aug-2025`, `31-Aug-25`, `1-Aug-2025`, `1-Aug-25`
+- And all other valid day/month/year combinations
+
 ## [Version 54] - 2025-01-12
 ### 🚨 CRITICAL FIXES: Date Parsing & Customer Management UI Restoration
 - 🐛 **FIXED VISIT DATE PARSING** - Fixed "Invalid Date" issue in demo data generator that prevented visits from appearing in schedule

@@ -10,7 +10,7 @@ import { Company, Contract, Branch } from '@/types/customer';
 import { formatDateForDisplay } from '@/lib/date-handler';
 
 interface ExportTemplateProps {
-  entityType: 'companies' | 'contracts' | 'branches';
+  entityType: 'companies' | 'contracts' | 'contractsAdvanced' | 'branches';
   data: Company[] | Contract[] | Branch[];
   onClose?: () => void;
 }
@@ -73,6 +73,23 @@ export function ExportTemplate({ entityType, data, onClose }: ExportTemplateProp
         { key: 'createdAt', label: 'تاريخ الإنشاء', required: false }
       ]
     },
+    contractsAdvanced: {
+      title: 'تصدير بيانات العقود المتقدمة',
+      description: 'تصدير بيانات العقود المتقدمة مع مجموعات الخدمات والفروع',
+      availableFields: [
+        { key: 'contractId', label: 'معرف العقد', required: true },
+        { key: 'companyId', label: 'معرف الشركة', required: true },
+        { key: 'contractStartDate', label: 'تاريخ بداية العقد', required: true },
+        { key: 'contractEndDate', label: 'تاريخ انتهاء العقد', required: false },
+        { key: 'contractPeriodMonths', label: 'مدة العقد (بالأشهر)', required: false },
+        { key: 'contractValue', label: 'قيمة العقد', required: false },
+        { key: 'serviceBatches', label: 'مجموعات الخدمات', required: false },
+        { key: 'totalBranches', label: 'عدد الفروع', required: false },
+        { key: 'totalServices', label: 'عدد الخدمات', required: false },
+        { key: 'notes', label: 'ملاحظات العقد', required: false },
+        { key: 'createdAt', label: 'تاريخ الإنشاء', required: false }
+      ]
+    },
     branches: {
       title: 'تصدير بيانات الفروع',
       description: 'تصدير بيانات الفروع مع تفاصيل المواقع والعقود',
@@ -130,6 +147,45 @@ export function ExportTemplate({ entityType, data, onClose }: ExportTemplateProp
     // Handle array values (like contractIds)
     if (Array.isArray(value)) {
       return value.join(',');
+    }
+
+    // Handle serviceBatches for advanced contracts
+    if (fieldKey === 'serviceBatches' && Array.isArray(value)) {
+      return value.map((batch: any) => {
+        const services = Object.entries(batch.services || {})
+          .filter(([_, enabled]) => enabled)
+          .map(([service, _]) => service)
+          .join(',');
+        return `${batch.branchIds?.join(',') || ''}:${services}`;
+      }).join(';');
+    }
+
+    // Handle totalBranches calculation for advanced contracts
+    if (fieldKey === 'totalBranches' && entityType === 'contractsAdvanced') {
+      const contract = item as Contract;
+      if (contract.serviceBatches) {
+        const allBranchIds = new Set<string>();
+        contract.serviceBatches.forEach(batch => {
+          batch.branchIds?.forEach(branchId => allBranchIds.add(branchId));
+        });
+        return allBranchIds.size.toString();
+      }
+      return '0';
+    }
+
+    // Handle totalServices calculation for advanced contracts
+    if (fieldKey === 'totalServices' && entityType === 'contractsAdvanced') {
+      const contract = item as Contract;
+      if (contract.serviceBatches) {
+        const allServices = new Set<string>();
+        contract.serviceBatches.forEach(batch => {
+          Object.entries(batch.services || {}).forEach(([service, enabled]) => {
+            if (enabled) allServices.add(service);
+          });
+        });
+        return allServices.size.toString();
+      }
+      return '0';
     }
 
     // Handle date formatting

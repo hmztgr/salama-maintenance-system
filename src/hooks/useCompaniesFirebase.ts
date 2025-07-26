@@ -19,20 +19,31 @@ import { db } from '@/lib/firebase/config';
 import { useAuth } from '@/contexts/AuthContextFirebase';
 import { Company } from '@/types/customer';
 import { generateCompanyId } from '@/lib/id-generator';
+import { useFirebaseStorage } from './useFirebaseStorage';
 export function useCompaniesFirebase() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { authState } = useAuth();
+  const { uploadFile } = useFirebaseStorage();
   const unsubscribeRef = useRef<Unsubscribe | null>(null);
   const isListenerActiveRef = useRef(false);
   const componentMountedRef = useRef(true);
   // Real-time listener for companies with robust conflict prevention
   useEffect(() => {
+    console.log('🏢 Companies useEffect triggered:', {
+      hasUser: !!authState.user,
+      userId: authState.user?.uid,
+      isListenerActive: isListenerActiveRef.current,
+      hasUnsubscribe: !!unsubscribeRef.current
+    });
+    
     if (!authState.user) {
+      console.log('🏢 No user, setting loading to false');
       setLoading(false);
       return;
     }
+    
     // Prevent multiple listeners and ensure cleanup
     if (isListenerActiveRef.current && unsubscribeRef.current) {
       console.log('🏢 Listener already active, cleaning up first...');
@@ -47,6 +58,8 @@ export function useCompaniesFirebase() {
       }, 500);
       return;
     }
+    
+    console.log('🏢 Setting up initial listener...');
     setupListener();
     function setupListener() {
       if (!componentMountedRef.current) return;
@@ -62,19 +75,35 @@ export function useCompaniesFirebase() {
           const companiesData = snapshot.docs
             .map(doc => {
               const data = doc.data();
-              return {
+              console.log('📁 Raw Firebase data for company:', doc.id, data);
+              const mappedCompany = {
                 id: doc.id,
                 companyId: data.companyId,
                 companyName: data.companyName,
                 unifiedNumber: data.unifiedNumber || '',
+                commercialRegistration: data.commercialRegistration || '',
+                commercialRegistrationFile: data.commercialRegistrationFile || '',
+                vatNumber: data.vatNumber || '',
+                vatFile: data.vatFile || '',
+                nationalAddressFile: data.nationalAddressFile || '',
                 email: data.email || '',
                 phone: data.phone || '',
+                mobile: data.mobile || '',
                 address: data.address || '',
+                website: data.website || '',
                 contactPerson: data.contactPerson || '',
+                contactPersonTitle: data.contactPersonTitle || '',
+                notes: data.notes || '',
                 isArchived: data.isArchived || false,
                 createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : data.createdAt,
                 updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate().toISOString() : data.updatedAt,
               } as Company;
+              console.log('📁 Mapped company data:', mappedCompany.companyId, {
+                commercialRegistrationFile: mappedCompany.commercialRegistrationFile,
+                vatFile: mappedCompany.vatFile,
+                nationalAddressFile: mappedCompany.nationalAddressFile
+              });
+              return mappedCompany;
             })
             .filter(company => !company.isArchived);
           setCompanies(companiesData);
@@ -101,19 +130,35 @@ export function useCompaniesFirebase() {
                 const companiesData = snapshot.docs
                   .map(doc => {
                     const data = doc.data();
-                    return {
+                    console.log('📁 Raw Firebase data (fallback) for company:', doc.id, data);
+                    const mappedCompany = {
                       id: doc.id,
                       companyId: data.companyId,
                       companyName: data.companyName,
                       unifiedNumber: data.unifiedNumber || '',
+                      commercialRegistration: data.commercialRegistration || '',
+                      commercialRegistrationFile: data.commercialRegistrationFile || '',
+                      vatNumber: data.vatNumber || '',
+                      vatFile: data.vatFile || '',
+                      nationalAddressFile: data.nationalAddressFile || '',
                       email: data.email || '',
                       phone: data.phone || '',
+                      mobile: data.mobile || '',
                       address: data.address || '',
+                      website: data.website || '',
                       contactPerson: data.contactPerson || '',
+                      contactPersonTitle: data.contactPersonTitle || '',
+                      notes: data.notes || '',
                       isArchived: data.isArchived || false,
                       createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : data.createdAt,
                       updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate().toISOString() : data.updatedAt,
                     } as Company;
+                    console.log('📁 Mapped company data (fallback):', mappedCompany.companyId, {
+                      commercialRegistrationFile: mappedCompany.commercialRegistrationFile,
+                      vatFile: mappedCompany.vatFile,
+                      nationalAddressFile: mappedCompany.nationalAddressFile
+                    });
+                    return mappedCompany;
                   })
                   .filter(company => !company.isArchived);
                 setCompanies(companiesData);
@@ -136,7 +181,11 @@ export function useCompaniesFirebase() {
       unsubscribeRef.current = unsubscribe;
     }
     return () => {
-      console.log('🏢 Cleaning up companies listener...');
+      console.log('🏢 Cleaning up companies listener...', {
+        componentMounted: componentMountedRef.current,
+        hasUnsubscribe: !!unsubscribeRef.current,
+        isListenerActive: isListenerActiveRef.current
+      });
       componentMountedRef.current = false;
       if (unsubscribeRef.current) {
         unsubscribeRef.current();
@@ -144,7 +193,7 @@ export function useCompaniesFirebase() {
       }
       isListenerActiveRef.current = false;
     };
-  }, [authState.user]);
+  }, [authState.user?.uid || authState.user?.email]); // Use user ID or email as fallback
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -169,20 +218,98 @@ export function useCompaniesFirebase() {
             warnings: ['لا يمكن تحديد هوية المستخدم - تأكد من تسجيل الدخول']
           };
         }
+
+        // Handle file uploads
+        const warnings: string[] = [];
+        let commercialRegistrationUrl = '';
+        let vatFileUrl = '';
+        let nationalAddressFileUrl = '';
+
+        console.log('📁 Processing file data from CompanyForm:', {
+          commercialRegistrationFile: companyData.commercialRegistrationFile,
+          vatFile: companyData.vatFile,
+          nationalAddressFile: companyData.nationalAddressFile
+        });
+
+        // Handle file data from CompanyForm (pipe-separated URLs)
+        if (companyData.commercialRegistrationFile && typeof companyData.commercialRegistrationFile === 'string') {
+          commercialRegistrationUrl = companyData.commercialRegistrationFile;
+          console.log('📁 Using commercial registration URL:', commercialRegistrationUrl);
+        } else if (companyData.commercialRegistrationFile && companyData.commercialRegistrationFile instanceof File) {
+          try {
+            console.log('📤 Uploading commercial registration file...');
+            const uploadedFile = await uploadFile(companyData.commercialRegistrationFile, {
+              folder: `companies/${companyId}/documents`,
+              customName: 'commercial_registration'
+            });
+            commercialRegistrationUrl = uploadedFile.url;
+          } catch (error) {
+            warnings.push(`فشل في رفع السجل التجاري: ${error}`);
+          }
+        }
+
+        if (companyData.vatFile && typeof companyData.vatFile === 'string') {
+          vatFileUrl = companyData.vatFile;
+          console.log('📁 Using VAT file URL:', vatFileUrl);
+        } else if (companyData.vatFile && companyData.vatFile instanceof File) {
+        try {
+            console.log('📤 Uploading VAT file...');
+            const uploadedFile = await uploadFile(companyData.vatFile, {
+              folder: `companies/${companyId}/documents`,
+              customName: 'vat_certificate'
+            });
+            vatFileUrl = uploadedFile.url;
+          } catch (error) {
+            warnings.push(`فشل في رفع شهادة الضريبة: ${error}`);
+          }
+        }
+
+        if (companyData.nationalAddressFile && typeof companyData.nationalAddressFile === 'string') {
+          nationalAddressFileUrl = companyData.nationalAddressFile;
+          console.log('📁 Using national address file URL:', nationalAddressFileUrl);
+        } else if (companyData.nationalAddressFile && companyData.nationalAddressFile instanceof File) {
+        try {
+            console.log('📤 Uploading national address file...');
+            const uploadedFile = await uploadFile(companyData.nationalAddressFile, {
+              folder: `companies/${companyId}/documents`,
+              customName: 'national_address'
+            });
+            nationalAddressFileUrl = uploadedFile.url;
+          } catch (error) {
+            warnings.push(`فشل في رفع العنوان الوطني: ${error}`);
+          }
+        }
+
         const now = new Date().toISOString();
         const newCompanyData = {
           companyId,
           companyName: companyData.companyName,
           unifiedNumber: companyData.unifiedNumber || '',
+          commercialRegistration: companyData.commercialRegistration || '',
+          commercialRegistrationFile: commercialRegistrationUrl,
+          vatNumber: companyData.vatNumber || '',
+          vatFile: vatFileUrl,
+          nationalAddressFile: nationalAddressFileUrl,
           email: companyData.email || '',
           phone: companyData.phone || '',
+          mobile: companyData.mobile || '',
           address: companyData.address || '',
+          website: companyData.website || '',
           contactPerson: companyData.contactPerson || '',
+          contactPersonTitle: companyData.contactPersonTitle || '',
+          notes: companyData.notes || '',
           isArchived: false,
           createdAt: now,
           updatedAt: now,
           createdBy: userId,
         };
+        
+        console.log('📁 Saving company data to Firebase with files:', {
+          commercialRegistrationFile: newCompanyData.commercialRegistrationFile,
+          vatFile: newCompanyData.vatFile,
+          nationalAddressFile: newCompanyData.nationalAddressFile
+        });
+        
         const docRef = await addDoc(collection(db, 'companies'), newCompanyData);
         console.log('✅ Company added to Firebase with ID:', docRef.id);
         const newCompany: Company = {
@@ -193,7 +320,8 @@ export function useCompaniesFirebase() {
         };
         return {
           success: true,
-          company: newCompany
+          company: newCompany,
+          warnings: warnings.length > 0 ? warnings : undefined
         };
       } catch (error) {
         console.error('❌ Error adding company to Firebase:', error);
@@ -203,7 +331,7 @@ export function useCompaniesFirebase() {
         };
       }
     },
-    [companies, authState.user]
+    [companies, authState.user, uploadFile]
   );
   const updateCompany = useCallback(
     async (
@@ -223,11 +351,41 @@ export function useCompaniesFirebase() {
         if (!userId) {
           return { success: false, warnings: ['لا يمكن تحديد هوية المستخدم'] };
         }
+
+        // Handle file uploads
+        const warnings: string[] = [];
+        let commercialRegistrationUrl = company.commercialRegistrationFile || '';
+        let vatFileUrl = company.vatFile || '';
+        let nationalAddressFileUrl = company.nationalAddressFile || '';
+
+        // Process file uploads if they are provided as strings (from FileUpload component)
+        if (updates.commercialRegistrationFile && typeof updates.commercialRegistrationFile === 'string') {
+          commercialRegistrationUrl = updates.commercialRegistrationFile;
+        }
+        if (updates.vatFile && typeof updates.vatFile === 'string') {
+          vatFileUrl = updates.vatFile;
+        }
+        if (updates.nationalAddressFile && typeof updates.nationalAddressFile === 'string') {
+          nationalAddressFileUrl = updates.nationalAddressFile;
+        }
+
+        // Filter out file fields from updates since we handle them separately
+        const { commercialRegistrationFile, vatFile, nationalAddressFile, ...otherUpdates } = updates;
+        
+        // Filter out undefined values to prevent Firebase errors
+        const filteredUpdates = Object.fromEntries(
+          Object.entries(otherUpdates).filter(([_, value]) => value !== undefined)
+        );
+        
         const updateData = {
-          ...updates,
+          ...filteredUpdates,
+          commercialRegistrationFile: commercialRegistrationUrl,
+          vatFile: vatFileUrl,
+          nationalAddressFile: nationalAddressFileUrl,
           updatedAt: new Date().toISOString(),
           lastModifiedBy: userId,
         };
+        
         await updateDoc(doc(db, 'companies', company.id), updateData);
         console.log('✅ Company updated in Firebase');
         return { success: true };

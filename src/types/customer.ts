@@ -34,10 +34,10 @@ export interface Company {
   companyName: string;
   unifiedNumber?: string;
   commercialRegistration?: string;
-  commercialRegistrationFile?: File;
+  commercialRegistrationFile?: File | string; // File for uploads, string URL for storage
   vatNumber?: string;
-  vatFile?: File;
-  nationalAddressFile?: File;
+  vatFile?: File | string; // File for uploads, string URL for storage
+  nationalAddressFile?: File | string; // File for uploads, string URL for storage
   email?: string;
   phone?: string;
   mobile?: string;
@@ -77,7 +77,7 @@ export interface Contract {
   contractStartDate: string; // Format: dd-mmm-yyyy
   contractEndDate: string; // Format: dd-mmm-yyyy
   contractPeriodMonths?: number;
-  contractDocument?: File;
+  contractDocument?: File | string; // File for uploads, string URL for storage
   contractValue?: number;
   notes?: string;
   // NEW: Service batches per branch instead of global services

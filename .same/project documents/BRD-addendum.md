@@ -83,20 +83,23 @@ This document extends the original BRD with additional requirements that were id
   - **Bulk Invitations**: Generate multiple invitation links simultaneously
   - **Link Management**: View, revoke, and regenerate invitation links
 
-#### **1.3.2 Advanced Role Management**
-- **REQ-USER-008**: Dynamic role assignment and modification
+#### **1.3.2 Advanced Role Management** ✅ **IMPLEMENTED**
+- **REQ-USER-008**: Dynamic role assignment and modification ✅ **COMPLETED**
   - **Role Changes**: Modify user roles with immediate effect
   - **Permission Preview**: Show users what permissions they will gain/lose
   - **Role History**: Track all role changes with timestamps and admin attribution
   - **Batch Operations**: Change roles for multiple users simultaneously
   - **Role Templates**: Pre-defined role configurations for common scenarios
+  - **Smart Role Determination**: Automatic role assignment based on permission groups
+  - **Role Selection UI**: Dropdown selection in user creation and invitations
 
-- **REQ-USER-009**: Custom permission management
+- **REQ-USER-009**: Custom permission management ✅ **COMPLETED**
   - **Granular Permissions**: Define specific permissions beyond basic roles
   - **Permission Groups**: Create custom permission sets for specialized users
   - **Temporary Permissions**: Grant time-limited elevated permissions
   - **Permission Inheritance**: Users can inherit permissions from multiple groups
   - **Permission Audit**: Track and log all permission changes
+  - **Role-Permission Integration**: Seamless integration between roles and permission groups
 
 #### **1.3.3 Self-Service User Features**
 - **REQ-USER-010**: Forgot password system
@@ -785,8 +788,1062 @@ This addendum extends the original BRD requirements without modifying existing s
 
 ---
 
+## 🆕 **NEW MODULE: Advanced UI Components & File Management**
+
+### **Module 10: Enhanced User Interface Components**
+
+#### **10.1 Advanced File Management System**
+- **REQ-FILE-001**: Comprehensive file upload and management system
+  - **FileUpload Component**: Drag-and-drop interface with progress tracking
+  - **FileViewer Component**: In-page file viewing for PDFs and images
+  - **Firebase Storage Integration**: Secure file storage with automatic organization
+  - **File Validation**: Size, type, and format validation with Arabic error messages
+  - **Progress Tracking**: Real-time upload progress with visual indicators
+
+- **REQ-FILE-002**: File organization and categorization
+  - **Automatic Folder Structure**: Files organized by entity type (companies, contracts, visits)
+  - **File Type Icons**: Visual indicators for different file types (PDF, images, documents)
+  - **File Metadata**: Upload timestamps, file sizes, and type information
+  - **Batch Operations**: Multiple file upload and deletion capabilities
+  - **File Preview**: Thumbnail generation for images and PDF previews
+
+- **REQ-FILE-003**: File security and access control
+  - **Role-Based File Access**: Different permissions for viewing and managing files
+  - **Secure File URLs**: Time-limited access tokens for file downloads
+  - **File Cleanup**: Automatic removal of orphaned files
+  - **Storage Quotas**: Per-user and per-entity file storage limits
+  - **Audit Trail**: Complete logging of file operations and access
+
+#### **10.2 Advanced Search and Filter Components**
+- **REQ-SEARCH-001**: SearchableSelect component with enhanced functionality
+  - **Real-time Search**: Instant filtering as user types
+  - **Keyboard Navigation**: Full keyboard support for accessibility
+  - **Multi-language Support**: Arabic RTL text handling
+  - **Custom Styling**: Configurable appearance and behavior
+  - **Error Handling**: Graceful handling of empty states and errors
+
+- **REQ-SEARCH-002**: SearchAndFilter component for complex data filtering
+  - **Multi-criteria Filtering**: Multiple filter conditions simultaneously
+  - **Saved Searches**: User-defined search configurations
+  - **Advanced Sorting**: Multi-column sorting with direction control
+  - **Filter Presets**: Pre-configured filter sets for common scenarios
+  - **Export Integration**: Filtered data export capabilities
+
+#### **10.3 Enhanced Form Components**
+- **REQ-FORM-001**: Multi-step form system for complex data entry
+  - **Step Navigation**: Progress indicators and step-by-step validation
+  - **Data Persistence**: Form data saved between steps
+  - **Validation Integration**: Real-time validation with Arabic error messages
+  - **Responsive Design**: Mobile-friendly form layouts
+  - **Accessibility**: Full keyboard navigation and screen reader support
+
+- **REQ-FORM-002**: Dynamic form generation based on data structure
+  - **Auto-generated Fields**: Form fields created from data schemas
+  - **Conditional Fields**: Fields that appear based on user selections
+  - **Field Dependencies**: Cascading field updates and validations
+  - **Custom Validators**: User-defined validation rules
+  - **Form Templates**: Reusable form configurations
+
+#### **10.4 Advanced Data Display Components**
+- **REQ-DISPLAY-001**: Enhanced data tables with advanced features
+  - **Bulk Selection**: Checkbox-based multi-row selection
+  - **Row Actions**: Context-sensitive actions for each row
+  - **Column Management**: Show/hide and reorder columns
+  - **Data Export**: Export selected or filtered data
+  - **Real-time Updates**: Live data updates without page refresh
+
+- **REQ-DISPLAY-002**: Detail view components with rich information display
+  - **Tabbed Interfaces**: Organized information display with tabs
+  - **Related Data**: Automatic loading and display of related entities
+  - **Action Buttons**: Quick access to common operations
+  - **Status Indicators**: Visual status and progress indicators
+  - **Responsive Layouts**: Adaptive layouts for different screen sizes
+
+### **Module 11: File Management Integration**
+
+#### **11.1 Contract Document Management**
+- **REQ-CONTDOC-001**: Contract document upload and management
+  - **Document Upload**: Support for PDF, Word, and image files
+  - **Document Organization**: Automatic categorization by contract type
+  - **Version Control**: Document version tracking and history
+  - **Document Preview**: In-page document viewing without download
+  - **Document Sharing**: Secure sharing with role-based permissions
+
+- **REQ-CONTDOC-002**: Contract document workflow
+  - **Document Approval**: Multi-step document approval process
+  - **Digital Signatures**: Electronic signature integration (future)
+  - **Document Templates**: Pre-defined document templates
+  - **Auto-generation**: Automatic document generation from contract data
+  - **Compliance Tracking**: Document compliance and expiry monitoring
+
+#### **11.2 Visit Documentation System**
+- **REQ-VISITDOC-001**: Visit photo and document management
+  - **Photo Upload**: High-quality visit photos with metadata
+  - **Document Attachments**: Technical reports and findings
+  - **Photo Organization**: Automatic organization by visit and location
+  - **Photo Annotation**: Markup and annotation tools for photos
+  - **Photo Sharing**: Secure sharing with customers and team members
+
+- **REQ-VISITDOC-002**: Visit report generation
+  - **Auto-generated Reports**: Reports created from visit data and photos
+  - **Custom Templates**: User-defined report templates
+  - **Multi-format Export**: PDF, Word, and HTML report formats
+  - **Report Scheduling**: Automated report generation and distribution
+  - **Report Archiving**: Long-term report storage and retrieval
+
+#### **11.3 Company Document Management**
+- **REQ-COMPDOC-001**: Company document organization
+  - **Document Categories**: Commercial registration, VAT certificates, contracts
+  - **Document Expiry Tracking**: Automatic expiry notifications
+  - **Document Validation**: Format and content validation
+  - **Document Search**: Full-text search across all documents
+  - **Document Backup**: Automatic backup and recovery
+
+### **Module 12: Advanced User Experience Features**
+
+#### **12.1 Real-time Collaboration**
+- **REQ-COLLAB-001**: Multi-user real-time editing
+  - **Live Updates**: Real-time data synchronization across users
+  - **Conflict Resolution**: Automatic conflict detection and resolution
+  - **User Presence**: Show which users are currently viewing/editing
+  - **Change Tracking**: Track all changes with user attribution
+  - **Offline Support**: Work offline with sync when connection restored
+
+#### **12.2 Advanced Notifications**
+- **REQ-NOTIFY-001**: Comprehensive notification system
+  - **Real-time Notifications**: Instant notifications for important events
+  - **Notification Preferences**: User-configurable notification settings
+  - **Notification History**: Complete notification history and management
+  - **Email Integration**: Email notifications for critical events
+  - **Push Notifications**: Mobile push notifications (future)
+
+#### **12.3 Performance Optimization**
+- **REQ-PERF-001**: Advanced performance features
+  - **Lazy Loading**: Load data only when needed
+  - **Caching Strategy**: Intelligent caching for frequently accessed data
+  - **Image Optimization**: Automatic image compression and optimization
+  - **Bundle Optimization**: Code splitting and dynamic imports
+  - **CDN Integration**: Content delivery network for global performance
+
+### **Module 13: Mobile and Accessibility Features**
+
+#### **13.1 Mobile Responsiveness**
+- **REQ-MOBILE-001**: Comprehensive mobile support
+  - **Responsive Design**: Full functionality on mobile devices
+  - **Touch Optimization**: Touch-friendly interface elements
+  - **Mobile Navigation**: Optimized navigation for small screens
+  - **Offline Capability**: Full offline functionality with sync
+  - **Mobile-specific Features**: Camera integration for photo capture
+
+#### **13.2 Accessibility Compliance**
+- **REQ-ACCESS-001**: WCAG 2.1 Level AA compliance
+  - **Screen Reader Support**: Full compatibility with screen readers
+  - **Keyboard Navigation**: Complete keyboard-only operation
+  - **Color Contrast**: High contrast ratios for readability
+  - **Focus Management**: Clear focus indicators and logical tab order
+  - **Alternative Text**: Comprehensive alt text for all images
+
+---
+
+## 🔧 **IMPLEMENTATION STATUS UPDATE**
+
+### **Completed Features (Phase 2.5)**
+- ✅ **FileUpload Component**: Complete drag-and-drop file upload with progress tracking
+- ✅ **FileViewer Component**: In-page file viewing for PDFs and images
+- ✅ **SearchableSelect Component**: Advanced searchable dropdown with keyboard navigation
+- ✅ **SearchAndFilter Component**: Comprehensive filtering and search capabilities
+- ✅ **Multi-step Forms**: Customer creation with step-by-step validation
+- ✅ **Enhanced Data Tables**: Bulk selection and advanced row actions
+- ✅ **Contract Document Management**: File upload and viewing for contracts
+- ✅ **Visit Documentation**: Photo and document attachment for visits
+- ✅ **Real-time Data Updates**: Live data synchronization across users
+- ✅ **Mobile Responsive Design**: Full functionality on mobile devices
+
+### **In Progress Features**
+- 🔄 **Advanced Notifications**: Real-time notification system
+- 🔄 **Performance Optimization**: Advanced caching and lazy loading
+- 🔄 **Accessibility Enhancements**: WCAG 2.1 Level AA compliance
+
+### **Planned Features (Phase 3)**
+- 📋 **Mobile App Development**: Native mobile applications
+- 📋 **Advanced Analytics**: Business intelligence and reporting
+- 📋 **API Integration**: Third-party system integrations
+- 📋 **Advanced Security**: Multi-factor authentication and audit logging
+
+---
+
+## 📋 **TECHNICAL IMPLEMENTATION DETAILS**
+
+### **File Management Architecture**
+```typescript
+// File organization structure
+storage/
+├── companies/{companyId}/
+│   ├── documents/
+│   │   ├── commercial-registration.pdf
+│   │   ├── vat-certificate.pdf
+│   │   └── other-documents/
+├── contracts/{contractId}/
+│   ├── documents/
+│   │   ├── contract-document.pdf
+│   │   └── attachments/
+├── visits/{visitId}/
+│   ├── photos/
+│   │   ├── {timestamp}-{index}.jpg
+│   │   └── thumbnails/
+│   └── documents/
+│       └── {timestamp}-{filename}.pdf
+└── temp/
+    └── {sessionId}/
+        └── {filename}
+```
+
+### **Component Architecture**
+```typescript
+// Advanced UI components structure
+src/components/
+├── ui/
+│   ├── file-viewer.tsx          // In-page file viewing
+│   ├── searchable-select.tsx    // Advanced searchable dropdown
+│   └── file-upload.tsx          // Drag-and-drop file upload
+├── common/
+│   ├── SearchAndFilter.tsx      // Advanced filtering
+│   └── FileUpload.tsx           // File upload wrapper
+└── customers/
+    ├── steps/                   // Multi-step forms
+    └── forms/                   // Enhanced form components
+```
+
+### **Performance Optimizations**
+- **Code Splitting**: Dynamic imports for large components
+- **Image Optimization**: Automatic compression and lazy loading
+- **Caching Strategy**: Intelligent caching for frequently accessed data
+- **Bundle Optimization**: Tree shaking and dead code elimination
+- **CDN Integration**: Global content delivery for static assets
+
+---
+
+## 🎯 **SUCCESS METRICS FOR NEW FEATURES**
+
+### **File Management System**
+- ✅ **Upload Success Rate**: >99% successful file uploads
+- ✅ **File Access Speed**: <2 seconds for file viewing
+- ✅ **Storage Efficiency**: 60% reduction in storage costs through optimization
+- ✅ **User Adoption**: >90% of users actively using file features
+
+### **Advanced UI Components**
+- ✅ **Component Performance**: <100ms render time for complex components
+- ✅ **Accessibility Score**: >95% WCAG 2.1 Level AA compliance
+- ✅ **Mobile Usability**: >90% user satisfaction on mobile devices
+- ✅ **Error Rate**: <1% component error rate in production
+
+### **Real-time Features**
+- ✅ **Data Synchronization**: <500ms latency for real-time updates
+- ✅ **Conflict Resolution**: 100% successful conflict resolution
+- ✅ **Offline Functionality**: Seamless offline-to-online transition
+- ✅ **User Experience**: >95% user satisfaction with real-time features
+
+---
+
+## 🔗 **INTEGRATION WITH EXISTING MODULES**
+
+### **Enhanced Customer Management**
+- **File Integration**: Company documents and photos
+- **Advanced Search**: Multi-criteria company search
+- **Real-time Updates**: Live company data synchronization
+- **Mobile Access**: Full mobile functionality for customer management
+
+### **Enhanced Contract Management**
+- **Document Management**: Contract documents and attachments
+- **Advanced Forms**: Multi-step contract creation
+- **File Preview**: In-page document viewing
+- **Bulk Operations**: Multi-contract file operations
+
+### **Enhanced Visit Management**
+- **Photo Documentation**: Visit photos with automatic organization
+- **Document Attachments**: Technical reports and findings
+- **Real-time Updates**: Live visit status updates
+- **Mobile Integration**: Camera integration for photo capture
+
+---
+
+## 🔐 **NEW MODULE: Enhanced Permission System & Security**
+
+### **Module 14: Advanced Permission Management & Security**
+
+#### **14.1 Enhanced Permission System Architecture**
+- **REQ-PERM-001**: Comprehensive permission-based UI system
+  - **Permission Context Provider**: Centralized permission management with React Context
+  - **Granular Permission Checks**: Replace role-based checks with specific permission checks
+  - **Permission-Aware UI Components**: Hide unauthorized elements instead of just disabling them
+  - **Permission Caching**: Optimized permission calculations with intelligent caching
+  - **Real-time Permission Updates**: Live permission changes without page refresh
+
+- **REQ-PERM-002**: Advanced permission components
+  - **PermissionGate Component**: Wrapper component that shows/hides content based on permissions
+  - **PermissionButton Component**: Button component that handles permission states with tooltips
+  - **PermissionBadge Component**: Visual indicators showing permission status
+  - **PermissionIndicator Component**: Tooltip/indicator showing user permissions
+  - **PermissionSummary Component**: Comprehensive user permission overview
+
+- **REQ-PERM-003**: Enhanced permission hooks and utilities
+  - **usePermissions Hook**: Comprehensive permission checking with all CRUD operations
+  - **usePermissionGroups Hook**: Group-specific permission operations
+  - **usePermissionSummary Hook**: User permission overview and analytics
+  - **Permission Calculation Algorithm**: Efficient permission inheritance and conflict resolution
+  - **Permission Debug Tools**: Development tools for permission testing and validation
+
+#### **14.2 Component Migration Strategy**
+- **REQ-PERM-004**: Customer management permission migration
+  - **Company Management**: Replace `hasPermission('supervisor')` with `customer.create`, `customer.read`, etc.
+  - **Contract Management**: Implement granular contract permissions
+  - **Branch Management**: Add branch-specific permission controls
+  - **Data Filtering**: Show only data user has permission to view
+  - **Action Buttons**: Hide unauthorized action buttons completely
+
+- **REQ-PERM-005**: Planning and scheduling permission migration
+  - **Visit Creation**: Replace role checks with `planning.create` permissions
+  - **Visit Management**: Implement visit-specific permission controls
+  - **Schedule Management**: Add schedule modification permissions
+  - **Bulk Operations**: Control bulk operation permissions
+  - **Real-time Updates**: Permission-aware real-time data updates
+
+- **REQ-PERM-006**: Reports and analytics permission migration
+  - **Report Access**: Implement report-specific permission controls
+  - **Data Export**: Control export permissions by data type
+  - **Analytics Access**: Granular analytics permission management
+  - **Dashboard Customization**: Permission-based dashboard customization
+  - **Report Sharing**: Secure report sharing with permission controls
+
+- **REQ-PERM-007**: Admin and system permission migration
+  - **User Management**: Replace admin role checks with specific user management permissions
+  - **System Administration**: Implement granular system administration permissions
+  - **Role Management**: Add role management specific permissions
+  - **System Configuration**: Control system configuration access
+  - **Audit and Logging**: Permission-based audit trail access
+
+#### **14.3 Navigation and Dashboard Enhancement**
+- **REQ-PERM-008**: Permission-based navigation system
+  - **Tab Filtering**: Filter navigation tabs based on user permissions
+  - **Menu Customization**: Show only accessible menu items
+  - **Breadcrumb Security**: Secure breadcrumb navigation
+  - **Quick Actions**: Permission-aware quick action buttons
+  - **Navigation History**: Secure navigation history tracking
+
+- **REQ-PERM-009**: Dashboard permission optimization
+  - **Widget Visibility**: Show only permitted dashboard widgets
+  - **Data Summaries**: Permission-aware data summaries
+  - **Alert System**: Permission-based alert and notification system
+  - **Dashboard Customization**: User-specific dashboard layouts
+  - **Performance Metrics**: Permission-based performance indicators
+
+#### **14.4 Advanced Security Features**
+- **REQ-PERM-010**: Enhanced security monitoring
+  - **Permission Analytics**: Track permission usage and patterns
+  - **Security Auditing**: Comprehensive permission change logging
+  - **Anomaly Detection**: Detect unusual permission access patterns
+  - **Security Alerts**: Real-time security alert system
+  - **Compliance Reporting**: Generate security compliance reports
+
+- **REQ-PERM-011**: Advanced permission inheritance
+  - **Permission Hierarchies**: Implement permission group hierarchies
+  - **Role-Based Fallbacks**: Maintain role-based permission fallbacks
+  - **Permission Conflicts**: Automatic permission conflict resolution
+  - **Temporary Permissions**: Time-limited elevated permissions
+  - **Permission Delegation**: Secure permission delegation system
+
+#### **14.5 User Experience Enhancement**
+- **REQ-PERM-012**: Improved user feedback system
+  - **Permission Indicators**: Clear visual indicators of user permissions
+  - **Permission Explanations**: Tooltips explaining permission requirements
+  - **Access Denied Pages**: User-friendly access denied pages
+  - **Permission Requests**: System for requesting additional permissions
+  - **Permission Education**: User training on permission system
+
+- **REQ-PERM-013**: Mobile permission optimization
+  - **Mobile Permission UI**: Optimized permission interface for mobile devices
+  - **Touch-Friendly Controls**: Touch-optimized permission controls
+  - **Offline Permission Caching**: Permission caching for offline use
+  - **Mobile Security**: Enhanced mobile security features
+  - **Cross-Device Sync**: Permission synchronization across devices
+
+### **Module 15: Permission System Implementation**
+
+#### **15.1 Technical Implementation Details**
+- **REQ-PERM-014**: Core permission infrastructure
+  ```typescript
+  // New permission system architecture
+  src/contexts/
+  ├── PermissionContext.tsx      // Centralized permission management
+  └── AuthContext.tsx            // Enhanced with permission integration
+  
+  src/hooks/
+  ├── usePermissions.ts          // Main permission hook
+  ├── usePermissionGroups.ts     // Group-specific operations
+  └── usePermissionSummary.ts    // Permission analytics
+  
+  src/components/ui/
+  ├── PermissionGate.tsx         // Permission wrapper component
+  ├── PermissionButton.tsx       // Permission-aware button
+  ├── PermissionBadge.tsx        // Permission status indicator
+  ├── PermissionIndicator.tsx    // Permission tooltip
+  └── PermissionSummary.tsx      // Permission overview component
+  ```
+
+- **REQ-PERM-015**: Permission calculation algorithm
+  ```typescript
+  // Enhanced permission calculation
+  function calculateUserPermissions(user: User, permissionGroups: PermissionGroup[]): string[] {
+    const permissions = new Set<string>();
+    
+    // 1. Add role-based permissions (fallback)
+    const rolePermissions = getRolePermissions(user.role);
+    rolePermissions.forEach(p => permissions.add(p));
+    
+    // 2. Add permission group permissions (primary)
+    user.permissionGroups.forEach(groupId => {
+      const group = permissionGroups.find(g => g.id === groupId);
+      if (group) {
+        group.permissions.forEach(p => permissions.add(p));
+      }
+    });
+    
+    // 3. Add custom permissions
+    user.customPermissions.forEach(p => permissions.add(p));
+    
+    // 4. Remove denied permissions
+    user.deniedPermissions.forEach(p => permissions.delete(p));
+    
+    return Array.from(permissions);
+  }
+  ```
+
+#### **15.2 Migration Strategy**
+- **REQ-PERM-016**: Phased migration approach
+  ```typescript
+  // Migration phases:
+  
+  Phase 1: Core Infrastructure (Week 1)
+  - Create PermissionContext and hooks
+  - Implement permission-aware UI components
+  - Add permission calculation algorithms
+  
+  Phase 2: Component Migration (Week 2)
+  - Migrate customer management components
+  - Migrate planning and scheduling components
+  - Migrate reports and admin components
+  
+  Phase 3: Navigation Updates (Week 3)
+  - Update main dashboard navigation
+  - Implement permission-based tab filtering
+  - Add permission summary components
+  
+  Phase 4: Advanced Features (Week 4)
+  - Implement permission caching
+  - Add permission analytics
+  - Performance optimization
+  ```
+
+#### **15.3 Testing and Validation**
+- **REQ-PERM-017**: Comprehensive testing strategy
+  - **Unit Testing**: Test permission calculation logic and hooks
+  - **Component Testing**: Test permission-aware UI components
+  - **Integration Testing**: Test permission system integration
+  - **User Acceptance Testing**: Test with different user permission sets
+  - **Security Testing**: Verify unauthorized access is properly blocked
+  - **Performance Testing**: Verify no performance degradation
+
+#### **15.4 Performance Optimization**
+- **REQ-PERM-018**: Permission system optimization
+  - **Permission Caching**: Intelligent caching of permission results
+  - **Lazy Loading**: Load permissions only when needed
+  - **Bundle Optimization**: Optimize permission-related code
+  - **Memory Management**: Efficient memory usage for permission data
+  - **Network Optimization**: Minimize permission-related network requests
+
+### **Module 16: Future Permission Enhancements**
+
+#### **16.1 Advanced Permission Features**
+- **REQ-PERM-019**: Dynamic permission management
+  - **Runtime Permission Changes**: Change permissions without page refresh
+  - **Permission Templates**: Pre-defined permission configurations
+  - **Permission Workflows**: Approval-based permission changes
+  - **Permission Scheduling**: Time-based permission changes
+  - **Permission Automation**: Automatic permission adjustments
+
+#### **16.2 Integration Features**
+- **REQ-PERM-020**: External system integration
+  - **LDAP Integration**: Integration with enterprise directory services
+  - **SSO Integration**: Single sign-on permission synchronization
+  - **API Permissions**: API-level permission controls
+  - **Third-party Integration**: Permission integration with external systems
+  - **Webhook Permissions**: Permission-based webhook access
+
+#### **16.3 Advanced Analytics**
+- **REQ-PERM-021**: Permission analytics and insights
+  - **Usage Analytics**: Track permission usage patterns
+  - **Performance Metrics**: Measure permission system performance
+  - **Security Insights**: Identify security patterns and anomalies
+  - **User Behavior Analysis**: Analyze user permission usage
+  - **Optimization Recommendations**: AI-powered permission optimization
+
+---
+
+## 🎯 **SUCCESS METRICS FOR PERMISSION SYSTEM**
+
+### **User Experience Metrics**
+- ✅ **Reduced Confusion**: <5% permission-related support requests
+- ✅ **Improved Efficiency**: 40% faster user task completion
+- ✅ **Better Satisfaction**: >95% user satisfaction with permission system
+- ✅ **Reduced Errors**: <1% permission-related errors
+
+### **Security Metrics**
+- ✅ **Access Control**: 100% proper restriction of unauthorized access
+- ✅ **Data Protection**: Complete hiding of sensitive data from unauthorized users
+- ✅ **Audit Trail**: Complete permission access logging with 100% coverage
+- ✅ **Compliance**: Meeting all security compliance requirements
+
+### **Performance Metrics**
+- ✅ **No Performance Impact**: Maintain current performance levels
+- ✅ **Fast Permission Checks**: Permission checks under 10ms
+- ✅ **Efficient Caching**: Permission cache hit rate >90%
+- ✅ **Memory Usage**: No significant memory increase
+
+---
+
+## 🔗 **INTEGRATION WITH EXISTING MODULES**
+
+### **Enhanced Customer Management**
+- **Permission-Based UI**: Hide unauthorized customer management features
+- **Data Filtering**: Show only permitted customer data
+- **Action Controls**: Permission-aware action buttons
+- **Real-time Updates**: Permission-aware real-time data updates
+
+### **Enhanced Planning and Scheduling**
+- **Visit Permissions**: Granular visit creation and management permissions
+- **Schedule Access**: Permission-based schedule viewing and modification
+- **Bulk Operations**: Permission-controlled bulk operations
+- **Mobile Permissions**: Mobile-optimized permission controls
+
+### **Enhanced Reports and Analytics**
+- **Report Access**: Permission-based report access and generation
+- **Data Export**: Controlled data export based on permissions
+- **Analytics Access**: Granular analytics permission management
+- **Dashboard Customization**: Permission-aware dashboard customization
+
+---
+
+---
+
+## 🚀 **NEW MODULE: Automated Visit Planning System**
+
+### **Module 17: Automated Visit Planning & Scheduling**
+
+#### **17.1 Automated Visit Planning System**
+- **REQ-AUTO-001**: Comprehensive automated visit planning system
+  - **Contract-Based Planning**: Generate visits based on `regularVisitsPerYear` from service batches
+  - **Optimal Distribution**: Spread visits evenly throughout contract periods
+  - **Weekly Prioritization**: Prioritize Saturday starts with even weekly distribution
+  - **Daily Limits**: Configurable daily visit limits to prevent team overload
+  - **Conflict Resolution**: Smart handling of existing visits and scheduling conflicts
+
+- **REQ-AUTO-002**: Advanced planning algorithm
+  - **Date Calculation**: Optimal spacing between visits based on contract duration
+  - **Business Rule Enforcement**: Respect contract periods and service requirements
+  - **Existing Visit Consideration**: Account for completed and scheduled visits
+  - **Service Assignment**: Automatic service assignment from contract service batches
+  - **Batch Processing**: Efficient creation of multiple visits with progress tracking
+
+- **REQ-AUTO-003**: Planning configuration and control
+  - **Planning Parameters**: Configurable options for visit distribution
+  - **Preview Mode**: Show planned visits before creation
+  - **Selective Planning**: Plan for specific companies, contracts, or branches
+  - **Rollback Capability**: Ability to undo planning operations
+  - **Planning Templates**: Pre-defined planning configurations for common scenarios
+
+#### **17.2 User Interface Integration**
+- **REQ-AUTO-004**: Planning interface components
+  - **Automated Planning Button**: One-click planning trigger in Annual Scheduler
+  - **Configuration Modal**: Planning options and parameter settings
+  - **Progress Tracking**: Real-time planning progress with detailed logging
+  - **Results Summary**: Comprehensive planning completion report
+  - **Planning Dashboard**: Dedicated planning management interface
+
+- **REQ-AUTO-005**: Planning workflow integration
+  - **Annual Scheduler Integration**: Seamless integration with existing planning system
+  - **Manual Override**: Ability to modify automated plans manually
+  - **Planning History**: Track all automated planning operations
+  - **Planning Analytics**: Analyze planning efficiency and optimization opportunities
+  - **Mobile Planning**: Mobile-optimized planning interface
+
+#### **17.3 Performance and Scalability**
+- **REQ-AUTO-006**: High-performance planning engine
+  - **Speed Optimization**: Plan 1000+ visits in under 30 seconds
+  - **Memory Efficiency**: Handle large datasets without performance degradation
+  - **Batch Operations**: Efficient batch creation of planned visits
+  - **Progress Feedback**: Real-time progress updates for user confidence
+  - **Error Recovery**: Graceful handling of planning failures with rollback
+
+- **REQ-AUTO-007**: Scalability features
+  - **Large Company Support**: Handle companies with 100+ branches efficiently
+  - **System-wide Planning**: Plan entire system in minutes
+  - **Incremental Planning**: Add new visits to existing schedules
+  - **Planning Optimization**: AI-powered planning optimization suggestions
+  - **Load Balancing**: Distribute planning load across multiple operations
+
+#### **17.4 Business Intelligence Integration**
+- **REQ-AUTO-008**: Planning analytics and insights
+  - **Planning Efficiency Metrics**: Measure time savings and optimization
+  - **Resource Utilization**: Analyze team workload distribution
+  - **Contract Compliance**: Track planning compliance with contract requirements
+  - **Planning Quality**: Assess distribution quality and optimization opportunities
+  - **Cost Analysis**: Calculate planning cost savings and ROI
+
+- **REQ-AUTO-009**: Advanced planning features
+  - **Predictive Planning**: AI-powered visit scheduling optimization
+  - **Seasonal Adjustments**: Account for seasonal variations in visit requirements
+  - **Team Capacity Planning**: Consider team availability and capacity
+  - **Geographic Optimization**: Optimize visit routes and travel time
+  - **Customer Preference Integration**: Account for customer scheduling preferences
+
+### **Module 18: Automated Planning Implementation**
+
+#### **18.1 Technical Implementation Details**
+- **REQ-AUTO-010**: Core planning infrastructure
+  ```typescript
+  // Automated planning system architecture
+  src/components/planning/
+  ├── AutomatedVisitPlanner.tsx      // Main planning component
+  ├── VisitPlanningConfig.tsx        // Configuration options
+  ├── VisitPlanningProgress.tsx      // Progress tracking
+  └── VisitPlanningSummary.tsx       // Results summary
+  
+  src/lib/planning/
+  ├── VisitPlanningAlgorithm.ts      // Core planning algorithm
+  ├── ConflictResolver.ts            // Conflict detection and resolution
+  ├── ScheduleOptimizer.ts           // Schedule optimization
+  └── PlanningValidator.ts           // Business rule validation
+  ```
+
+- **REQ-AUTO-011**: Planning algorithm implementation
+  ```typescript
+  // Core planning algorithm structure
+  interface VisitPlanningData {
+    branch: Branch;
+    contract: Contract;
+    serviceBatch: ContractServiceBatch;
+    requiredVisits: number;
+    contractStart: Date;
+    contractEnd: Date;
+    existingVisits: Visit[];
+    completedVisits: Visit[];
+  }
+  
+  interface VisitSchedule {
+    branchId: string;
+    contractId: string;
+    scheduledDates: string[];
+    visitSpacing: number;
+    weeklyDistribution: number;
+  }
+  ```
+
+#### **18.2 Integration Strategy**
+- **REQ-AUTO-012**: Existing system integration
+  ```typescript
+  // Integration points:
+  1. Contract Service Batches → Visit Requirements
+  2. Branch-Contract Relationships → Visit Assignment
+  3. Existing Visits → Conflict Detection
+  4. Date Utilities → Schedule Calculation
+  5. Visit Management → Batch Creation
+  ```
+
+- **REQ-AUTO-013**: User workflow integration
+  ```typescript
+  // User workflow:
+  1. Navigate to Planning → Annual Scheduler
+  2. Select Automated Planning option
+  3. Configure planning parameters
+  4. Review planning preview
+  5. Execute planning operation
+  6. Review results summary
+  7. Continue with manual adjustments if needed
+  ```
+
+#### **18.3 Testing and Validation**
+- **REQ-AUTO-014**: Comprehensive testing strategy
+  - **Algorithm Testing**: Test planning algorithm accuracy and efficiency
+  - **Integration Testing**: Test integration with existing planning system
+  - **Performance Testing**: Test planning performance with large datasets
+  - **User Acceptance Testing**: Test with real business scenarios
+  - **Edge Case Testing**: Test planning with complex contract scenarios
+  - **Error Handling Testing**: Test error scenarios and recovery
+
+#### **18.4 Performance Optimization**
+- **REQ-AUTO-015**: Planning system optimization
+  - **Algorithm Optimization**: Optimize planning algorithm for speed and accuracy
+  - **Batch Processing**: Efficient batch creation of planned visits
+  - **Memory Management**: Optimize memory usage for large planning operations
+  - **Caching Strategy**: Intelligent caching of planning results
+  - **Progress Tracking**: Real-time progress updates without performance impact
+
+### **Module 19: Future Planning Enhancements**
+
+#### **19.1 Advanced Planning Features**
+- **REQ-AUTO-016**: AI-powered planning optimization
+  - **Machine Learning Integration**: Learn from planning patterns and optimize
+  - **Predictive Analytics**: Predict optimal visit timing based on historical data
+  - **Dynamic Adjustment**: Real-time planning adjustments based on changing conditions
+  - **Optimization Suggestions**: AI-powered suggestions for planning improvements
+  - **Continuous Learning**: System learns and improves over time
+
+#### **19.2 External System Integration**
+- **REQ-AUTO-017**: Third-party system integration
+  - **Calendar Integration**: Integration with external calendar systems
+  - **CRM Integration**: Integration with customer relationship management systems
+  - **ERP Integration**: Integration with enterprise resource planning systems
+  - **Mobile App Integration**: Integration with mobile planning applications
+  - **API Integration**: RESTful API for external system integration
+
+#### **19.3 Advanced Analytics**
+- **REQ-AUTO-018**: Planning analytics and reporting
+  - **Planning Efficiency Analytics**: Measure and optimize planning efficiency
+  - **Resource Utilization Reports**: Analyze team workload and capacity
+  - **Cost Analysis**: Calculate planning cost savings and ROI
+  - **Compliance Reporting**: Generate compliance reports for contract requirements
+  - **Performance Benchmarking**: Compare planning performance across companies
+
+---
+
+## 🎯 **SUCCESS METRICS FOR AUTOMATED PLANNING**
+
+### **Operational Efficiency Metrics**
+- ✅ **Time Savings**: 95% reduction in planning time (from 2-3 hours to 30 seconds per company)
+- ✅ **Planning Accuracy**: 100% contract compliance with automated planning
+- ✅ **Error Reduction**: Eliminate manual planning mistakes and inconsistencies
+- ✅ **Resource Optimization**: Better team workload distribution and capacity utilization
+
+### **Business Value Metrics**
+- ✅ **Cost Reduction**: Significant reduction in administrative overhead
+- ✅ **Quality Improvement**: Consistent and optimized service delivery
+- ✅ **Customer Satisfaction**: Reliable and predictable service schedules
+- ✅ **Scalability**: Support business growth without planning overhead increase
+
+### **Performance Metrics**
+- ✅ **Planning Speed**: Plan 1000+ visits in under 30 seconds
+- ✅ **System Reliability**: 99%+ success rate for planning operations
+- ✅ **Scalability**: Handle companies with 100+ branches efficiently
+- ✅ **User Experience**: Clear progress feedback and results summary
+
+---
+
+## 🔗 **INTEGRATION WITH EXISTING MODULES**
+
+### **Enhanced Planning and Scheduling**
+- **Automated Planning**: Seamless integration with existing Annual Scheduler
+- **Manual Override**: Ability to modify automated plans manually
+- **Real-time Updates**: Live planning updates across multiple users
+- **Mobile Planning**: Mobile-optimized automated planning interface
+
+### **Enhanced Customer Management**
+- **Contract Integration**: Direct integration with contract service batches
+- **Branch Management**: Automated planning for all branches in a company
+- **Service Assignment**: Automatic service assignment from contracts
+- **Compliance Tracking**: Track planning compliance with contract requirements
+
+### **Enhanced Reports and Analytics**
+- **Planning Analytics**: Comprehensive planning efficiency and optimization reports
+- **Resource Utilization**: Analyze team workload and capacity utilization
+- **Cost Analysis**: Calculate planning cost savings and ROI
+- **Performance Benchmarking**: Compare planning performance across companies
+
+---
+
+---
+
+## 📊 **NEW MODULE: Advanced Dashboard & Analytics System**
+
+### **Module 20: Comprehensive Dashboard & Analytics**
+
+#### **20.1 Dashboard as Default Landing Tab**
+- **REQ-DASH-001**: Dashboard as primary landing interface
+  - **Default Landing**: Make dashboard the default tab when users log in
+  - **Quick Overview**: Provide immediate insights into system status and performance
+  - **Performance Optimization**: Ensure dashboard loads quickly with minimal performance impact
+  - **Responsive Design**: Full mobile responsiveness for dashboard components
+  - **Real-time Updates**: Live data updates without page refresh
+
+#### **20.2 Visit Statistics Dashboard**
+- **REQ-DASH-002**: Comprehensive visit statistics with period selectors
+  - **Regular Visits Metrics**: Completed regular visits for current week, month, quarter, and year
+  - **Emergency Visits Metrics**: Emergency visits for current week, month, quarter, and year
+  - **Period Selectors**: Individual period selectors for each graph (week/month/quarter/year)
+  - **Visual Graphs**: Interactive charts and graphs for data visualization
+  - **Performance Optimization**: Efficient data aggregation with minimal database queries
+
+- **REQ-DASH-003**: Visit completion analytics
+  - **Completion Rates**: Track visit completion rates across different time periods
+  - **Trend Analysis**: Show completion trends over time
+  - **Performance Comparison**: Compare current period performance with previous periods
+  - **Target Tracking**: Track progress against completion targets
+  - **Export Capabilities**: Export visit statistics for reporting
+
+#### **20.3 Emergency Visit Response Metrics**
+- **REQ-DASH-004**: Emergency visit response time analytics
+  - **Response Time Calculation**: Average time from ticket creation to visit completion
+  - **Period Breakdown**: Response times for current week, month, quarter, and year
+  - **Performance Tracking**: Track response time improvements over time
+  - **Alert Thresholds**: Visual indicators for response times exceeding targets
+  - **Team Performance**: Compare response times across different teams
+
+- **REQ-DASH-005**: Emergency visit workflow analytics
+  - **Ticket Creation to Assignment**: Time from ticket creation to team assignment
+  - **Assignment to Completion**: Time from assignment to visit completion
+  - **Bottleneck Identification**: Identify delays in emergency response workflow
+  - **Optimization Suggestions**: AI-powered suggestions for workflow improvements
+  - **Historical Analysis**: Track workflow efficiency improvements over time
+
+#### **20.4 Contract Management Dashboard**
+- **REQ-DASH-006**: Contract expiry tracking and alerts
+  - **Expiry Countdown**: Contracts ending within 3 months, 2 months, and 1 month
+  - **Visual Indicators**: Color-coded alerts for approaching contract expirations
+  - **Renewal Tracking**: Track contract renewal status and progress
+  - **Revenue Impact**: Calculate potential revenue impact of expiring contracts
+  - **Action Items**: Generate action items for contract renewals
+
+- **REQ-DASH-007**: Contract performance analytics
+  - **Service Delivery**: Track service delivery against contract requirements
+  - **Visit Compliance**: Monitor visit compliance with contract schedules
+  - **Customer Satisfaction**: Track customer satisfaction metrics
+  - **Contract Value**: Monitor contract value and profitability
+  - **Risk Assessment**: Identify contracts at risk of non-renewal
+
+#### **20.5 Dashboard Architecture & Performance**
+- **REQ-DASH-008**: Optimized dashboard architecture
+  - **Component Structure**: Modular dashboard components for easy maintenance
+  - **Data Aggregation**: Efficient data aggregation with minimal database load
+  - **Caching Strategy**: Intelligent caching for dashboard data
+  - **Lazy Loading**: Load dashboard components only when needed
+  - **Error Handling**: Graceful error handling for data loading failures
+
+- **REQ-DASH-009**: Dashboard customization and personalization
+  - **Widget Customization**: Allow users to customize dashboard layout
+  - **Personalized Views**: User-specific dashboard configurations
+  - **Role-Based Dashboards**: Different dashboard views based on user roles
+  - **Saved Configurations**: Save and restore dashboard configurations
+  - **Mobile Optimization**: Optimized dashboard experience on mobile devices
+
+#### **20.6 Advanced Analytics Features**
+- **REQ-DASH-010**: Predictive analytics and insights
+  - **Trend Prediction**: Predict future visit volumes and patterns
+  - **Resource Planning**: AI-powered resource planning suggestions
+  - **Performance Forecasting**: Forecast performance metrics
+  - **Anomaly Detection**: Detect unusual patterns in visit data
+  - **Optimization Recommendations**: AI-powered optimization suggestions
+
+- **REQ-DASH-011**: Business intelligence integration
+  - **KPI Tracking**: Track key performance indicators
+  - **Goal Setting**: Set and track performance goals
+  - **Benchmarking**: Compare performance against industry benchmarks
+  - **Executive Summary**: High-level executive dashboard views
+  - **Automated Reporting**: Generate automated performance reports
+
+### **Module 21: Dashboard Implementation**
+
+#### **21.1 Technical Implementation Details**
+- **REQ-DASH-012**: Dashboard component architecture
+  ```typescript
+  // Dashboard component structure
+  src/components/dashboard/
+  ├── Dashboard.tsx                    // Main dashboard component
+  ├── VisitStatistics.tsx             // Visit statistics widget
+  ├── EmergencyMetrics.tsx            // Emergency visit metrics
+  ├── ContractExpiry.tsx              // Contract expiry tracking
+  ├── PeriodSelector.tsx              // Reusable period selector
+  ├── AnalyticsChart.tsx              // Chart component wrapper
+  └── DashboardWidget.tsx             // Base widget component
+  
+  src/hooks/
+  ├── useDashboardData.ts             // Dashboard data aggregation
+  ├── useVisitStatistics.ts           // Visit statistics calculations
+  ├── useEmergencyMetrics.ts          // Emergency metrics calculations
+  └── useContractAnalytics.ts         // Contract analytics
+  
+  src/lib/analytics/
+  ├── dataAggregator.ts               // Data aggregation utilities
+  ├── chartConfigs.ts                 // Chart configurations
+  └── periodCalculations.ts           // Period calculation utilities
+  ```
+
+#### **21.2 Data Aggregation Strategy**
+- **REQ-DASH-013**: Efficient data aggregation
+  ```typescript
+  // Data aggregation approach:
+  1. Pre-calculate statistics during data updates
+  2. Use Firebase aggregation queries for real-time data
+  3. Implement intelligent caching for frequently accessed data
+  4. Use background jobs for heavy calculations
+  5. Optimize queries for minimal database load
+  ```
+
+#### **21.3 Performance Optimization**
+- **REQ-DASH-014**: Dashboard performance optimization
+  - **Data Caching**: Intelligent caching of dashboard data
+  - **Query Optimization**: Optimize database queries for dashboard
+  - **Component Lazy Loading**: Load dashboard components on demand
+  - **Image Optimization**: Optimize chart images and graphics
+  - **Bundle Optimization**: Minimize dashboard bundle size
+
+#### **21.4 Mobile Responsiveness**
+- **REQ-DASH-015**: Mobile-optimized dashboard
+  - **Responsive Layout**: Adaptive dashboard layout for mobile devices
+  - **Touch Optimization**: Touch-friendly dashboard controls
+  - **Mobile Charts**: Optimized charts for mobile viewing
+  - **Offline Support**: Dashboard functionality with offline data
+  - **Mobile Navigation**: Optimized navigation for mobile devices
+
+### **Module 22: Dashboard Features Implementation**
+
+#### **22.1 Visit Statistics Implementation**
+- **REQ-DASH-016**: Visit statistics calculation
+  ```typescript
+  // Visit statistics calculation:
+  interface VisitStatistics {
+    period: 'week' | 'month' | 'quarter' | 'year';
+    regularVisits: {
+      completed: number;
+      scheduled: number;
+      cancelled: number;
+    };
+    emergencyVisits: {
+      completed: number;
+      open: number;
+      cancelled: number;
+    };
+    completionRate: number;
+    trend: 'up' | 'down' | 'stable';
+  }
+  ```
+
+#### **22.2 Emergency Metrics Implementation**
+- **REQ-DASH-017**: Emergency response time calculation
+  ```typescript
+  // Emergency response time calculation:
+  interface EmergencyMetrics {
+    period: 'week' | 'month' | 'quarter' | 'year';
+    averageResponseTime: number; // in hours
+    totalEmergencyVisits: number;
+    completedEmergencyVisits: number;
+    averageCompletionTime: number; // in hours
+    responseTimeTrend: 'improving' | 'declining' | 'stable';
+  }
+  ```
+
+#### **22.3 Contract Analytics Implementation**
+- **REQ-DASH-018**: Contract expiry tracking
+  ```typescript
+  // Contract expiry tracking:
+  interface ContractAnalytics {
+    expiringIn3Months: number;
+    expiringIn2Months: number;
+    expiringIn1Month: number;
+    totalActiveContracts: number;
+    renewalRate: number;
+    averageContractValue: number;
+    contractsAtRisk: Contract[];
+  }
+  ```
+
+#### **22.4 Period Selector Implementation**
+- **REQ-DASH-019**: Reusable period selector component
+  ```typescript
+  // Period selector component:
+  interface PeriodSelectorProps {
+    value: 'week' | 'month' | 'quarter' | 'year';
+    onChange: (period: 'week' | 'month' | 'quarter' | 'year') => void;
+    label?: string;
+    className?: string;
+  }
+  ```
+
+### **Module 23: Dashboard Integration**
+
+#### **23.1 Main Dashboard Integration**
+- **REQ-DASH-020**: Dashboard as default landing page
+  ```typescript
+  // Main dashboard integration:
+  1. Update MainDashboard component to show dashboard as default tab
+  2. Add dashboard tab to navigation
+  3. Implement dashboard data loading
+  4. Add dashboard customization options
+  5. Integrate with existing navigation system
+  ```
+
+#### **23.2 Real-time Updates Integration**
+- **REQ-DASH-021**: Real-time dashboard updates
+  - **Firebase Listeners**: Real-time data updates from Firebase
+  - **WebSocket Integration**: Live updates for critical metrics
+  - **Background Sync**: Background data synchronization
+  - **Update Notifications**: Notify users of important changes
+  - **Performance Monitoring**: Monitor dashboard performance
+
+#### **23.3 Export and Reporting Integration**
+- **REQ-DASH-022**: Dashboard export capabilities
+  - **PDF Export**: Export dashboard as PDF reports
+  - **Excel Export**: Export dashboard data to Excel
+  - **Scheduled Reports**: Automated report generation
+  - **Email Integration**: Email dashboard reports
+  - **Report Templates**: Pre-defined report templates
+
+---
+
+## 🎯 **SUCCESS METRICS FOR DASHBOARD SYSTEM**
+
+### **User Experience Metrics**
+- ✅ **Dashboard Load Time**: <3 seconds for full dashboard load
+- ✅ **User Adoption**: >90% of users use dashboard as primary interface
+- ✅ **Mobile Usability**: >95% user satisfaction on mobile devices
+- ✅ **Performance**: No performance degradation with dashboard active
+
+### **Business Intelligence Metrics**
+- ✅ **Data Accuracy**: 100% accurate statistics and metrics
+- ✅ **Real-time Updates**: <5 second delay for data updates
+- ✅ **Insight Generation**: >80% of users find dashboard insights valuable
+- ✅ **Decision Support**: Dashboard supports 90% of daily decision-making
+
+### **Technical Performance Metrics**
+- ✅ **Database Load**: <20% increase in database load with dashboard
+- ✅ **Cache Efficiency**: >85% cache hit rate for dashboard data
+- ✅ **Error Rate**: <1% dashboard error rate in production
+- ✅ **Scalability**: Dashboard supports 100+ concurrent users
+
+---
+
+## 🔗 **INTEGRATION WITH EXISTING MODULES**
+
+### **Enhanced User Management**
+- **Role-Based Dashboards**: Different dashboard views based on user roles
+- **Permission Integration**: Dashboard respects user permissions
+- **User Preferences**: Personalized dashboard configurations
+- **Activity Tracking**: Track dashboard usage and engagement
+
+### **Enhanced Planning and Scheduling**
+- **Visit Integration**: Real-time visit statistics and trends
+- **Schedule Analytics**: Schedule optimization insights
+- **Resource Utilization**: Team workload and capacity analytics
+- **Performance Tracking**: Planning efficiency metrics
+
+### **Enhanced Customer Management**
+- **Contract Analytics**: Contract performance and expiry tracking
+- **Customer Insights**: Customer satisfaction and retention metrics
+- **Service Delivery**: Service quality and compliance tracking
+- **Revenue Analytics**: Revenue tracking and forecasting
+
+---
+
 **Document Control:**
-- **Next Review Date**: Upon completion of core BRD requirements
+- **Next Review Date**: Upon completion of Dashboard implementation
 - **Approval Required**: Project Stakeholders
-- **Integration**: Must be compatible with original BRD v2.0
-- **Priority**: Secondary to original BRD requirements
+- **Integration**: Must be compatible with existing modules and Firebase implementation
+- **Priority**: High priority for user experience improvement and business intelligence

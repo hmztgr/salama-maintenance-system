@@ -9,6 +9,7 @@ import {
   orderBy,
   onSnapshot,
   where,
+  getDocs,
   serverTimestamp,
   Timestamp
 } from 'firebase/firestore';
@@ -163,7 +164,8 @@ export function useInvitationsFirebase() {
         const invitationData = {
           type: 'email' as InvitationType,
           email: data.email,
-          role: data.role,
+          role: data.role || 'viewer',
+          permissionGroups: data.permissionGroups || [],
           invitedBy: 'current-user', // Should come from auth context
           invitedByName: 'النظام', // Should come from auth context
           customMessage: data.customMessage || '',
@@ -185,7 +187,7 @@ export function useInvitationsFirebase() {
         const emailTemplate = EmailService.generateInvitationContent(
           data.email,
           'النظام',
-          data.role,
+          data.role || 'viewer',
           invitationLink,
           expiryDate.toLocaleDateString('ar-SA'),
           data.customMessage
@@ -247,7 +249,8 @@ export function useInvitationsFirebase() {
 
         const invitationData = {
           type: 'link' as InvitationType,
-          role: data.role,
+          role: data.role || 'viewer',
+          permissionGroups: data.permissionGroups || [],
           invitedBy: 'current-user', // Should come from auth context
           invitedByName: 'النظام', // Should come from auth context
           customMessage: data.customMessage || '',
@@ -420,7 +423,74 @@ export function useInvitationsFirebase() {
     revokeInvitation,
     updateInvitation: async () => ({ success: false }), // Placeholder
     validateInvitation: async () => ({ isValid: false }), // Placeholder
-    acceptInvitation: async () => ({ success: false }), // Placeholder
+    acceptInvitation: async (registrationData: InvitationRegistration): Promise<{ success: boolean; user?: any; error?: string }> => {
+      try {
+        console.log('👤 Accepting invitation for:', registrationData.email);
+
+        // Find the invitation by token
+        const invitation = invitations.find(inv => inv.linkToken === registrationData.invitationToken);
+        if (!invitation) {
+          throw new Error('الدعوة غير موجودة أو غير صالحة');
+        }
+
+        if (invitation.status !== 'sent' && invitation.status !== 'opened') {
+          throw new Error('الدعوة غير صالحة أو منتهية الصلاحية');
+        }
+
+        // Check if user already exists
+        const existingUserQuery = query(
+          collection(db, 'users'),
+          where('email', '==', registrationData.email)
+        );
+        const existingUserSnapshot = await getDocs(existingUserQuery);
+        
+        if (!existingUserSnapshot.empty) {
+          throw new Error('يوجد حساب بالفعل لهذا البريد الإلكتروني');
+        }
+
+        // Create new user in Firebase
+        const newUser = {
+          username: registrationData.username,
+          email: registrationData.email,
+          fullName: registrationData.fullName,
+          role: invitation.role || 'viewer',
+          permissionGroups: invitation.permissionGroups || [],
+          customPermissions: [],
+          deniedPermissions: [],
+          isActive: true,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          createdBy: invitation.invitedBy || 'system'
+        };
+
+        // Add user to Firestore
+        const userDocRef = await addDoc(collection(db, 'users'), newUser);
+        console.log('✅ User created in Firestore with ID:', userDocRef.id);
+
+        // Update invitation status
+        await updateDoc(doc(db, 'invitations', invitation.id), {
+          status: 'accepted',
+          acceptedAt: serverTimestamp(),
+          lastActivity: serverTimestamp()
+        });
+
+        console.log('✅ Invitation accepted successfully');
+
+        return { 
+          success: true, 
+          user: {
+            id: userDocRef.id,
+            ...newUser
+          }
+        };
+
+      } catch (err) {
+        console.error('❌ Failed to accept invitation:', err);
+        const errorMessage = err instanceof Error ? err.message : 'فشل في إنشاء الحساب';
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+    },
     trackInvitationOpened: async () => {}, // Placeholder
     getInvitations: () => invitations, // Return current invitations
     getInvitationById: (id: string) => invitations.find(inv => inv.id === id) || null,

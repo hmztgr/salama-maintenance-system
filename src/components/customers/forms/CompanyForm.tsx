@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Company } from '@/types/customer';
+import { FileUpload } from '@/components/common/FileUpload';
+import { UploadedFile } from '@/hooks/useFirebaseStorage';
 
 export interface CompanyFormProps {
   company?: Company;
@@ -24,17 +26,122 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
     contactPerson: company?.contactPerson || '',
     contactPersonTitle: company?.contactPersonTitle || '',
     notes: company?.notes || '',
-    commercialRegistrationFile: undefined as File | undefined,
-    vatFile: undefined as File | undefined,
-    nationalAddressFile: undefined as File | undefined,
+  });
+
+  const [uploadedFiles, setUploadedFiles] = useState<{
+    commercialRegistrationFile: UploadedFile[];
+    vatFile: UploadedFile[];
+    nationalAddressFile: UploadedFile[];
+  }>({
+    commercialRegistrationFile: company?.commercialRegistrationFile && typeof company.commercialRegistrationFile === 'string' 
+      ? company.commercialRegistrationFile.split('|').filter(url => url.trim()).map((url, index) => ({
+          name: `Commercial Registration ${index + 1}`,
+          url: url.trim(),
+          path: 'companies/commercial-registration/' + company.companyId + '_' + index,
+          size: 0,
+          type: 'application/pdf',
+          uploadedAt: new Date().toISOString(),
+        }))
+      : [],
+    vatFile: company?.vatFile && typeof company.vatFile === 'string'
+      ? company.vatFile.split('|').filter(url => url.trim()).map((url, index) => ({
+          name: `VAT Certificate ${index + 1}`,
+          url: url.trim(),
+          path: 'companies/vat/' + company.companyId + '_' + index,
+          size: 0,
+          type: 'application/pdf',
+          uploadedAt: new Date().toISOString(),
+        }))
+      : [],
+    nationalAddressFile: company?.nationalAddressFile && typeof company.nationalAddressFile === 'string'
+      ? company.nationalAddressFile.split('|').filter(url => url.trim()).map((url, index) => ({
+          name: `National Address ${index + 1}`,
+          url: url.trim(),
+          path: 'companies/national-address/' + company.companyId + '_' + index,
+          size: 0,
+          type: 'application/pdf',
+          uploadedAt: new Date().toISOString(),
+        }))
+      : [],
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // File input refs
-  const commercialRegFileRef = useRef<HTMLInputElement>(null);
-  const vatFileRef = useRef<HTMLInputElement>(null);
-  const nationalAddressFileRef = useRef<HTMLInputElement>(null);
+  // Update uploadedFiles when company prop changes (for editing)
+  useEffect(() => {
+    console.log('🔄 CompanyForm useEffect triggered with company:', company);
+    
+    if (company) {
+      console.log('📁 Processing company files for editing:', {
+        commercialRegistrationFile: company.commercialRegistrationFile,
+        vatFile: company.vatFile,
+        nationalAddressFile: company.nationalAddressFile
+      });
+      
+      const newUploadedFiles = {
+        commercialRegistrationFile: company.commercialRegistrationFile && typeof company.commercialRegistrationFile === 'string' 
+          ? company.commercialRegistrationFile.split('|').filter(url => url.trim()).map((url, index) => ({
+              name: `Commercial Registration ${index + 1}`,
+              url: url.trim(),
+              path: 'companies/commercial-registration/' + company.companyId + '_' + index,
+              size: 0,
+              type: 'application/pdf',
+              uploadedAt: new Date().toISOString(),
+            }))
+          : [],
+        vatFile: company.vatFile && typeof company.vatFile === 'string'
+          ? company.vatFile.split('|').filter(url => url.trim()).map((url, index) => ({
+              name: `VAT Certificate ${index + 1}`,
+              url: url.trim(),
+              path: 'companies/vat/' + company.companyId + '_' + index,
+              size: 0,
+              type: 'application/pdf',
+              uploadedAt: new Date().toISOString(),
+            }))
+          : [],
+        nationalAddressFile: company.nationalAddressFile && typeof company.nationalAddressFile === 'string'
+          ? company.nationalAddressFile.split('|').filter(url => url.trim()).map((url, index) => ({
+              name: `National Address ${index + 1}`,
+              url: url.trim(),
+              path: 'companies/national-address/' + company.companyId + '_' + index,
+              size: 0,
+              type: 'application/pdf',
+              uploadedAt: new Date().toISOString(),
+            }))
+          : [],
+      };
+      
+      console.log('📁 Setting uploadedFiles for editing:', newUploadedFiles);
+      setUploadedFiles(newUploadedFiles);
+
+      // Also update form data
+      setFormData({
+        companyName: company.companyName || '',
+        unifiedNumber: company.unifiedNumber || '',
+        commercialRegistration: company.commercialRegistration || '',
+        vatNumber: company.vatNumber || '',
+        email: company.email || '',
+        phone: company.phone || '',
+        mobile: company.mobile || '',
+        address: company.address || '',
+        website: company.website || '',
+        contactPerson: company.contactPerson || '',
+        contactPersonTitle: company.contactPersonTitle || '',
+        notes: company.notes || '',
+      });
+    } else {
+      console.log('📁 No company provided, resetting uploadedFiles to empty');
+      setUploadedFiles({
+        commercialRegistrationFile: [],
+        vatFile: [],
+        nationalAddressFile: [],
+      });
+    }
+    
+    // Reset submission state when company changes
+    setIsSubmitting(false);
+  }, [company]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -62,16 +169,58 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
     }
   };
 
-  const handleFileChange = (field: string, file: File | null) => {
-    setFormData(prev => ({ ...prev, [field]: file }));
+  const handleFilesUploaded = (field: keyof typeof uploadedFiles, files: UploadedFile[]) => {
+    console.log(`📁 Files uploaded for ${field}:`, files);
+    setUploadedFiles(prev => {
+      const newState = { ...prev, [field]: files };
+      console.log(`📁 Updated uploadedFiles state:`, newState);
+      return newState;
+    });
+  };
+
+  // Add a useEffect to log state changes
+  useEffect(() => {
+    console.log('📁 uploadedFiles state changed:', uploadedFiles);
+  }, [uploadedFiles]);
+
+  const handleFileDeleted = (field: keyof typeof uploadedFiles, filePath: string) => {
+    setUploadedFiles(prev => ({
+      ...prev,
+      [field]: prev[field].filter(file => file.path !== filePath)
+    }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (validateForm()) {
-      onSubmit(formData);
+    if (isSubmitting) {
+      console.log('🚫 Form submission already in progress');
+      return;
     }
+
+    if (validateForm()) {
+      setIsSubmitting(true);
+      console.log('📁 Current uploadedFiles state before submission:', uploadedFiles);
+      
+      const submitData = {
+        ...formData,
+        // Store all file URLs as arrays for multiple files
+        commercialRegistrationFile: uploadedFiles.commercialRegistrationFile.map(file => file.url).join('|'),
+        vatFile: uploadedFiles.vatFile.map(file => file.url).join('|'),
+        nationalAddressFile: uploadedFiles.nationalAddressFile.map(file => file.url).join('|'),
+      };
+      
+      console.log('📤 Submitting company data:', submitData);
+      
+      // Call onSubmit and let the parent component handle the form closing
+      onSubmit(submitData);
+    }
+  };
+
+  const handleCancel = () => {
+    // Reset submission state before canceling
+    setIsSubmitting(false);
+    onCancel();
   };
 
   const isEditing = !!company;
@@ -85,7 +234,7 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
               {isEditing ? 'تعديل الشركة' : 'إضافة شركة جديدة'}
             </h2>
             <button
-              onClick={onCancel}
+              onClick={handleCancel}
               className="text-gray-400 hover:text-gray-600"
               disabled={isLoading}
             >
@@ -283,29 +432,16 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     السجل التجاري
                   </label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-md p-4 text-center">
-                    <input
-                      ref={commercialRegFileRef}
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      onChange={(e) => handleFileChange('commercialRegistrationFile', e.target.files?.[0] || null)}
-                      className="hidden"
-                      disabled={isLoading}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => commercialRegFileRef.current?.click()}
-                      className="text-blue-600 hover:text-blue-800 text-sm"
-                      disabled={isLoading}
-                    >
-                      📎 رفع ملف السجل التجاري
-                    </button>
-                    {formData.commercialRegistrationFile && (
-                      <p className="text-xs text-green-600 mt-1">
-                        {formData.commercialRegistrationFile.name}
-                      </p>
-                    )}
-                  </div>
+                  <FileUpload
+                    onFilesUploaded={(files) => handleFilesUploaded('commercialRegistrationFile', files)}
+                    onFileDeleted={(filePath) => handleFileDeleted('commercialRegistrationFile', filePath)}
+                    existingFiles={uploadedFiles.commercialRegistrationFile}
+                    maxFiles={3}
+                    multiple={true}
+                    allowedTypes={['pdf', 'jpg', 'jpeg', 'png']}
+                    folder="companies/commercial-registration"
+                    disabled={isLoading}
+                  />
                 </div>
 
                 {/* VAT Upload */}
@@ -313,29 +449,16 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     شهادة ضريبة القيمة المضافة
                   </label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-md p-4 text-center">
-                    <input
-                      ref={vatFileRef}
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      onChange={(e) => handleFileChange('vatFile', e.target.files?.[0] || null)}
-                      className="hidden"
-                      disabled={isLoading}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => vatFileRef.current?.click()}
-                      className="text-blue-600 hover:text-blue-800 text-sm"
-                      disabled={isLoading}
-                    >
-                      📎 رفع شهادة الضريبة
-                    </button>
-                    {formData.vatFile && (
-                      <p className="text-xs text-green-600 mt-1">
-                        {formData.vatFile.name}
-                      </p>
-                    )}
-                  </div>
+                  <FileUpload
+                    onFilesUploaded={(files) => handleFilesUploaded('vatFile', files)}
+                    onFileDeleted={(filePath) => handleFileDeleted('vatFile', filePath)}
+                    existingFiles={uploadedFiles.vatFile}
+                    maxFiles={3}
+                    multiple={true}
+                    allowedTypes={['pdf', 'jpg', 'jpeg', 'png']}
+                    folder="companies/vat"
+                    disabled={isLoading}
+                  />
                 </div>
 
                 {/* National Address Upload */}
@@ -343,29 +466,16 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     العنوان الوطني
                   </label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-md p-4 text-center">
-                    <input
-                      ref={nationalAddressFileRef}
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      onChange={(e) => handleFileChange('nationalAddressFile', e.target.files?.[0] || null)}
-                      className="hidden"
-                      disabled={isLoading}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => nationalAddressFileRef.current?.click()}
-                      className="text-blue-600 hover:text-blue-800 text-sm"
-                      disabled={isLoading}
-                    >
-                      📎 رفع العنوان الوطني
-                    </button>
-                    {formData.nationalAddressFile && (
-                      <p className="text-xs text-green-600 mt-1">
-                        {formData.nationalAddressFile.name}
-                      </p>
-                    )}
-                  </div>
+                  <FileUpload
+                    onFilesUploaded={(files) => handleFilesUploaded('nationalAddressFile', files)}
+                    onFileDeleted={(filePath) => handleFileDeleted('nationalAddressFile', filePath)}
+                    existingFiles={uploadedFiles.nationalAddressFile}
+                    maxFiles={3}
+                    multiple={true}
+                    allowedTypes={['pdf', 'jpg', 'jpeg', 'png']}
+                    folder="companies/national-address"
+                    disabled={isLoading}
+                  />
                 </div>
               </div>
             </div>
@@ -389,7 +499,7 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
             <div className="flex justify-end space-x-3 space-x-reverse pt-4">
               <button
                 type="button"
-                onClick={onCancel}
+                onClick={handleCancel}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
                 disabled={isLoading}
               >
@@ -398,9 +508,9 @@ export function CompanyForm({ company, onSubmit, onCancel, isLoading = false }: 
               <button
                 type="submit"
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-                disabled={isLoading}
+                disabled={isLoading || isSubmitting}
               >
-                {isLoading ? 'جاري الحفظ...' : (isEditing ? 'تحديث' : 'إضافة')}
+                {isLoading || isSubmitting ? 'جاري الحفظ...' : (isEditing ? 'تحديث' : 'إضافة')}
               </button>
             </div>
           </form>

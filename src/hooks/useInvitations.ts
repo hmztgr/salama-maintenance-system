@@ -125,7 +125,8 @@ export function useInvitations(): {
         id: `inv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         type: 'email',
         email: data.email,
-        role: data.role,
+        role: data.role || 'viewer',
+        permissionGroups: data.permissionGroups || [],
         invitedBy: 'current-user-id', // Would get from auth context
         invitedByName: 'المستخدم الحالي', // Would get from auth context
         customMessage: data.customMessage,
@@ -176,7 +177,8 @@ export function useInvitations(): {
       const invitation: UserInvitation = {
         id: `inv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         type: 'link',
-        role: data.role,
+        role: data.role || 'viewer',
+        permissionGroups: data.permissionGroups || [],
         invitedBy: 'current-user-id', // Would get from auth context
         invitedByName: 'المستخدم الحالي', // Would get from auth context
         customMessage: data.customMessage,
@@ -381,6 +383,9 @@ export function useInvitations(): {
         fullName: registrationData.fullName,
         phone: registrationData.phone,
         role: validation.invitation.role,
+        permissionGroups: validation.invitation.permissionGroups || [],
+        customPermissions: [],
+        deniedPermissions: [],
         isActive: true,
         createdAt: getCurrentDate(),
         invitationId: validation.invitation.id

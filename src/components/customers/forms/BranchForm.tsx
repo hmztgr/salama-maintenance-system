@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect, SearchableSelectOption } from '@/components/ui/searchable-select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertCircle, CheckCircle, Save, X } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -28,6 +28,13 @@ const SAUDI_CITIES = [
 export function BranchForm({ branch, onSuccess, onCancel }: BranchFormProps) {
   const { addBranch, updateBranch } = useBranchesFirebase();
   const { companies } = useCompaniesFirebase();
+
+  // Add debugging for companies data
+  console.log('🏢 BranchForm - Companies data:', {
+    companiesCount: companies.length,
+    nonArchivedCount: companies.filter(c => !c.isArchived).length,
+    companies: companies.filter(c => !c.isArchived).slice(0, 3) // Show first 3 for debugging
+  });
 
   const [formData, setFormData] = useState({
     companyId: branch?.companyId || '',
@@ -149,22 +156,56 @@ export function BranchForm({ branch, onSuccess, onCancel }: BranchFormProps) {
             <Label htmlFor="companyId" className="text-right block">
               الشركة *
             </Label>
-            <Select
+            <div className="relative">
+            <SearchableSelect
+              options={companies
+                .filter(c => !c.isArchived)
+                .sort((a, b) => a.companyId.localeCompare(b.companyId))
+                .map((company): SearchableSelectOption => ({
+                  value: company.companyId,
+                  label: `${company.companyId} - ${company.companyName}`
+                }))}
               value={formData.companyId}
-              onValueChange={(value) => handleInputChange('companyId', value)}
+                onValueChange={(value) => {
+                  console.log('🏢 BranchForm - Company selected:', value);
+                  handleInputChange('companyId', value);
+                }}
+              placeholder="اختر الشركة"
+              searchPlaceholder="ابحث بالاسم أو الرقم..."
+              emptyMessage="لا توجد شركات"
+              className={errors.companyId ? 'border-red-500' : ''}
+              maxHeight="300px"
               dir="rtl"
-            >
-              <SelectTrigger className={errors.companyId ? 'border-red-500' : ''}>
-                <SelectValue placeholder="اختر الشركة" />
-              </SelectTrigger>
-              <SelectContent className="z-[10000]">
-                {companies.filter(c => !c.isArchived).map((company) => (
-                  <SelectItem key={company.companyId} value={company.companyId}>
-                    {company.companyName} ({company.companyId})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
+              {/* Debug info */}
+              <div className="text-xs text-gray-500 mt-1">
+                Debug: {companies.filter(c => !c.isArchived).length} companies available
+              </div>
+              
+              {/* Fallback regular select for testing */}
+              <details className="mt-2">
+                <summary className="text-xs text-blue-600 cursor-pointer">اختبار: استخدم قائمة عادية</summary>
+                <select
+                  value={formData.companyId}
+                  onChange={(e) => {
+                    console.log('🏢 BranchForm - Fallback select changed:', e.target.value);
+                    handleInputChange('companyId', e.target.value);
+                  }}
+                  className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md"
+                  dir="rtl"
+                >
+                  <option value="">اختر الشركة</option>
+                  {companies
+                    .filter(c => !c.isArchived)
+                    .sort((a, b) => a.companyId.localeCompare(b.companyId))
+                    .map((company) => (
+                      <option key={company.companyId} value={company.companyId}>
+                        {company.companyId} - {company.companyName}
+                      </option>
+                    ))}
+                </select>
+              </details>
+            </div>
             {errors.companyId && (
               <p className="text-sm text-red-500 text-right">{errors.companyId}</p>
             )}
@@ -177,22 +218,20 @@ export function BranchForm({ branch, onSuccess, onCancel }: BranchFormProps) {
             <Label htmlFor="city" className="text-right block">
               المدينة *
             </Label>
-            <Select
+            <SearchableSelect
+              options={SAUDI_CITIES.map((city): SearchableSelectOption => ({
+                value: city,
+                label: city
+              }))}
               value={formData.city}
               onValueChange={(value) => handleInputChange('city', value)}
+              placeholder="اختر المدينة"
+              searchPlaceholder="ابحث بالمدينة..."
+              emptyMessage="لا توجد مدن"
+              className={errors.city ? 'border-red-500' : ''}
+              maxHeight="300px"
               dir="rtl"
-            >
-              <SelectTrigger className={errors.city ? 'border-red-500' : ''}>
-                <SelectValue placeholder="اختر المدينة" />
-              </SelectTrigger>
-              <SelectContent className="z-[10000]">
-                {SAUDI_CITIES.map((city) => (
-                  <SelectItem key={city} value={city}>
-                    {city}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
             {errors.city && (
               <p className="text-sm text-red-500 text-right">{errors.city}</p>
             )}

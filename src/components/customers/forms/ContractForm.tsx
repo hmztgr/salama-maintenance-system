@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { Contract, Company } from '@/types/customer';
 import { formatDateForInput, convertInputDateToStandard, parseStandardDate } from '@/lib/date-handler';
+import { FileUpload } from '@/components/common/FileUpload';
+import { UploadedFile } from '@/hooks/useFirebaseStorage';
 
 export interface ContractFormProps {
   contract?: Contract;
@@ -32,12 +34,23 @@ export function ContractForm({ contract, companies, onSubmit, onCancel, isLoadin
     fireSuppressionMaintenance: firstBatch?.services?.fireSuppressionMaintenance || false,
     gasFireSuppression: firstBatch?.services?.gasFireSuppression || false,
     foamFireSuppression: firstBatch?.services?.foamFireSuppression || false,
-    contractDocument: undefined as File | undefined,
   });
+
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(
+    contract?.contractDocument && typeof contract.contractDocument === 'string'
+      ? [{
+          name: 'Contract Document',
+          url: contract.contractDocument,
+          path: 'contracts/' + contract.contractId,
+          size: 0,
+          type: 'application/pdf',
+          uploadedAt: new Date().toISOString(),
+        }]
+      : []
+  );
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [usePeriod, setUsePeriod] = useState(false);
-  const contractFileRef = useRef<HTMLInputElement>(null);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -132,8 +145,12 @@ export function ContractForm({ contract, companies, onSubmit, onCancel, isLoadin
     }
   };
 
-  const handleFileChange = (file: File | null) => {
-    setFormData(prev => ({ ...prev, contractDocument: file || undefined }));
+  const handleFilesUploaded = (files: UploadedFile[]) => {
+    setUploadedFiles(prev => [...prev, ...files]);
+  };
+
+  const handleFileDeleted = (filePath: string) => {
+    setUploadedFiles(prev => prev.filter(file => file.path !== filePath));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -165,7 +182,7 @@ export function ContractForm({ contract, companies, onSubmit, onCancel, isLoadin
         contractValue: formData.contractValue,
         notes: formData.notes,
         serviceBatches,
-        contractDocument: formData.contractDocument,
+        ...(uploadedFiles.length > 0 && { contractDocument: uploadedFiles[0].url }),
       };
 
       onSubmit(contractData);
@@ -483,7 +500,10 @@ export function ContractForm({ contract, companies, onSubmit, onCancel, isLoadin
                     min="0"
                     step="0.01"
                     value={formData.contractValue || ''}
-                    onChange={(e) => handleInputChange('contractValue', parseFloat(e.target.value) || 0)}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9]/g, '');
+                      handleInputChange('contractValue', value ? parseInt(value, 10) : 0);
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="0.00"
                     disabled={isLoading}
@@ -494,29 +514,15 @@ export function ContractForm({ contract, companies, onSubmit, onCancel, isLoadin
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     وثيقة العقد
                   </label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-md p-4 text-center">
-                    <input
-                      ref={contractFileRef}
-                      type="file"
-                      accept=".pdf,.doc,.docx"
-                      onChange={(e) => handleFileChange(e.target.files?.[0] || null)}
-                      className="hidden"
-                      disabled={isLoading}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => contractFileRef.current?.click()}
-                      className="text-blue-600 hover:text-blue-800 text-sm"
-                      disabled={isLoading}
-                    >
-                      📎 رفع وثيقة العقد
-                    </button>
-                    {formData.contractDocument && (
-                      <p className="text-xs text-green-600 mt-1">
-                        {formData.contractDocument.name}
-                      </p>
-                    )}
-                  </div>
+                  <FileUpload
+                    onFilesUploaded={handleFilesUploaded}
+                    onFileDeleted={handleFileDeleted}
+                    existingFiles={uploadedFiles}
+                    maxFiles={1}
+                    allowedTypes={['pdf', 'doc', 'docx']}
+                    folder={contract ? `contracts/${contract.contractId}/documents` : 'contracts/temp'}
+                    disabled={isLoading}
+                  />
                 </div>
 
                 <div className="md:col-span-2">

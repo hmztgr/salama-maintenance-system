@@ -34,7 +34,7 @@ import {
   History
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContextFirebase';
-import { useRoleManagement } from '@/hooks/useRoleManagement';
+import { useRoleManagementFirebase } from '@/hooks/useRoleManagementFirebase';
 import {
   ExtendedUser,
   UserRole,
@@ -58,15 +58,22 @@ export function AdvancedRoleManagement() {
     stats,
     actions,
     refreshData
-  } = useRoleManagement();
+  } = useRoleManagementFirebase();
 
-  const [activeTab, setActiveTab] = useState<'users' | 'groups' | 'history' | 'statistics'>('users');
+  // Debug logging
+  console.log('🔍 AdvancedRoleManagement - permissionGroups:', permissionGroups);
+  console.log('🔍 AdvancedRoleManagement - loading:', loading);
+  console.log('🔍 AdvancedRoleManagement - error:', error);
+
+  const [activeTab, setActiveTab] = useState<'users' | 'groups' | 'history' | 'statistics'>('groups');
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<UserRole | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [selectedUser, setSelectedUser] = useState<ExtendedUser | null>(null);
   const [showUserDetails, setShowUserDetails] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState<PermissionGroup | null>(null);
+  const [showGroupDetails, setShowGroupDetails] = useState(false);
 
   // Check permissions
   if (!hasPermission('admin')) {
@@ -554,6 +561,8 @@ export function AdvancedRoleManagement() {
           }}
         />
       )}
+
+
     </div>
   );
 }
@@ -635,8 +644,10 @@ function PermissionGroupsTab({ permissionGroups, permissions, actions, onRefresh
                             variant="outline"
                             size="sm"
                             onClick={() => {
+                              console.log('🔧 Edit button clicked for group:', group);
                               setSelectedGroup(group);
                               setShowGroupDetails(true);
+                              console.log('🔧 Modal state set - selectedGroup:', group, 'showGroupDetails:', true);
                             }}
                             className="gap-1"
                           >
@@ -665,6 +676,34 @@ function PermissionGroupsTab({ permissionGroups, permissions, actions, onRefresh
           )}
         </CardContent>
       </Card>
+
+      {/* Group Details Modal */}
+      {(() => {
+        console.log('🔧 Modal rendering check - showGroupDetails:', showGroupDetails, 'selectedGroup:', selectedGroup);
+        return null;
+      })()}
+      {showGroupDetails && selectedGroup ? (
+        <GroupDetailsModal
+          group={selectedGroup}
+          permissions={permissions}
+          actions={actions}
+          onClose={() => {
+            console.log('🔧 Modal closing');
+            setShowGroupDetails(false);
+            setSelectedGroup(null);
+          }}
+          onSuccess={() => {
+            console.log('🔧 Modal success');
+            onRefresh();
+            setShowGroupDetails(false);
+            setSelectedGroup(null);
+          }}
+        />
+      ) : (
+        <div style={{ display: 'none' }}>
+          {/* Debug: Modal not rendering - showGroupDetails: {String(showGroupDetails)}, selectedGroup: {selectedGroup ? 'exists' : 'null'} */}
+        </div>
+      )}
     </div>
   );
 }
@@ -1012,6 +1051,132 @@ function UserDetailsModal({ user, permissions, permissionGroups, actions, onClos
             </div>
           </div>
 
+          {/* Permission Groups Management */}
+          <div className="space-y-4">
+            <h3 className="font-medium text-gray-900">إدارة مجموعات الصلاحيات</h3>
+            
+            <div className="space-y-2 max-h-48 overflow-y-auto border rounded p-3">
+              {permissionGroups.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center">لا توجد مجموعات صلاحيات متاحة</p>
+              ) : (
+                permissionGroups.map((group) => (
+                  <div key={group.id} className="flex items-center gap-2 justify-end">
+                    <div className="text-right">
+                      <div className="font-medium text-sm">{group.name}</div>
+                      <div className="text-xs text-gray-600">{group.description}</div>
+                    </div>
+                    <Checkbox
+                      checked={user.permissionGroups.includes(group.id)}
+                      onCheckedChange={(checked) => {
+                        // This would need to be implemented in the actions
+                        console.log('Toggle permission group:', group.id, checked);
+                      }}
+                    />
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Custom Permissions Management */}
+          <div className="space-y-4">
+            <h3 className="font-medium text-gray-900">إدارة الصلاحيات المخصصة</h3>
+            
+            <div className="space-y-2">
+              <Label className="text-right block mb-1">فئة الصلاحيات</Label>
+              <Select defaultValue="customer">
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="customer">إدارة العملاء</SelectItem>
+                  <SelectItem value="planning">التخطيط والجدولة</SelectItem>
+                  <SelectItem value="visits">إدارة الزيارات</SelectItem>
+                  <SelectItem value="reports">التقارير</SelectItem>
+                  <SelectItem value="admin">الإدارة</SelectItem>
+                  <SelectItem value="system">النظام</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-right block mb-1">الصلاحيات المخصصة</Label>
+              
+              {/* Bulk Selection Controls for Custom Permissions */}
+              <div className="flex items-center justify-between mb-3 p-2 bg-gray-50 rounded border">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    checked={false}
+                    onCheckedChange={(checked) => {
+                      // This would need to be implemented
+                      console.log('Select all custom permissions:', checked);
+                    }}
+                  />
+                  <span className="text-sm font-medium">تحديد الكل</span>
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      // This would need to be implemented
+                      console.log('Select read permissions');
+                    }}
+                    className="text-xs"
+                  >
+                    تحديد صلاحيات القراءة
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      // This would need to be implemented
+                      console.log('Select write permissions');
+                    }}
+                    className="text-xs"
+                  >
+                    تحديد صلاحيات الكتابة
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      // This would need to be implemented
+                      console.log('Clear all custom permissions');
+                    }}
+                    className="text-xs text-red-600 hover:text-red-700"
+                  >
+                    إلغاء التحديد
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="space-y-2 max-h-48 overflow-y-auto border rounded p-3">
+                {permissions.slice(0, 10).map((permission) => (
+                  <div key={permission.id} className="flex items-center gap-2 justify-end">
+                    <div className="text-right">
+                      <div className="font-medium text-sm">{permission.name}</div>
+                      <div className="text-xs text-gray-600">{permission.description}</div>
+                    </div>
+                    <Checkbox
+                      checked={user.customPermissions.includes(permission.id)}
+                      onCheckedChange={(checked) => {
+                        // This would need to be implemented in the actions
+                        console.log('Toggle custom permission:', permission.id, checked);
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
           {/* Actions */}
           <div className="flex gap-3 justify-end pt-4 border-t">
             <Button
@@ -1151,7 +1316,7 @@ function CreateGroupModal({ permissions, actions, onClose, onSuccess }: CreateGr
               <Label className="text-right block mb-1">الفئة *</Label>
               <Select
                 value={formData.category}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, category: value as PermissionCategory, permissions: [] }))}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, category: value as PermissionCategory }))}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -1169,6 +1334,114 @@ function CreateGroupModal({ permissions, actions, onClose, onSuccess }: CreateGr
 
             <div>
               <Label className="text-right block mb-3">الصلاحيات *</Label>
+              
+              {/* Bulk Selection Controls */}
+              <div className="flex items-center justify-between mb-3 p-2 bg-gray-50 rounded border">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={permissions.length > 0 && formData.permissions.length === permissions.length}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setFormData(prev => ({
+                            ...prev,
+                            permissions: permissions.map(p => p.id)
+                          }));
+                        } else {
+                          setFormData(prev => ({
+                            ...prev,
+                            permissions: []
+                          }));
+                        }
+                      }}
+                    />
+                    <span className="text-sm font-medium">تحديد الكل (جميع الفئات)</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={permissionsByCategory.length > 0 && 
+                        permissionsByCategory.every(p => formData.permissions.includes(p.id))}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setFormData(prev => ({
+                            ...prev,
+                            permissions: [...new Set([...prev.permissions, ...permissionsByCategory.map(p => p.id)])]
+                          }));
+                        } else {
+                          setFormData(prev => ({
+                            ...prev,
+                            permissions: prev.permissions.filter(id => 
+                              !permissionsByCategory.some(p => p.id === id)
+                            )
+                          }));
+                        }
+                      }}
+                    />
+                    <span className="text-sm font-medium">تحديد الكل (الفئة الحالية)</span>
+                  </div>
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const readPermissions = permissionsByCategory
+                        .filter(p => p.action === 'read')
+                        .map(p => p.id);
+                      setFormData(prev => ({
+                        ...prev,
+                        permissions: [...new Set([...prev.permissions, ...readPermissions])]
+                      }));
+                    }}
+                    className="text-xs"
+                  >
+                    تحديد صلاحيات القراءة
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const writePermissions = permissionsByCategory
+                        .filter(p => ['create', 'update', 'delete'].includes(p.action))
+                        .map(p => p.id);
+                      setFormData(prev => ({
+                        ...prev,
+                        permissions: [...new Set([...prev.permissions, ...writePermissions])]
+                      }));
+                    }}
+                    className="text-xs"
+                  >
+                    تحديد صلاحيات الكتابة
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        permissions: []
+                      }));
+                    }}
+                    className="text-xs text-red-600 hover:text-red-700"
+                  >
+                    إلغاء التحديد
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Selection Summary */}
+              <div className="text-xs text-gray-600 text-right mb-2">
+                محدد {formData.permissions.length} من {permissions.length} صلاحية (جميع الفئات) | 
+                محدد {permissionsByCategory.filter(p => formData.permissions.includes(p.id)).length} من {permissionsByCategory.length} صلاحية (الفئة الحالية)
+              </div>
+              
               <div className="space-y-2 max-h-64 overflow-y-auto border rounded p-3">
                 {permissionsByCategory.map((permission) => (
                   <div key={permission.id} className="flex items-center gap-2 justify-end">
@@ -1184,7 +1457,7 @@ function CreateGroupModal({ permissions, actions, onClose, onSuccess }: CreateGr
                 ))}
               </div>
               <p className="text-xs text-gray-600 mt-2 text-right">
-                محدد {formData.permissions.length} من {permissionsByCategory.length} صلاحية
+                محدد {formData.permissions.length} من {permissions.length} صلاحية (جميع الفئات)
               </p>
             </div>
 
@@ -1211,6 +1484,339 @@ function CreateGroupModal({ permissions, actions, onClose, onSuccess }: CreateGr
                   <>
                     <Plus className="w-4 h-4" />
                     إنشاء المجموعة
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Group Details Modal Component
+interface GroupDetailsModalProps {
+  group: PermissionGroup;
+  permissions: Permission[];
+  actions: any;
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+function GroupDetailsModal({ group, permissions, actions, onClose, onSuccess }: GroupDetailsModalProps) {
+  const [formData, setFormData] = useState({
+    name: group.name,
+    description: group.description,
+    category: group.category,
+    permissions: group.permissions || []
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const getCategoryDisplay = (category: PermissionCategory) => {
+    const displays = {
+      customer: { name: 'إدارة العملاء', icon: '👥', color: 'bg-blue-50 text-blue-700' },
+      planning: { name: 'التخطيط والجدولة', icon: '📅', color: 'bg-green-50 text-green-700' },
+      visits: { name: 'إدارة الزيارات', icon: '🏠', color: 'bg-purple-50 text-purple-700' },
+      reports: { name: 'التقارير', icon: '📊', color: 'bg-orange-50 text-orange-700' },
+      admin: { name: 'الإدارة', icon: '⚙️', color: 'bg-red-50 text-red-700' },
+      system: { name: 'النظام', icon: '🔧', color: 'bg-gray-50 text-gray-700' }
+    };
+    return displays[category];
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = 'اسم المجموعة مطلوب';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handlePermissionToggle = (permissionId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      permissions: prev.permissions.includes(permissionId)
+        ? prev.permissions.filter(id => id !== permissionId)
+        : [...prev.permissions, permissionId]
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('🔧 GroupDetailsModal handleSubmit called');
+
+    if (!validateForm()) {
+      console.log('🔧 Form validation failed');
+      return;
+    }
+
+    console.log('🔧 Starting update with data:', {
+      groupId: group.id,
+      updates: {
+        name: formData.name,
+        description: formData.description,
+        category: formData.category,
+        permissions: formData.permissions
+      }
+    });
+
+    setIsSubmitting(true);
+
+    try {
+      console.log('🔧 Calling actions.updatePermissionGroup...');
+      const result = await actions.updatePermissionGroup(group.id, {
+        name: formData.name,
+        description: formData.description,
+        category: formData.category,
+        permissions: formData.permissions
+      });
+
+      console.log('🔧 Update result:', result);
+
+      if (result.success) {
+        console.log('🔧 Update successful, calling onSuccess');
+        onSuccess();
+      } else {
+        console.log('🔧 Update failed:', result.error);
+        setErrors({ submit: result.error || 'فشل في تحديث مجموعة الصلاحيات' });
+      }
+    } catch (err) {
+      console.error('🔧 Exception during update:', err);
+      setErrors({ submit: 'فشل في تحديث مجموعة الصلاحيات' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const permissionsByCategory = permissions.filter(p => p.category === formData.category);
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4" style={{ zIndex: 9999 }}>
+      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto" style={{ zIndex: 10000 }}>
+        <CardHeader>
+          <CardTitle className="text-right flex items-center justify-between">
+            <span>تعديل مجموعة الصلاحيات: {group.name}</span>
+            <Button variant="ghost" onClick={onClose} className="p-2">
+              ✕
+            </Button>
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="name" className="text-right block mb-1">اسم المجموعة *</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="مثال: مجموعة إدارة العملاء"
+                className={`text-right ${errors.name ? 'border-red-500' : ''}`}
+                dir="rtl"
+              />
+              {errors.name && (
+                <p className="text-sm text-red-500 text-right mt-1">{errors.name}</p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="description" className="text-right block mb-1">الوصف</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="وصف المجموعة والغرض منها"
+                className="text-right"
+                dir="rtl"
+              />
+            </div>
+
+            <div>
+              <Label className="text-right block mb-1">الفئة *</Label>
+              <Select
+                value={formData.category}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, category: value as PermissionCategory }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="z-[10001]" style={{ zIndex: 10001 }}>
+                  <SelectItem value="customer">إدارة العملاء</SelectItem>
+                  <SelectItem value="planning">التخطيط والجدولة</SelectItem>
+                  <SelectItem value="visits">إدارة الزيارات</SelectItem>
+                  <SelectItem value="reports">التقارير</SelectItem>
+                  <SelectItem value="admin">الإدارة</SelectItem>
+                  <SelectItem value="system">النظام</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="text-right block mb-3">الصلاحيات *</Label>
+              
+              {/* Bulk Selection Controls */}
+              <div className="flex items-center justify-between mb-3 p-2 bg-gray-50 rounded border">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={permissions.length > 0 && formData.permissions.length === permissions.length}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setFormData(prev => ({
+                            ...prev,
+                            permissions: permissions.map(p => p.id)
+                          }));
+                        } else {
+                          setFormData(prev => ({
+                            ...prev,
+                            permissions: []
+                          }));
+                        }
+                      }}
+                    />
+                    <span className="text-sm font-medium">تحديد الكل (جميع الفئات)</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={permissionsByCategory.length > 0 && 
+                        permissionsByCategory.every(p => formData.permissions.includes(p.id))}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setFormData(prev => ({
+                            ...prev,
+                            permissions: [...new Set([...prev.permissions, ...permissionsByCategory.map(p => p.id)])]
+                          }));
+                        } else {
+                          setFormData(prev => ({
+                            ...prev,
+                            permissions: prev.permissions.filter(id => 
+                              !permissionsByCategory.some(p => p.id === id)
+                            )
+                          }));
+                        }
+                      }}
+                    />
+                    <span className="text-sm font-medium">تحديد الكل (الفئة الحالية)</span>
+                  </div>
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const readPermissions = permissionsByCategory
+                        .filter(p => p.action === 'read')
+                        .map(p => p.id);
+                      setFormData(prev => ({
+                        ...prev,
+                        permissions: [...new Set([...prev.permissions, ...readPermissions])]
+                      }));
+                    }}
+                    className="text-xs"
+                  >
+                    تحديد صلاحيات القراءة
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const writePermissions = permissionsByCategory
+                        .filter(p => ['create', 'update', 'delete'].includes(p.action))
+                        .map(p => p.id);
+                      setFormData(prev => ({
+                        ...prev,
+                        permissions: [...new Set([...prev.permissions, ...writePermissions])]
+                      }));
+                    }}
+                    className="text-xs"
+                  >
+                    تحديد صلاحيات الكتابة
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        permissions: []
+                      }));
+                    }}
+                    className="text-xs text-red-600 hover:text-red-700"
+                  >
+                    إلغاء التحديد
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Selection Summary */}
+              <div className="text-xs text-gray-600 text-right mb-2">
+                محدد {formData.permissions.length} من {permissions.length} صلاحية (جميع الفئات) | 
+                محدد {permissionsByCategory.filter(p => formData.permissions.includes(p.id)).length} من {permissionsByCategory.length} صلاحية (الفئة الحالية)
+              </div>
+              
+              <div className="space-y-2 max-h-64 overflow-y-auto border rounded p-3">
+                {permissionsByCategory.map((permission) => (
+                  <div key={permission.id} className="flex items-center gap-2 justify-end">
+                    <div className="text-right">
+                      <div className="font-medium text-sm">{permission.name}</div>
+                      <div className="text-xs text-gray-600">{permission.description}</div>
+                    </div>
+                    <Checkbox
+                      checked={formData.permissions.includes(permission.id)}
+                      onCheckedChange={() => handlePermissionToggle(permission.id)}
+                    />
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-gray-600 mt-2 text-right">
+                محدد {formData.permissions.length} من {permissions.length} صلاحية (جميع الفئات)
+              </p>
+            </div>
+
+            {errors.submit && (
+              <Alert className="border-red-500 bg-red-50">
+                <XCircle className="h-4 w-4 text-red-600" />
+                <AlertDescription className="text-red-700 text-right">
+                  {errors.submit}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <div className="flex gap-3 justify-end pt-4 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={isSubmitting}
+              >
+                إلغاء
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="gap-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    جاري التحديث...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    تحديث المجموعة
                   </>
                 )}
               </Button>

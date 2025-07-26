@@ -147,12 +147,20 @@ export function formatDateForDisplay(date: Date | string): string {
   if (typeof date === 'string') {
     const validation = standardizeDate(date);
     if (!validation.isValid || !validation.standardizedDate) {
-      return 'Invalid Date';
+      console.warn('Invalid date string provided to formatDateForDisplay:', date);
+      return getCurrentDate(); // Return current date instead of 'Invalid Date'
     }
     return validation.standardizedDate;
   }
 
   const dateObj = date;
+  
+  // Validate the Date object
+  if (isNaN(dateObj.getTime())) {
+    console.warn('Invalid Date object provided to formatDateForDisplay:', dateObj);
+    return getCurrentDate(); // Return current date instead of 'Invalid Date'
+  }
+  
   const day = dateObj.getDate().toString().padStart(2, '0');
   const month = MONTH_NAMES[dateObj.getMonth() + 1 as keyof typeof MONTH_NAMES];
   const year = dateObj.getFullYear();
@@ -208,8 +216,24 @@ export function formatDateForInput(dateString: string): string {
 export function convertInputDateToStandard(inputDate: string): string {
   if (!inputDate) return '';
 
-  const validation = standardizeDate(inputDate);
-  return validation.standardizedDate || '';
+  try {
+    // Parse the yyyy-mm-dd format directly to avoid timezone issues
+    const [year, month, day] = inputDate.split('-').map(Number);
+    if (!year || !month || !day) return '';
+
+    // Create date in local timezone (not UTC)
+    const date = new Date(year, month - 1, day);
+    
+    // Format as dd-mmm-yyyy
+    const dayStr = date.getDate().toString().padStart(2, '0');
+    const monthName = MONTH_NAMES[date.getMonth() + 1 as keyof typeof MONTH_NAMES];
+    const yearStr = date.getFullYear().toString();
+
+    return `${dayStr}-${monthName}-${yearStr}`;
+  } catch (error) {
+    console.error('Error converting input date:', error);
+    return '';
+  }
 }
 
 /**
@@ -309,4 +333,54 @@ export function getCurrentWeekStart(): string {
  */
 export function getCurrentWeekEnd(): string {
   return getWeekEndDate(getCurrentDate());
+}
+
+/**
+ * Fix invalid dates in visit data
+ * This function can be used to migrate existing data with invalid dates
+ */
+export function fixInvalidDate(dateString: string): string {
+  if (!dateString || dateString === 'Invalid Date' || dateString === 'NaN') {
+    // Return current date as fallback
+    return getCurrentDate();
+  }
+  
+  // Try to standardize the date
+  const validation = standardizeDate(dateString);
+  if (validation.isValid && validation.standardizedDate) {
+    return validation.standardizedDate;
+  }
+  
+  // If still invalid, return current date
+  return getCurrentDate();
+}
+
+/**
+ * Validate and fix a date string, returning a valid dd-mmm-yyyy format
+ */
+export function validateAndFixDate(dateString: string): { isValid: boolean; fixedDate: string; originalDate: string } {
+  const originalDate = dateString;
+  
+  if (!dateString || dateString === 'Invalid Date' || dateString === 'NaN') {
+    return {
+      isValid: false,
+      fixedDate: getCurrentDate(),
+      originalDate
+    };
+  }
+  
+  const validation = standardizeDate(dateString);
+  if (validation.isValid && validation.standardizedDate) {
+    return {
+      isValid: true,
+      fixedDate: validation.standardizedDate,
+      originalDate
+    };
+  }
+  
+  return {
+    isValid: false,
+    fixedDate: getCurrentDate(),
+    originalDate
+  };
 }

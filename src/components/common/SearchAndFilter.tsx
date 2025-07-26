@@ -81,6 +81,7 @@ export function SearchAndFilter({
       regularVisits: { min: '', max: '' },
       emergencyVisits: { min: '', max: '' },
       dateRange: { start: '', end: '' },
+      visitStatus: 'all',
       sortBy: 'name',
       sortDirection: 'asc'
     });
@@ -143,6 +144,7 @@ export function SearchAndFilter({
       filters.regularVisits?.max ||
       filters.emergencyVisits?.min ||
       filters.emergencyVisits?.max ||
+      filters.visitStatus !== 'all' ||
       filters.dateRange.start ||
       filters.dateRange.end
     );
@@ -396,6 +398,31 @@ export function SearchAndFilter({
                   <div className="text-xs text-gray-500 text-right">
                     مثال: من 1 إلى 5 زيارات طارئة سنوياً
                   </div>
+                </div>
+              </div>
+
+              {/* Visit Status Filter */}
+              <div className="space-y-2">
+                <Label className="text-right block">حالة الزيارات</Label>
+                <Select
+                  value={filters.visitStatus}
+                  onValueChange={(value) => handleFilterChange('visitStatus', value)}
+                  dir="rtl"
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">جميع الفروع</SelectItem>
+                    <SelectItem value="hasPlanned">فروع لديها زيارات مخططة</SelectItem>
+                    <SelectItem value="hasEmergency">فروع لديها زيارات طارئة</SelectItem>
+                    <SelectItem value="hasCompleted">فروع لديها زيارات مكتملة</SelectItem>
+                    <SelectItem value="noVisits">فروع بدون زيارات</SelectItem>
+                    <SelectItem value="hasAnyVisits">فروع لديها أي نوع من الزيارات</SelectItem>
+                  </SelectContent>
+                </Select>
+                <div className="text-xs text-gray-500 text-right">
+                  تصفية حسب حالة الزيارات في السنة المحددة
                 </div>
               </div>
 

@@ -8,10 +8,21 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, AlertTriangle, XCircle, FileText, Download, Upload } from 'lucide-react';
 import { standardizeDate } from '@/lib/date-handler';
+import { useCompaniesFirebase } from '@/hooks/useCompaniesFirebase';
+import { useContractsFirebase } from '@/hooks/useContractsFirebase';
+import { useBranchesFirebase } from '@/hooks/useBranchesFirebase';
+import { 
+  normalizeImportValue, 
+  validateNormalizedValue, 
+  processImportRow, 
+  getFieldConfig,
+  generateImportGuide,
+  ImportFieldConfig 
+} from '@/lib/import-utils';
 
 interface ImportReviewProps {
   file: File;
-  entityType: 'companies' | 'contracts' | 'branches';
+  entityType: 'companies' | 'contracts' | 'contractsAdvanced' | 'branches';
   onClose: () => void;
   onImportComplete: (results: ImportResults) => void;
 }
@@ -107,9 +118,27 @@ const COLUMN_MAPPINGS = {
     foamFireSuppression: ['foamFireSuppression', 'foam_suppression', 'نظام الإطفاء بالفوم*', 'إطفاء الفوم', 'Foam Suppression', 'فوم', 'إطفاء فوم'],
     notes: ['notes', 'Notes', 'ملاحظات', 'التعليقات', 'تعليق', 'ملحوظات']
   },
-  branches: {
+  contractsAdvanced: {
     companyId: ['companyId', 'company_id', 'معرف الشركة*', 'معرف الشركة', 'Company ID', 'معرف', 'رقم الشركة'],
-    contractIds: ['contractIds', 'contract_ids', 'معرفات العقود*', 'معرفات العقود', 'Contract IDs', 'عقود', 'معرفات عقود'],
+    contractStartDate: ['contractStartDate', 'contract_start_date', 'تاريخ بداية العقد*', 'تاريخ البداية', 'Start Date', 'بداية العقد', 'تاريخ بدء'],
+    contractEndDate: ['contractEndDate', 'contract_end_date', 'تاريخ انتهاء العقد*', 'تاريخ انتهاء العقد', 'تاريخ الانتهاء', 'End Date', 'انتهاء العقد', 'تاريخ انتهاء'],
+    contractPeriodMonths: ['contractPeriodMonths', 'contract_period_months', 'مدة العقد بالشهور*', 'مدة العقد بالأشهر', 'مدة العقد', 'Contract Period', 'مدة العقد', 'مدة عقد'],
+    contractValue: ['contractValue', 'contract_value', 'قيمة العقد', 'Contract Value', 'القيمة', 'قيمة', 'سعر'],
+    branchIds: ['branchIds', 'branch_ids', 'معرفات الفروع*', 'معرفات الفروع', 'Branch IDs', 'فروع', 'معرفات فروع'],
+    fireExtinguisherMaintenance: ['fireExtinguisherMaintenance', 'fire_extinguisher', 'صيانة الطفايات*', 'صيانة الطفايات', 'Fire Extinguisher', 'طفايات', 'صيانة طفايات'],
+    alarmSystemMaintenance: ['alarmSystemMaintenance', 'alarm_system', 'صيانة نظام الإنذار*', 'صيانة نظام الإنذار', 'نظام الإنذار', 'Alarm System', 'إنذار', 'صيانة إنذار'],
+    fireSuppressionMaintenance: ['fireSuppressionMaintenance', 'fire_suppression', 'صيانة نظام الإطفاء*', 'صيانة نظام الإطفاء', 'نظام الإطفاء', 'Fire Suppression', 'إطفاء', 'صيانة إطفاء'],
+    gasFireSuppression: ['gasFireSuppression', 'gas_suppression', 'نظام الإطفاء بالغاز*', 'نظام الإطفاء بالغاز', 'إطفاء الغاز', 'Gas Suppression', 'غاز', 'إطفاء غاز'],
+    foamFireSuppression: ['foamFireSuppression', 'foam_suppression', 'نظام الإطفاء بالفوم*', 'نظام الإطفاء بالفوم', 'إطفاء الفوم', 'Foam Suppression', 'فوم', 'إطفاء فوم'],
+    regularVisitsPerYear: ['regularVisitsPerYear', 'regular_visits', 'عدد الزيارات العادية سنوياً*', 'عدد الزيارات العادية سنوياً', 'الزيارات العادية', 'Regular Visits', 'زيارات عادية', 'زيارات'],
+    emergencyVisitsPerYear: ['emergencyVisitsPerYear', 'emergency_visits', 'عدد الزيارات الطارئة سنوياً*', 'عدد الزيارات الطارئة سنوياً', 'الزيارات الطارئة', 'Emergency Visits', 'زيارات طارئة', 'طوارئ'],
+    emergencyVisitCost: ['emergencyVisitCost', 'emergency_visit_cost', 'تكلفة الزيارة الطارئة*', 'تكلفة الزيارة الطارئة', 'Emergency Visit Cost', 'تكلفة زيارة طارئة', 'تكلفة طوارئ'],
+    batchNotes: ['batchNotes', 'batch_notes', 'ملاحظات الدفعة*', 'ملاحظات الدفعة', 'Batch Notes', 'ملاحظات الدفعة', 'ملاحظات دفعة'],
+    contractNotes: ['contractNotes', 'contract_notes', 'ملاحظات العقد*', 'ملاحظات العقد', 'Contract Notes', 'ملاحظات العقد', 'ملاحظات عقد']
+  },
+  branches: {
+    companyId: ['companyId', 'company_id', 'معرف الشركة***', 'معرف الشركة', 'Company ID', 'معرف', 'رقم الشركة'],
+    companyName: ['companyName', 'company_name', 'اسم الشركة**', 'اسم الشركة', 'Company Name', 'الشركة', 'اسم', 'شركة', 'الاسم'],
     city: ['city', 'City', 'المدينة*', 'المدينة', 'مدينة'],
     location: ['location', 'Location', 'الموقع*', 'الموقع', 'موقع', 'منطقة'],
     branchName: ['branchName', 'branch_name', 'اسم الفرع*', 'اسم الفرع', 'Branch Name', 'فرع', 'اسم فرع'],
@@ -122,7 +151,7 @@ const COLUMN_MAPPINGS = {
 };
 
 // Enhanced helper function with better fuzzy matching for Arabic text
-const mapHeaderToField = (header: string, entityType: 'companies' | 'contracts' | 'branches'): string | null => {
+const mapHeaderToField = (header: string, entityType: 'companies' | 'contracts' | 'contractsAdvanced' | 'branches'): string | null => {
   const mappings = COLUMN_MAPPINGS[entityType];
   const cleanHeader = header.trim();
 
@@ -175,6 +204,19 @@ const mapHeaderToField = (header: string, entityType: 'companies' | 'contracts' 
   return null;
 };
 
+// Helper function to safely get Arabic names from COLUMN_MAPPINGS
+const getArabicNames = (entityType: string, fieldName: string): string[] => {
+  try {
+    const entityMappings = COLUMN_MAPPINGS[entityType as keyof typeof COLUMN_MAPPINGS];
+    if (entityMappings && fieldName in entityMappings) {
+      return entityMappings[fieldName as keyof typeof entityMappings] as string[];
+    }
+  } catch (error) {
+    console.warn('Error accessing COLUMN_MAPPINGS:', error);
+  }
+  return [];
+};
+
 export function ImportReview({ file, entityType, onClose, onImportComplete }: ImportReviewProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [importRows, setImportRows] = useState<ImportRow[]>([]);
@@ -182,6 +224,16 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
   const [showErrorsOnly, setShowErrorsOnly] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
   const [processingComplete, setProcessingComplete] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<{
+    type: 'error' | 'warning' | null;
+    field: string | null;
+  }>({ type: null, field: null });
+  const [skippedRowsCount, setSkippedRowsCount] = useState<number>(0);
+
+  // Get data for validation
+  const { companies } = useCompaniesFirebase();
+  const { contracts } = useContractsFirebase();
+  const { branches } = useBranchesFirebase();
 
   // Field validation configurations
   const validationConfigs = useMemo(() => ({
@@ -201,8 +253,8 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
       required: ['companyId', 'contractStartDate', 'contractEndDate', 'regularVisitsPerYear', 'emergencyVisitsPerYear'],
       validations: {
         companyId: { pattern: /^\d{4}$/ },
-        contractStartDate: { pattern: /^\d{2}-[A-Za-z]{3}-\d{4}$/ },
-        contractEndDate: { pattern: /^\d{2}-[A-Za-z]{3}-\d{4}$/ },
+        contractStartDate: { pattern: /^\d{1,2}-[A-Za-z]{3}-\d{2,4}$/ },
+        contractEndDate: { pattern: /^\d{1,2}-[A-Za-z]{3}-\d{2,4}$/ },
         regularVisitsPerYear: { min: 0, max: 365, type: 'number' },
         emergencyVisitsPerYear: { min: 0, max: 365, type: 'number' },
         contractValue: { min: 0, type: 'number' },
@@ -214,11 +266,32 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
         notes: { maxLength: 500 }
       }
     },
-    branches: {
-      required: ['companyId', 'contractIds', 'city', 'location', 'branchName'],
+    contractsAdvanced: {
+      required: ['companyId', 'contractStartDate', 'branchIds', 'fireExtinguisherMaintenance', 'alarmSystemMaintenance', 'fireSuppressionMaintenance'],
       validations: {
         companyId: { pattern: /^\d{4}$/ },
-        contractIds: { pattern: /^[A-Z\-\d,\s]+$/ },
+        contractStartDate: { pattern: /^\d{1,2}-[A-Za-z]{3}-\d{2,4}$/ },
+        contractEndDate: { pattern: /^\d{1,2}-[A-Za-z]{3}-\d{2,4}$/ },
+        contractPeriodMonths: { min: 1, max: 120, type: 'number' },
+        contractValue: { min: 0, type: 'number' },
+        branchIds: { maxLength: 500 },
+        fireExtinguisherMaintenance: { enum: ['نعم', 'لا', 'yes', 'no', 'true', 'false'] },
+        alarmSystemMaintenance: { enum: ['نعم', 'لا', 'yes', 'no', 'true', 'false'] },
+        fireSuppressionMaintenance: { enum: ['نعم', 'لا', 'yes', 'no', 'true', 'false'] },
+        gasFireSuppression: { enum: ['نعم', 'لا', 'yes', 'no', 'true', 'false'] },
+        foamFireSuppression: { enum: ['نعم', 'لا', 'yes', 'no', 'true', 'false'] },
+        regularVisitsPerYear: { min: 0, max: 365, type: 'number' },
+        emergencyVisitsPerYear: { min: 0, max: 365, type: 'number' },
+        emergencyVisitCost: { min: 0, type: 'number' },
+        batchNotes: { maxLength: 500 },
+        contractNotes: { maxLength: 500 }
+      }
+    },
+    branches: {
+      required: ['city', 'location', 'branchName'],
+      validations: {
+        companyId: { pattern: /^\d{4}$/ },
+        companyName: { maxLength: 100 },
         city: { enum: SAUDI_CITIES },
         location: { maxLength: 100 },
         branchName: { maxLength: 100 },
@@ -264,207 +337,218 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
       }
 
       row.push(current.trim());
-      result.push(row);
+      
+      // Only add the row if it has at least one non-empty cell
+      if (row.some(cell => cell && cell.trim().length > 0)) {
+        result.push(row);
+      } else {
+        console.log(`🚫 Skipping completely empty row during CSV parsing`);
+      }
     }
 
-    return result.filter(row => row.some(cell => cell.length > 0));
+    return result;
   };
 
-  // Validate individual field with enhanced error handling
-  const validateField = useCallback((fieldName: string, value: string, rowNumber: number): ValidationError[] => {
+  // Get field configurations for normalization
+  const fieldConfigs = useMemo(() => getFieldConfig(entityType), [entityType]);
+
+  // Validate individual field with normalization
+  const validateField = useCallback((fieldName: string, value: string, rowNumber: number, rowData: Record<string, string>): ValidationError[] => {
     const errors: ValidationError[] = [];
-    const config = currentConfig.validations[fieldName as keyof typeof currentConfig.validations];
+    
+    // Find field configuration
+    const fieldConfig = fieldConfigs.find(config => config.fieldName === fieldName);
+    if (!fieldConfig) return errors;
 
-    // Skip validation for fields not in our configuration
-    if (!config) {
-      console.warn(`⚠️ No validation config found for field: ${fieldName}`);
-      return errors;
-    }
-
-    // Required field validation
-    if (currentConfig.required.includes(fieldName) && (!value || value.trim() === '')) {
+    // Normalize the value
+    const normalized = normalizeImportValue(value, fieldConfig);
+    
+    // Validate the normalized value
+    const validation = validateNormalizedValue(normalized.normalizedValue, fieldConfig);
+    
+    // Add normalization warnings
+    normalized.warnings.forEach(warning => {
       errors.push({
         row: rowNumber,
         field: fieldName,
-        value,
-        error: `الحقل "${fieldName}" مطلوب`,
-        suggestion: 'يرجى إدخال قيمة صحيحة',
-        severity: 'error'
-      });
-      return errors;
-    }
-
-    // Skip validation for empty optional fields
-    if (!value || value.trim() === '') return errors;
-
-    // Type validation
-    if ('type' in config && config.type === 'number' && isNaN(Number(value))) {
-      errors.push({
-        row: rowNumber,
-        field: fieldName,
-        value,
-        error: 'يجب أن تكون القيمة رقم',
-        suggestion: `مثال: 12`,
-        severity: 'error'
-      });
-      return errors;
-    }
-
-    // Enhanced pattern validation with date format flexibility
-    if ('pattern' in config && config.pattern) {
-      let isValid = false;
-      let suggestion = '';
-
-      if (fieldName.includes('Date')) {
-        // Use the enhanced date parser from date-handler.ts
-        try {
-          // Import standardizeDate function for validation
-          const dateValidation = standardizeDate(value);
-          isValid = dateValidation.isValid;
-          
-          if (!isValid) {
-            suggestion = 'استخدم تنسيق dd-mmm-yyyy (مثال: 15-Jan-2024) أو dd/mm/yyyy أو mm/dd/yyyy أو yyyy-mm-dd';
-          }
-        } catch (error) {
-          isValid = false;
-          suggestion = 'تنسيق التاريخ غير مدعوم. استخدم: dd-mmm-yyyy (مثال: 06-Aug-2023)';
-        }
-      } else {
-        // For non-date fields, use the original pattern
-        isValid = (config.pattern as RegExp).test(value);
-
-        if (fieldName === 'email') {
-          suggestion = 'استخدم تنسيق email صحيح (مثال: user@company.com)';
-        } else if (fieldName.includes('phone') || fieldName === 'phone') {
-          suggestion = 'استخدم أرقام ورموز فقط (مثال: 0501234567)';
-        } else if (fieldName === 'companyId') {
-          suggestion = 'استخدم 4 أرقام (مثال: 0001)';
-        } else {
-          suggestion = 'تحقق من تنسيق القيمة المدخلة';
-        }
-      }
-
-      if (!isValid) {
-        errors.push({
-          row: rowNumber,
-          field: fieldName,
-          value,
-          error: 'تنسيق القيمة غير صحيح',
-          suggestion,
-          severity: 'error'
-        });
-      }
-    }
-
-    // Length validation
-    if ('maxLength' in config && config.maxLength && value.length > config.maxLength) {
-      errors.push({
-        row: rowNumber,
-        field: fieldName,
-        value,
-        error: `القيمة طويلة جداً (الحد الأقصى ${config.maxLength} حرف)`,
-        suggestion: `اختصر النص إلى ${config.maxLength} حرف أو أقل`,
+        value: normalized.originalValue,
+        error: warning,
+        suggestion: 'تم تطبيع القيمة تلقائياً',
         severity: 'warning'
       });
+    });
+
+    // Add validation errors
+    validation.errors.forEach(error => {
+      errors.push({
+        row: rowNumber,
+        field: fieldName,
+        value: normalized.originalValue,
+        error: error,
+        suggestion: 'يرجى تصحيح القيمة',
+        severity: 'error'
+      });
+    });
+
+    // Business logic validation for companies
+    if (entityType === 'companies') {
+      if (fieldName === 'companyName') {
+        const existingCompany = companies.find(c => 
+          c.companyName.toLowerCase() === normalized.normalizedValue.toLowerCase()
+        );
+        if (existingCompany) {
+          errors.push({
+            row: rowNumber,
+            field: fieldName,
+            value: normalized.originalValue,
+            error: 'اسم الشركة موجود مسبقاً في النظام',
+            suggestion: 'استخدم اسم مختلف أو تحقق من الشركة الموجودة',
+            severity: 'warning'
+          });
+        }
+      }
     }
 
-    // Enhanced enum validation with flexible matching
-    if ('enum' in config && config.enum) {
-      const enumValues = config.enum as string[];
-      const isValid = enumValues.some((option: string) => {
-        // Exact match
-        if (option === value) return true;
+    // Business logic validation for contracts with enhanced companyId lookup
+    if (entityType === 'contracts' || entityType === 'contractsAdvanced') {
+      if (fieldName === 'companyId') {
+        // Try multiple approaches to find the company
+        let company = null;
+        const searchValues = [
+          normalized.normalizedValue, // Normalized value
+          value, // Original value
+          value.replace(/[^0-9]/g, '').padStart(4, '0'), // Padded numeric value
+          value.replace(/^'/, ''), // Remove leading quote
+          value.replace(/^'/, '').padStart(4, '0') // Remove quote and pad
+        ];
 
-        // Case-insensitive match
-        if (option.toLowerCase() === value.toLowerCase()) return true;
-
-        // Boolean value flexibility for service fields
-        if (fieldName.includes('Maintenance') || fieldName.includes('Suppression')) {
-          const valueLower = value.toLowerCase();
-          const optionLower = option.toLowerCase();
-
-          // Map various boolean representations
-          const trueValues = ['yes', 'true', '1', 'نعم', 'صحيح'];
-          const falseValues = ['no', 'false', '0', 'لا', 'خطأ'];
-
-          if (trueValues.includes(optionLower) && trueValues.includes(valueLower)) return true;
-          if (falseValues.includes(optionLower) && falseValues.includes(valueLower)) return true;
+        for (const searchValue of searchValues) {
+          company = companies.find(c => c.companyId === searchValue);
+          if (company) break;
         }
 
-        return false;
-      });
-
-      if (!isValid) {
-        if (fieldName === 'city') {
-          // Enhanced city suggestion with fuzzy matching for both Arabic and English
-          const suggestion = SAUDI_CITIES.find(city => {
-            const cityLower = city.toLowerCase();
-            const valueLower = value.toLowerCase();
-            
-            // Exact or partial match
-            return cityLower.includes(valueLower) || 
-                   valueLower.includes(cityLower) ||
-                   // Handle common English variations
-                   (cityLower === 'jeddah' && valueLower === 'jidda') ||
-                   (cityLower === 'riyadh' && valueLower === 'riyad') ||
-                   (cityLower === 'makkah' && valueLower === 'mecca');
-          });
-
+        if (!company) {
+          const triedValues = searchValues.filter(v => v !== value).join(', ');
           errors.push({
             row: rowNumber,
             field: fieldName,
-            value,
-            error: 'المدينة غير معترف بها',
-            suggestion: suggestion ? `هل تقصد "${suggestion}"؟` : 'استخدم اسم مدينة سعودية بالعربية أو الإنجليزية (مثال: الرياض، Riyadh، جدة، Jeddah)',
-            severity: 'error'
-          });
-        } else if (fieldName.includes('Maintenance') || fieldName.includes('Suppression')) {
-          errors.push({
-            row: rowNumber,
-            field: fieldName,
-            value,
-            error: 'قيمة الخدمة غير صحيحة',
-            suggestion: 'استخدم: نعم، لا، yes، no، true، false',
-            severity: 'error'
-          });
-        } else {
-          errors.push({
-            row: rowNumber,
-            field: fieldName,
-            value,
-            error: 'القيمة غير صحيحة',
-            suggestion: 'استخدم: ' + enumValues.join(' أو '),
+            value: normalized.originalValue,
+            error: 'معرف الشركة غير موجود في النظام',
+            suggestion: `تأكد من إضافة الشركة أولاً في إدارة العملاء. القيم المحاولة: ${triedValues}`,
             severity: 'error'
           });
         }
       }
     }
 
-    // Range validation
-    if ('min' in config && config.min !== undefined && Number(value) < (config.min as number)) {
-      errors.push({
-        row: rowNumber,
-        field: fieldName,
-        value,
-        error: `القيمة صغيرة جداً (الحد الأدنى ${config.min})`,
-        suggestion: `استخدم قيمة ${config.min} أو أكبر`,
-        severity: 'error'
-      });
+    // Business logic validation for branches with enhanced company lookup
+    if (entityType === 'branches') {
+      if (fieldName === 'companyId' || fieldName === 'companyName') {
+        const companyId = rowData.companyId;
+        const companyName = rowData.companyName;
+        
+        // If both are empty, that's an error
+        if ((!companyId || companyId.trim() === '') && (!companyName || companyName.trim() === '')) {
+          errors.push({
+            row: rowNumber,
+            field: fieldName,
+            value: normalized.originalValue,
+            error: 'يجب إدخال معرف الشركة أو اسم الشركة',
+            suggestion: 'أدخل معرف الشركة (مثال: 0001) أو اسم الشركة',
+            severity: 'error'
+          });
+        } else {
+          // Enhanced company lookup
+          let companyFound = false;
+          
+          if (companyId && companyId.trim() !== '') {
+            // Try multiple approaches to find company by ID
+            const searchValues = [
+              companyId.trim(),
+              companyId.trim().padStart(4, '0'),
+              companyId.trim().replace(/^'/, ''),
+              companyId.trim().replace(/^'/, '').padStart(4, '0')
+            ];
+
+            let companyById = null;
+            for (const searchValue of searchValues) {
+              companyById = companies.find(c => c.companyId === searchValue);
+              if (companyById) break;
+            }
+
+            if (companyById) {
+              // If companyName is also provided, check if it matches
+              if (companyName && companyName.trim() !== '') {
+                if (companyById.companyName.toLowerCase() === companyName.trim().toLowerCase()) {
+                  companyFound = true;
+                } else {
+                  errors.push({
+                    row: rowNumber,
+                    field: fieldName,
+                    value: normalized.originalValue,
+                    error: 'اسم الشركة لا يتطابق مع معرف الشركة',
+                    suggestion: `اسم الشركة يجب أن يكون: ${companyById.companyName}`,
+                    severity: 'error'
+                  });
+                }
+              } else {
+                companyFound = true;
+              }
+            } else {
+              errors.push({
+                row: rowNumber,
+                field: fieldName,
+                value: normalized.originalValue,
+                error: 'معرف الشركة غير موجود في النظام',
+                suggestion: 'تأكد من إضافة الشركة أولاً أو استخدم اسم الشركة',
+                severity: 'error'
+              });
+            }
+          } else if (companyName && companyName.trim() !== '') {
+            const companyByName = companies.find(c => 
+              c.companyName.toLowerCase() === companyName.trim().toLowerCase()
+            );
+            if (companyByName) {
+              companyFound = true;
+            } else {
+              errors.push({
+                row: rowNumber,
+                field: fieldName,
+                value: normalized.originalValue,
+                error: 'اسم الشركة غير موجود في النظام',
+                suggestion: 'تأكد من إضافة الشركة أولاً أو استخدم معرف الشركة',
+                severity: 'error'
+              });
+            }
+          }
+        }
+      }
     }
 
-    if ('max' in config && config.max !== undefined && Number(value) > (config.max as number)) {
-      errors.push({
-        row: rowNumber,
-        field: fieldName,
-        value,
-        error: `القيمة كبيرة جداً (الحد الأقصى ${config.max})`,
-        suggestion: `استخدم قيمة ${config.max} أو أقل`,
-        severity: 'error'
-      });
+    // Business logic validation for contractsAdvanced
+    if (entityType === 'contractsAdvanced') {
+      // Check if either contractEndDate OR contractPeriodMonths is provided
+      if (fieldName === 'contractEndDate' || fieldName === 'contractPeriodMonths') {
+        const contractEndDate = rowData.contractEndDate;
+        const contractPeriodMonths = rowData.contractPeriodMonths;
+        
+        // If both are empty, add error to both fields
+        if ((!contractEndDate || contractEndDate.trim() === '') && 
+            (!contractPeriodMonths || contractPeriodMonths.trim() === '')) {
+          errors.push({
+            row: rowNumber,
+            field: fieldName,
+            value: normalized.originalValue,
+            error: 'تاريخ انتهاء العقد أو مدة العقد: أحدهما مطلوب',
+            suggestion: 'أدخل إما تاريخ انتهاء العقد أو مدة العقد بالشهور',
+            severity: 'error'
+          });
+        }
+      }
     }
 
     return errors;
-  }, [currentConfig]);
+  }, [companies, contracts, branches, entityType, fieldConfigs]);
 
   // Process uploaded file
   const processFile = useCallback(async () => {
@@ -518,7 +602,7 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
       currentConfig.required.forEach((requiredField: string) => {
         if (!mappedFields.has(requiredField)) {
           // Find the Arabic name for better error messages
-          const arabicNames = COLUMN_MAPPINGS[entityType][requiredField as keyof typeof COLUMN_MAPPINGS[typeof entityType]];
+          const arabicNames = getArabicNames(entityType, requiredField);
           const arabicName = arabicNames?.find(name => name.includes('*')) || arabicNames?.[0] || requiredField;
           missingHeaders.push(arabicName);
         }
@@ -534,7 +618,7 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
       // If there are critical header issues, provide helpful error message with suggestions
       if (missingHeaders.length > 0) {
         const suggestions = currentConfig.required.map((requiredField: string) => {
-          const arabicNames = COLUMN_MAPPINGS[entityType][requiredField as keyof typeof COLUMN_MAPPINGS[typeof entityType]];
+          const arabicNames = getArabicNames(entityType, requiredField);
           const suggestionList = arabicNames?.slice(0, 3).join(' أو ') || requiredField;
           return `• ${requiredField}: ${suggestionList}`;
         }).join('\n');
@@ -555,8 +639,27 @@ ${suggestions}
         entityType
       });
 
-      const processedRows: ImportRow[] = dataRows.map((row, index) => {
-        const rowNumber = index + 2; // +2 because we start from row 2 (after headers)
+      // Filter out completely empty rows before processing
+      const nonEmptyDataRows = dataRows.filter((row, index) => {
+        // Check if the row has at least one non-empty cell
+        const hasData = row.some(cell => cell && cell.trim().length > 0);
+        
+        if (!hasData) {
+          console.log(`🚫 Skipping empty row ${index + 2} (all cells empty)`);
+        }
+        
+        return hasData;
+      });
+
+      const skippedCount = dataRows.length - nonEmptyDataRows.length;
+      setSkippedRowsCount(skippedCount);
+      console.log(`📊 Processing ${nonEmptyDataRows.length} non-empty rows out of ${dataRows.length} total rows (skipped ${skippedCount} empty rows)`);
+
+      const processedRows: ImportRow[] = nonEmptyDataRows.map((row, index) => {
+        // Calculate the actual row number in the original CSV file
+        const originalRowIndex = dataRows.indexOf(row);
+        const rowNumber = originalRowIndex + 2; // +2 because we start from row 2 (after headers)
+        
         const rowData: Record<string, string> = {};
 
         // Map row data to standard field names using the header mapping
@@ -588,7 +691,7 @@ ${suggestions}
         Object.entries(rowData).forEach(([fieldName, value]) => {
           // All fields in rowData should now be standard field names
           if (fieldName in currentConfig.validations) {
-            const fieldErrors = validateField(fieldName, value, rowNumber);
+            const fieldErrors = validateField(fieldName, value, rowNumber, rowData);
             allErrors.push(...fieldErrors);
           }
         });
@@ -662,8 +765,45 @@ ${suggestions}
   const filteredRows = importRows.filter(row => {
     if (showApprovedOnly && !row.approved) return false;
     if (showErrorsOnly && row.isValid) return false;
+    
+    // Apply active filter
+    if (activeFilter.type && activeFilter.field) {
+      if (activeFilter.type === 'error') {
+        return row.errors.some(error => 
+          `${error.field}: ${error.error}` === activeFilter.field
+        );
+      } else if (activeFilter.type === 'warning') {
+        return row.warnings.some(warning => 
+          `${warning.field}: ${warning.error}` === activeFilter.field
+        );
+      }
+    }
+    
     return true;
   });
+
+  // Calculate error and warning summaries
+  const errorSummary = useMemo(() => {
+    const summary: Record<string, number> = {};
+    importRows.forEach(row => {
+      row.errors.forEach(error => {
+        const key = `${error.field}: ${error.error}`;
+        summary[key] = (summary[key] || 0) + 1;
+      });
+    });
+    return summary;
+  }, [importRows]);
+
+  const warningSummary = useMemo(() => {
+    const summary: Record<string, number> = {};
+    importRows.forEach(row => {
+      row.warnings.forEach(warning => {
+        const key = `${warning.field}: ${warning.error}`;
+        summary[key] = (summary[key] || 0) + 1;
+      });
+    });
+    return summary;
+  }, [importRows]);
 
   const stats = {
     total: importRows.length,
@@ -698,7 +838,7 @@ ${suggestions}
           {processingComplete && (
             <>
               {/* Statistics */}
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
                 <Card>
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
@@ -729,7 +869,76 @@ ${suggestions}
                     <div className="text-sm text-gray-600">سجلات مختارة</div>
                   </CardContent>
                 </Card>
+                {skippedRowsCount > 0 && (
+                  <Card>
+                    <CardContent className="p-4 text-center">
+                      <div className="text-2xl font-bold text-gray-600">{skippedRowsCount}</div>
+                      <div className="text-sm text-gray-600">صفوف فارغة تم تجاهلها</div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
+
+              {/* Error and Warning Summary */}
+              {(Object.keys(errorSummary).length > 0 || Object.keys(warningSummary).length > 0) && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-right">ملخص الأخطاء والتحذيرات</h3>
+                  
+                  {/* Error Summary */}
+                  {Object.keys(errorSummary).length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-md font-medium text-red-700 text-right">الأخطاء</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {Object.entries(errorSummary).map(([errorKey, count]) => (
+                          <Button
+                            key={errorKey}
+                            variant={activeFilter.type === 'error' && activeFilter.field === errorKey ? "default" : "outline"}
+                            size="sm"
+                            className="text-red-700 border-red-300 hover:bg-red-50"
+                            onClick={() => setActiveFilter({ type: 'error', field: errorKey })}
+                          >
+                            {count} {errorKey}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Warning Summary */}
+                  {Object.keys(warningSummary).length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-md font-medium text-yellow-700 text-right">التحذيرات</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {Object.entries(warningSummary).map(([warningKey, count]) => (
+                          <Button
+                            key={warningKey}
+                            variant={activeFilter.type === 'warning' && activeFilter.field === warningKey ? "default" : "outline"}
+                            size="sm"
+                            className="text-yellow-700 border-yellow-300 hover:bg-yellow-50"
+                            onClick={() => setActiveFilter({ type: 'warning', field: warningKey })}
+                          >
+                            {count} {warningKey}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Clear Filter Button */}
+                  {activeFilter.type && (
+                    <div className="flex justify-end">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setActiveFilter({ type: null, field: null })}
+                        className="text-gray-600"
+                      >
+                        إلغاء التصفية
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Filter Controls */}
               <div className="flex items-center gap-4 justify-end">

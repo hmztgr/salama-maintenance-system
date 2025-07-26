@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContextFirebase';
 import { CustomerManagement } from './customers/CustomerManagement';
 import { NewCustomerManagement } from './customers/NewCustomerManagement';
@@ -8,12 +9,16 @@ import { PlanningManagement } from './planning/PlanningManagement';
 import { DemoDataGenerator } from './admin/DemoDataGenerator';
 import { InvitationManagement } from './admin/InvitationManagement';
 import { AdvancedRoleManagement } from './admin/AdvancedRoleManagement';
+import { UserManagement } from './admin/UserManagement';
 import { FirebaseTest } from './admin/FirebaseTest';
 import { FirebaseAuthTest } from './admin/FirebaseAuthTest';
 import { FirebaseMigration } from './admin/FirebaseMigration';
 import { FirebaseDataTest } from './admin/FirebaseDataTest';
+import { FirebaseSimpleTest } from './admin/FirebaseSimpleTest';
+import { DataMigration } from './admin/DataMigration';
 import { UserProfile } from './profile/UserProfile';
 import { ReportsDashboard } from './reports/ReportsDashboard';
+import EmergencyTicketsPage from '@/app/emergency-tickets/page';
 
 export interface MainDashboardProps {
   className?: string;
@@ -21,8 +26,17 @@ export interface MainDashboardProps {
 
 export function MainDashboard({ className = '' }: MainDashboardProps) {
   const { authState, logout, hasPermission } = useAuth();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState('customers');
   const [adminSubTab, setAdminSubTab] = useState('demo-data');
+
+  // Handle URL tab parameter
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && ['customers', 'planning', 'reports', 'emergency-tickets', 'profile', 'admin'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   if (!authState.user) {
     return <div>غير مصرح بالدخول</div>;
@@ -46,6 +60,12 @@ export function MainDashboard({ className = '' }: MainDashboardProps) {
       label: 'التقارير',
       icon: '📊',
       requiredRole: 'supervisor' as const,
+    },
+    {
+      id: 'emergency-tickets',
+      label: 'التذاكر الطارئة',
+      icon: '🚨',
+      requiredRole: 'viewer' as const,
     },
     {
       id: 'checklists',
@@ -145,6 +165,8 @@ export function MainDashboard({ className = '' }: MainDashboardProps) {
 
         {activeTab === 'reports' && <ReportsDashboard />}
 
+        {activeTab === 'emergency-tickets' && <EmergencyTicketsPage />}
+
         {activeTab === 'admin' && (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-gray-900">إدارة النظام</h2>
@@ -182,6 +204,16 @@ export function MainDashboard({ className = '' }: MainDashboardProps) {
                     }`}
                   >
                     🛡️ إدارة الأدوار والصلاحيات
+                  </button>
+                  <button
+                    onClick={() => setAdminSubTab('user-management')}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                      adminSubTab === 'user-management'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    👥 إدارة المستخدمين
                   </button>
                   <button
                     onClick={() => setAdminSubTab('firebase')}
@@ -224,6 +256,26 @@ export function MainDashboard({ className = '' }: MainDashboardProps) {
                     💾 اختبار البيانات
                   </button>
                   <button
+                    onClick={() => setAdminSubTab('firebase-simple')}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                      adminSubTab === 'firebase-simple'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    🧪 اختبار بسيط
+                  </button>
+                  <button
+                    onClick={() => setAdminSubTab('data-migration')}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                      adminSubTab === 'data-migration'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    🔧 ترحيل البيانات
+                  </button>
+                  <button
                     onClick={() => setAdminSubTab('settings')}
                     className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                       adminSubTab === 'settings'
@@ -246,6 +298,9 @@ export function MainDashboard({ className = '' }: MainDashboardProps) {
                 {/* Advanced Role Management */}
                 {adminSubTab === 'users' && <AdvancedRoleManagement />}
 
+                {/* User Management */}
+                {adminSubTab === 'user-management' && <UserManagement />}
+
                 {/* Firebase Test */}
                 {adminSubTab === 'firebase' && <FirebaseTest />}
 
@@ -257,6 +312,12 @@ export function MainDashboard({ className = '' }: MainDashboardProps) {
 
                 {/* Firebase Data Test */}
                 {adminSubTab === 'firebase-data' && <FirebaseDataTest />}
+
+                {/* Firebase Simple Test */}
+                {adminSubTab === 'firebase-simple' && <FirebaseSimpleTest />}
+
+                {/* Data Migration */}
+                {adminSubTab === 'data-migration' && <DataMigration />}
 
                 {/* System Settings (Placeholder) */}
                 {adminSubTab === 'settings' && (

@@ -16,8 +16,12 @@ import { useSearch } from '@/hooks/useSearch';
 import { formatDateForDisplay } from '@/lib/date-handler';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import { ImportTemplate } from './import/ImportTemplate';
 import { ExportTemplate } from './export/ExportTemplate';
+import { CompanyDetailView } from './CompanyDetailView';
+import { ContractDetailView } from './ContractDetailView';
+import { BranchDetailView } from './BranchDetailView';
 
 export interface NewCustomerManagementProps {
   className?: string;
@@ -48,7 +52,13 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
   // Import/Export state
   const [showImportTemplate, setShowImportTemplate] = useState(false);
   const [showExportTemplate, setShowExportTemplate] = useState(false);
-  const [importExportType, setImportExportType] = useState<'companies' | 'contracts' | 'branches'>('companies');
+  const [importExportType, setImportExportType] = useState<'companies' | 'contracts' | 'contractsAdvanced' | 'branches'>('companies');
+
+  // Detail view state
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
+  const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
+  const [editingFromDetailView, setEditingFromDetailView] = useState<'company' | 'contract' | 'branch' | null>(null);
 
   // Data hooks - using Firebase
   const {
@@ -89,20 +99,50 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
     clearError: clearBranchesError
   } = useBranchesFirebase();
 
+  // Update selected items when data changes
+  useEffect(() => {
+    if (selectedCompany) {
+      const updatedCompany = companies.find(c => c.companyId === selectedCompany.companyId);
+      if (updatedCompany) {
+        setSelectedCompany(updatedCompany);
+      }
+    }
+  }, [companies, selectedCompany]);
+
+  useEffect(() => {
+    if (selectedContract) {
+      const updatedContract = contracts.find(c => c.id === selectedContract.id);
+      if (updatedContract) {
+        setSelectedContract(updatedContract);
+      }
+    }
+  }, [contracts, selectedContract]);
+
+  useEffect(() => {
+    if (selectedBranch) {
+      const updatedBranch = branches.find(b => b.id === selectedBranch.id);
+      if (updatedBranch) {
+        setSelectedBranch(updatedBranch);
+      }
+    }
+  }, [branches, selectedBranch]);
+
   const { visits, deleteVisit } = useVisits();
 
   // Search functionality for each tab
   const companySearchConfig = {
-    searchFields: ['companyName', 'unifiedNumber', 'email', 'phone'] as (keyof Company)[],
+    searchFields: ['companyId', 'companyName', 'unifiedNumber', 'email', 'phone'] as (keyof Company)[],
     statusField: 'isArchived' as keyof Company,
     cityField: 'address' as keyof Company, // Using address as city equivalent
     teamMemberField: 'contactPerson' as keyof Company,
+    defaultSortField: 'companyId',
   };
 
   const contractSearchConfig = {
     searchFields: ['contractId', 'companyId', 'notes'] as (keyof Contract)[],
     statusField: 'isArchived' as keyof Contract,
     dateField: 'contractEndDate' as keyof Contract,
+    defaultSortField: 'contractId',
     contractFields: {
       fireExtinguisher: 'fireExtinguisherMaintenance' as keyof Contract,
       alarmSystem: 'alarmSystemMaintenance' as keyof Contract,
@@ -118,6 +158,7 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
     cityField: 'city' as keyof Branch,
     locationField: 'location' as keyof Branch,
     teamMemberField: 'teamMember' as keyof Branch,
+    defaultSortField: 'branchId',
   };
 
   const companySearch = useSearch(companies, companySearchConfig);
@@ -160,6 +201,25 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
       else newSet.delete(branchId);
       return newSet;
     });
+  };
+
+  // Detail view handlers
+  const handleCompanyClick = (company: Company) => {
+    setSelectedCompany(company);
+  };
+
+  const handleContractClick = (contract: Contract) => {
+    setSelectedContract(contract);
+  };
+
+  const handleBranchClick = (branch: Branch) => {
+    setSelectedBranch(branch);
+  };
+
+  const handleBackToList = () => {
+    setSelectedCompany(null);
+    setSelectedContract(null);
+    setSelectedBranch(null);
   };
 
   const tabs = [
@@ -292,6 +352,14 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
             <SearchAndFilter
               filters={companySearch.filters}
               onFiltersChange={companySearch.setFilters}
+              availableSortOptions={[
+                { value: 'companyId', label: 'معرف الشركة' },
+                { value: 'companyName', label: 'اسم الشركة' },
+                { value: 'email', label: 'البريد الإلكتروني' },
+                { value: 'phone', label: 'رقم الهاتف' },
+                { value: 'createdAt', label: 'تاريخ الإنشاء' },
+                { value: 'updatedAt', label: 'تاريخ التحديث' }
+              ]}
               className="mb-6"
             />
 
@@ -366,11 +434,16 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {companySearch.filteredData.map((company) => (
-                      <tr key={company.id} className="hover:bg-gray-50">
+                      <tr 
+                        key={company.id} 
+                        className="hover:bg-gray-50 cursor-pointer"
+                        onClick={() => handleCompanyClick(company)}
+                      >
                         <td className="px-6 py-4 whitespace-nowrap text-center">
                           <Checkbox
                             checked={selectedCompanies.has(company.companyId)}
                             onCheckedChange={(checked) => handleCompanySelect(company.companyId, checked === true)}
+                            onClick={(e) => e.stopPropagation()}
                           />
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
@@ -436,15 +509,26 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
               </div>
               <div className="flex items-center gap-3">
                 {hasPermission('supervisor') && (
-                  <button
-                    onClick={() => {
-                      setImportExportType('contracts');
-                      setShowImportTemplate(true);
-                    }}
-                    className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center"
-                  >
-                    📥 استيراد
-                  </button>
+                  <div className="flex space-x-2 space-x-reverse">
+                    <button
+                      onClick={() => {
+                        setImportExportType('contractsAdvanced');
+                        setShowImportTemplate(true);
+                      }}
+                      className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 flex items-center"
+                    >
+                      📥 استيراد متقدم
+                    </button>
+                    <button
+                      onClick={() => {
+                        setImportExportType('contracts');
+                        setShowImportTemplate(true);
+                      }}
+                      className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center"
+                    >
+                      📥 استيراد بسيط
+                    </button>
+                  </div>
                 )}
                 {hasPermission('supervisor') && (
                   <button
@@ -488,6 +572,15 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
             <SearchAndFilter
               filters={contractSearch.filters}
               onFiltersChange={contractSearch.setFilters}
+              availableSortOptions={[
+                { value: 'contractId', label: 'معرف العقد' },
+                { value: 'companyId', label: 'معرف الشركة' },
+                { value: 'contractStartDate', label: 'تاريخ بداية العقد' },
+                { value: 'contractEndDate', label: 'تاريخ انتهاء العقد' },
+                { value: 'contractValue', label: 'قيمة العقد' },
+                { value: 'createdAt', label: 'تاريخ الإنشاء' },
+                { value: 'updatedAt', label: 'تاريخ التحديث' }
+              ]}
               className="mb-6"
             />
 
@@ -618,11 +711,16 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                       });
 
                       return (
-                        <tr key={contract.id} className="hover:bg-gray-50">
+                        <tr 
+                          key={contract.id} 
+                          className="hover:bg-gray-50 cursor-pointer"
+                          onClick={() => handleContractClick(contract)}
+                        >
                           <td className="px-6 py-4 whitespace-nowrap text-center">
                             <Checkbox
                               checked={selectedContracts.has(contract.contractId)}
                               onCheckedChange={(checked) => handleContractSelect(contract.contractId, checked === true)}
+                              onClick={(e) => e.stopPropagation()}
                             />
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
@@ -777,6 +875,15 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
             <SearchAndFilter
               filters={branchSearch.filters}
               onFiltersChange={branchSearch.setFilters}
+              availableSortOptions={[
+                { value: 'branchId', label: 'معرف الفرع' },
+                { value: 'branchName', label: 'اسم الفرع' },
+                { value: 'city', label: 'المدينة' },
+                { value: 'location', label: 'الموقع' },
+                { value: 'companyId', label: 'معرف الشركة' },
+                { value: 'createdAt', label: 'تاريخ الإنشاء' },
+                { value: 'updatedAt', label: 'تاريخ التحديث' }
+              ]}
               className="mb-6"
             />
 
@@ -851,11 +958,16 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {branchSearch.filteredData.map((branch) => (
-                      <tr key={branch.id} className="hover:bg-gray-50">
+                      <tr 
+                        key={branch.id} 
+                        className="hover:bg-gray-50 cursor-pointer"
+                        onClick={() => handleBranchClick(branch)}
+                      >
                         <td className="px-6 py-4 whitespace-nowrap text-center">
                           <Checkbox
                             checked={selectedBranches.has(branch.branchId)}
                             onCheckedChange={(checked) => handleBranchSelect(branch.branchId, checked === true)}
+                            onClick={(e) => e.stopPropagation()}
                           />
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
@@ -909,7 +1021,7 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
 
       {/* Form Modals */}
       {showCompanyForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
           <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <CompanyForm
               company={editingCompany || undefined}
@@ -922,8 +1034,10 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                     console.log('Update result:', result);
                     if (result.success) {
                       setSuccessMessage('تم تحديث بيانات الشركة بنجاح');
+                      // Close the form immediately on success
                       setShowCompanyForm(false);
                       setEditingCompany(null);
+                      setEditingFromDetailView(null);
                     } else {
                       setSuccessMessage('فشل في تحديث الشركة: ' + (result.warnings?.join(', ') || 'خطأ غير معروف'));
                     }
@@ -942,13 +1056,15 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                   setSuccessMessage('حدث خطأ أثناء حفظ البيانات');
                 } finally {
                   setFormLoading(false);
-                  // Only close form on success
+                  // Clear success message after 5 seconds
                   setTimeout(() => setSuccessMessage(''), 5000);
                 }
               }}
               onCancel={() => {
+                setFormLoading(false);
                 setShowCompanyForm(false);
                 setEditingCompany(null);
+                setEditingFromDetailView(null);
               }}
               isLoading={formLoading}
             />
@@ -957,7 +1073,7 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
       )}
 
       {showContractForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
           <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <ContractForm
               contract={editingContract || undefined}
@@ -992,7 +1108,7 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
       )}
 
       {showEnhancedContractForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
           <div className="bg-white rounded-lg p-6 max-w-6xl w-full mx-4 max-h-[95vh] overflow-y-auto">
             <EnhancedContractForm
               contract={editingContract || undefined}
@@ -1025,6 +1141,15 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                   setFormLoading(false);
                   setShowEnhancedContractForm(false);
                   setEditingContract(null);
+                  // If editing from detail view, keep the detail view open
+                  if (editingFromDetailView === 'contract' && selectedContract) {
+                    // The contract data will be refreshed by the Firebase listener
+                    // Don't close the detail view, just clear the editing state
+                    setEditingFromDetailView(null);
+                  } else {
+                    // If not editing from detail view, close the form normally
+                    setEditingFromDetailView(null);
+                  }
                   setTimeout(() => setSuccessMessage(''), 5000);
                   
                   return { success: true, warnings: result.warnings };
@@ -1037,6 +1162,7 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
               onCancel={() => {
                 setShowEnhancedContractForm(false);
                 setEditingContract(null);
+                setEditingFromDetailView(null);
               }}
               isLoading={formLoading}
             />
@@ -1045,13 +1171,22 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
       )}
 
       {showBranchForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
           <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <BranchForm
               branch={editingBranch || undefined}
               onSuccess={() => {
                 setShowBranchForm(false);
                 setEditingBranch(null);
+                // If editing from detail view, keep the detail view open
+                if (editingFromDetailView === 'branch' && selectedBranch) {
+                  // The branch data will be refreshed by the Firebase listener
+                  // Don't close the detail view, just clear the editing state
+                  setEditingFromDetailView(null);
+                } else {
+                  // If not editing from detail view, close the form normally
+                  setEditingFromDetailView(null);
+                }
                 if (editingBranch) {
                   setSuccessMessage('تم تحديث بيانات الفرع بنجاح');
                 } else {
@@ -1062,6 +1197,7 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
               onCancel={() => {
                 setShowBranchForm(false);
                 setEditingBranch(null);
+                setEditingFromDetailView(null);
               }}
             />
           </div>
@@ -1086,11 +1222,109 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
               entityType={importExportType}
               data={
                 importExportType === 'companies' ? companies :
-                importExportType === 'contracts' ? contracts :
+                importExportType === 'contracts' || importExportType === 'contractsAdvanced' ? contracts :
                 branches
               }
               onClose={() => setShowExportTemplate(false)}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Detail View Modals */}
+      {selectedCompany && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-7xl max-h-[95vh] flex flex-col">
+            <div className="flex-1 overflow-y-auto p-6">
+              <CompanyDetailView
+                company={selectedCompany}
+                onBack={() => setSelectedCompany(null)}
+                onEdit={() => {
+                  setEditingCompany(selectedCompany);
+                  setEditingFromDetailView('company');
+                  setShowCompanyForm(true);
+                }}
+                onDelete={async () => {
+                  if (confirm(`هل أنت متأكد من حذف الشركة "${selectedCompany.companyName}"؟`)) {
+                    const success = await deleteCompany(selectedCompany.companyId);
+                    if (success) {
+                      setSuccessMessage('تم حذف الشركة بنجاح');
+                      setSelectedCompany(null);
+                    } else {
+                      setSuccessMessage('فشل في حذف الشركة');
+                    }
+                    setTimeout(() => setSuccessMessage(''), 3000);
+                  }
+                }}
+                hasPermission={hasPermission}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedContract && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-7xl max-h-[95vh] flex flex-col">
+            <div className="flex-1 overflow-y-auto p-6">
+              <ContractDetailView
+                contract={selectedContract}
+                company={companies.find(c => c.companyId === selectedContract.companyId)}
+                branches={branches.filter(b => b.companyId === selectedContract.companyId)}
+                onBack={() => setSelectedContract(null)}
+                onEdit={() => {
+                  setEditingContract(selectedContract);
+                  setEditingFromDetailView('contract');
+                  setShowEnhancedContractForm(true);
+                }}
+                onDelete={async () => {
+                  if (confirm(`هل أنت متأكد من حذف العقد "${selectedContract.contractId}"؟`)) {
+                    const success = await deleteContract(selectedContract.id);
+                    if (success) {
+                      setSuccessMessage('تم حذف العقد بنجاح');
+                      setSelectedContract(null);
+                    } else {
+                      setSuccessMessage('فشل في حذف العقد');
+                    }
+                    setTimeout(() => setSuccessMessage(''), 3000);
+                  }
+                }}
+                hasPermission={hasPermission}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedBranch && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-7xl max-h-[95vh] flex flex-col">
+            <div className="flex-1 overflow-y-auto p-6">
+              <BranchDetailView
+                branch={selectedBranch}
+                company={companies.find(c => c.companyId === selectedBranch.companyId)}
+                contracts={contracts.filter(c => c.companyId === selectedBranch.companyId)}
+                onBack={() => setSelectedBranch(null)}
+                onEdit={() => {
+                  setEditingBranch(selectedBranch);
+                  setEditingFromDetailView('branch');
+                  setShowBranchForm(true);
+                }}
+                onDelete={async () => {
+                  if (confirm(`هل أنت متأكد من حذف الفرع "${selectedBranch.branchName}"؟`)) {
+                    const success = await deleteBranch(selectedBranch.id);
+                    if (success) {
+                      setSuccessMessage('تم حذف الفرع بنجاح');
+                      setSelectedBranch(null);
+                    } else {
+                      setSuccessMessage('فشل في حذف الفرع');
+                    }
+                    setTimeout(() => setSuccessMessage(''), 3000);
+                  }
+                }}
+                hasPermission={hasPermission}
+              />
+            </div>
           </div>
         </div>
       )}

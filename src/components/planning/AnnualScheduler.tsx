@@ -17,14 +17,32 @@ import { SearchAndFilter } from '@/components/common/SearchAndFilter';
 import { formatDateForDisplay, getWeekStartDate, getWeekEndDate, getWeekNumber, getCurrentDate } from '@/lib/date-handler';
 import { SafeStorage } from '@/lib/storage';
 import { Branch, Visit } from '@/types/customer';
+import { AutomatedVisitPlanner } from './AutomatedVisitPlanner';
 
-// Helper function to parse our custom date format (dd-mmm-yyyy)
+// Helper function to parse our custom date format (dd-mmm-yyyy) or ISO strings
 const parseCustomDate = (dateStr: string): Date => {
   if (!dateStr) {
     console.warn('🗓️ Empty date string provided to parseCustomDate');
     return new Date();
   }
 
+  // Handle ISO string format (e.g., "2024-12-30T21:00:00.000Z")
+  if (dateStr.includes('T') && dateStr.includes('Z')) {
+    const parsedDate = new Date(dateStr);
+    if (!isNaN(parsedDate.getTime())) {
+      return parsedDate;
+    }
+  }
+
+  // Handle ISO format first (e.g., "2024-12-30T21:00:00.000Z")
+  if (dateStr.includes('T') && dateStr.includes('Z')) {
+    const isoDate = new Date(dateStr);
+    if (!isNaN(isoDate.getTime())) {
+      return isoDate;
+    }
+  }
+
+  // Handle dd-mmm-yyyy format
   const parts = dateStr.split('-');
   if (parts.length !== 3) {
     console.warn('🗓️ Invalid date format (should be dd-mmm-yyyy):', dateStr);
@@ -51,15 +69,17 @@ const parseCustomDate = (dateStr: string): Date => {
 
   const parsedDate = new Date(yearNum, monthIndex, dayNum);
 
-  // Additional debug logging
-  console.log('🗓️ parseCustomDate:', {
-    input: dateStr,
-    day: dayNum,
-    month: month,
-    monthIndex: monthIndex,
-    year: yearNum,
-    result: parsedDate.toISOString()
-  });
+  // Only log for debugging specific issues (commented out to reduce spam)
+  // if (!isNaN(parsedDate.getTime())) {
+  // console.log('🗓️ parseCustomDate:', {
+  //   input: dateStr,
+  //   day: dayNum,
+  //   month: month,
+  //   monthIndex: monthIndex,
+  //   year: yearNum,
+  //   result: parsedDate.toISOString()
+  // });
+  // }
 
   return parsedDate;
 };
@@ -96,7 +116,14 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
 
   // Search functionality for branches with contract type filtering
   const branchSearchConfig = {
-    searchFields: ['branchName', 'branchId', 'address', 'contactPerson'] as (keyof Branch)[],
+    searchFields: ['branchName', 'branchId', 'address', 'contactPerson', 'companyName'] as (keyof (Branch & { 
+      companyName: string;
+      fireExtinguisherMaintenance: boolean;
+      alarmSystemMaintenance: boolean;
+      fireSuppressionMaintenance: boolean;
+      gasFireSuppression: boolean;
+      foamFireSuppression: boolean;
+    }))[],
     statusField: 'isArchived' as keyof Branch,
     cityField: 'city' as keyof Branch,
     locationField: 'location' as keyof Branch,
@@ -106,6 +133,9 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
   // Enhanced branch search with contract type filtering using new serviceBatches structure
   const enhancedBranches = useMemo(() => {
     return branches.map(branch => {
+      // Find company name for this branch
+      const company = companies.find(c => c.companyId === branch.companyId);
+      
       // Find contracts that include this branch in their service batches
       const branchContracts = contracts.filter(contract => 
         contract.serviceBatches?.some(batch => 
@@ -134,29 +164,104 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
         });
       });
 
+      // Calculate total regular visits for this branch
+      const totalRegularVisits = branchContracts.reduce((sum, contract) => {
+        return sum + contract.serviceBatches?.reduce((batchSum, batch) => {
+          return batch.branchIds.includes(branch.branchId) ? 
+            batchSum + (batch.regularVisitsPerYear || 0) : batchSum;
+        }, 0) || 0;
+      }, 0);
+
+      // Count existing visits for this branch in the selected year
+      const existingVisitsCount = visits.filter(visit => 
+        visit.branchId === branch.branchId && 
+        !visit.isArchived &&
+        new Date(visit.scheduledDate).getFullYear() === selectedYear
+      ).length;
+
+      // Calculate visit status flags for filtering
+      const branchVisits = visits.filter(visit => 
+        visit.branchId === branch.branchId && 
+        !visit.isArchived &&
+        new Date(visit.scheduledDate).getFullYear() === selectedYear
+      );
+
+      const hasPlannedVisits = branchVisits.some(visit => visit.status === 'scheduled' && visit.type === 'regular');
+      const hasEmergencyVisits = branchVisits.some(visit => visit.type === 'emergency');
+      const hasCompletedVisits = branchVisits.some(visit => visit.status === 'completed');
+      const hasAnyVisits = hasPlannedVisits || hasEmergencyVisits || hasCompletedVisits;
+
       return {
         ...branch,
+        // Add company name for search
+        companyName: company?.companyName || 'شركة غير معروفة',
         // Add contract type flags for filtering
         ...aggregatedServices,
+        // Add visit counts for filtering
+        totalRegularVisits,
+        existingVisitsCount,
+        // Add visit status flags for filtering
+        hasPlannedVisits,
+        hasEmergencyVisits,
+        hasCompletedVisits,
+        hasAnyVisits,
       };
     });
-  }, [branches, contracts]);
+  }, [branches, contracts, companies, visits, selectedYear]);
 
   const branchSearch = useSearch(enhancedBranches as unknown as (Branch & {
+    companyName: string;
     fireExtinguisherMaintenance: boolean;
     alarmSystemMaintenance: boolean;
     fireSuppressionMaintenance: boolean;
     gasFireSuppression: boolean;
     foamFireSuppression: boolean;
+    totalRegularVisits: number;
+    existingVisitsCount: number;
+    hasPlannedVisits: boolean;
+    hasEmergencyVisits: boolean;
+    hasCompletedVisits: boolean;
+    hasAnyVisits: boolean;
   })[], branchSearchConfig);
 
   // Generate available years (previous, current, next for contract continuity)
   const availableYears = [selectedYear - 1, selectedYear, selectedYear + 1];
 
-  // Use search results for filtered branches
+  // Use search results for filtered branches with additional visit count filtering
   const filteredBranches = useMemo(() => {
-    return branchSearch.filteredData.filter(branch => !branch.isArchived);
-  }, [branchSearch.filteredData]);
+    console.log('🔍 AnnualScheduler search debug:', {
+      totalEnhancedBranches: enhancedBranches.length,
+      searchFilteredData: branchSearch.filteredData.length,
+      searchTerm: branchSearch.filters.searchTerm,
+      searchResultCount: branchSearch.resultCount,
+      regularVisitsFilter: branchSearch.filters.regularVisits
+    });
+    
+    let filtered = branchSearch.filteredData.filter(branch => !branch.isArchived);
+    
+    // Apply visit count filtering
+    if (branchSearch.filters.regularVisits.min || branchSearch.filters.regularVisits.max) {
+      const minVisits = branchSearch.filters.regularVisits.min ? parseInt(branchSearch.filters.regularVisits.min) : 0;
+      const maxVisits = branchSearch.filters.regularVisits.max ? parseInt(branchSearch.filters.regularVisits.max) : Infinity;
+      
+      filtered = filtered.filter(branch => {
+        const visitCount = (branch as any).totalRegularVisits || 0;
+        return visitCount >= minVisits && visitCount <= maxVisits;
+      });
+      
+      console.log('🔍 After visit count filtering:', filtered.length, { minVisits, maxVisits });
+    }
+    
+    console.log('🔍 Final filtered branches for display:', filtered.length);
+    
+    return filtered;
+  }, [branchSearch.filteredData, enhancedBranches.length, branchSearch.filters.searchTerm, branchSearch.resultCount, branchSearch.filters.regularVisits]);
+
+  // Debug rendering
+  useEffect(() => {
+    console.log('🔍 AnnualScheduler rendering branches:', filteredBranches.length, filteredBranches.map(b => ({ id: b.branchId, name: b.branchName, company: b.companyName })));
+    console.log('🔍 AnnualScheduler table key:', `table-${filteredBranches.length}-${branchSearch.filters.searchTerm}`);
+  }, [filteredBranches, branchSearch.filters.searchTerm]);
 
   // Generate 52-week planning grid
   const weeklyData = useMemo(() => {
@@ -432,22 +537,30 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
       }
     }
 
-    // Save all visits at once to prevent race conditions
+    // Save all visits using Firebase addVisit function
     if (newVisits.length > 0) {
       try {
-        const allVisits = [...visits, ...newVisits];
-        const saveSuccess = SafeStorage.set('visits', allVisits);
-
-        if (saveSuccess) {
-          console.log(`🎯 BULK SAVE SUCCESS: Saved ${newVisits.length} visits to storage`);
-        } else {
-          console.log(`❌ BULK SAVE FAILED: Could not save to storage`);
-          successCount = 0;
-          failedBranches.length = 0;
-          failedBranches.push(...branchesToPlan.map(b => b.branch.branchName));
+        console.log(`🎯 BULK SAVE: Starting to save ${newVisits.length} visits to Firebase`);
+        
+        // Add each visit individually using the Firebase addVisit function
+        for (const newVisit of newVisits) {
+          try {
+            await addVisit(newVisit);
+            console.log(`✅ SAVED: Visit ${newVisit.visitId} for ${newVisit.branchId}`);
+          } catch (visitError) {
+            console.error(`❌ FAILED TO SAVE VISIT: ${newVisit.visitId}`, visitError);
+            failedBranches.push(`Visit ${newVisit.visitId}`);
+            successCount--;
+          }
         }
+        
+        console.log(`🎯 BULK SAVE COMPLETED: Successfully saved ${successCount} visits to Firebase`);
+        
+        // Refresh visits to update the UI
+        await refreshVisits();
+        
       } catch (error) {
-        console.log(`❌ BULK SAVE ERROR: ${error}`);
+        console.error(`❌ BULK SAVE ERROR:`, error);
         successCount = 0;
         failedBranches.length = 0;
         failedBranches.push(...branchesToPlan.map(b => b.branch.branchName));
@@ -588,6 +701,12 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
     return colors[status as keyof typeof colors] || 'bg-gray-200';
   };
 
+  // Handle export planning
+  const handleExportPlanning = () => {
+    // TODO: Implement export functionality
+    alert('سيتم إضافة ميزة التصدير قريباً');
+  };
+
   const getStatusText = (status: string) => {
     const texts = {
       'planned': 'مجدولة',
@@ -629,70 +748,65 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Header */}
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">المجدول السنوي</h1>
-          <p className="text-gray-600 mt-2">
-            عرض 52 أسبوع لجميع الفروع مع إمكانية التخطيط المباشر
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Button variant="outline" className="gap-2">
-            <Download className="w-4 h-4" />
-            تصدير التقرير
-          </Button>
+      {/* Header with year navigation and filters */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex items-center gap-4">
           <Button
             variant="outline"
-            onClick={() => setShowFilters(!showFilters)}
-            className="gap-2"
+            size="sm"
+            onClick={() => setSelectedYear(prev => prev - 1)}
           >
-            <Filter className="w-4 h-4" />
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          
+          <div className="text-center">
+            <h2 className="text-2xl font-bold">{selectedYear}</h2>
+            <p className="text-sm text-gray-600">جدولة الزيارات السنوية</p>
+          </div>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setSelectedYear(prev => prev + 1)}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* Automated Planning Button */}
+          <AutomatedVisitPlanner />
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter className="h-4 w-4 mr-2" />
             تصفية
           </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportPlanning}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            تصدير
+          </Button>
+          
           {selectedVisits.size > 0 && hasPermission('supervisor') && (
             <Button
               variant="destructive"
+              size="sm"
               onClick={handleBulkDeleteVisits}
-              className="gap-2"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="h-4 w-4 mr-2" />
               حذف المحدد ({selectedVisits.size})
             </Button>
           )}
         </div>
       </div>
-
-      {/* Year Selection */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex justify-between items-center">
-            <Button
-              variant="outline"
-              onClick={() => setSelectedYear(selectedYear - 1)}
-              className="gap-2"
-            >
-              <ChevronRight className="w-4 h-4" />
-              {selectedYear - 1}
-            </Button>
-
-            <div className="text-center">
-              <h3 className="font-bold text-2xl">{selectedYear}</h3>
-              <p className="text-sm text-gray-600">السنة المختارة</p>
-            </div>
-
-            <Button
-              variant="outline"
-              onClick={() => setSelectedYear(selectedYear + 1)}
-              className="gap-2"
-            >
-              {selectedYear + 1}
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Filters Panel */}
       {showFilters && (
@@ -792,7 +906,7 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
             </div>
           ) : (
             <div className="overflow-x-hidden">
-              <table className="w-full table-fixed text-xs">
+              <table className="w-full table-fixed text-xs" key={`table-${filteredBranches.length}-${branchSearch.filters.searchTerm}`}>
                 <thead className="bg-gray-50 sticky top-0">
                   {/* Bulk Planning Row */}
                   {hasPermission('supervisor') && (

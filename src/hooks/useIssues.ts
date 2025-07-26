@@ -27,7 +27,18 @@ export function useIssues() {
   // Create new issue
   const createIssue = useCallback(async (issueData: IssueFormData): Promise<string> => {
     try {
+      console.log('🔐 Auth state check:', { 
+        user: authState.user, 
+        isAuthenticated: authState.isAuthenticated,
+        isLoading: authState.isLoading 
+      });
+      
+      if (authState.isLoading) {
+        throw new Error('جاري التحقق من المصادقة...');
+      }
+      
       if (!authState.user || !authState.user.uid) {
+        console.error('❌ Authentication failed:', authState);
         throw new Error('يجب تسجيل الدخول أولاً');
       }
 

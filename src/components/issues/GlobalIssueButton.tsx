@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { IssueForm } from './IssueForm';
 import { useIssues } from '@/hooks/useIssues';
@@ -128,6 +128,9 @@ export function GlobalIssueButton({
               <X className="h-4 w-4" />
             </Button>
           </DialogTitle>
+          <DialogDescription>
+            قم بملء النموذج أدناه للإبلاغ عن مشكلة أو اقتراح تحسين
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4">
@@ -155,11 +158,7 @@ export function GlobalIssueButton({
           <IssueForm 
             onSuccess={handleFormSuccess}
             onCancel={() => setIsOpen(false)}
-            initialData={{
-              description: consoleLogs.length > 0 
-                ? `**المشكلة**: [وصف المشكلة]\n\n**سجلات وحدة التحكم**:\n\`\`\`\n${getRecentLogs()}\n\`\`\`\n\n**معلومات إضافية**: [أي معلومات ذات صلة]`
-                : undefined
-            }}
+            consoleLogs={consoleLogs.length > 0 ? getRecentLogs() : undefined}
           />
         </div>
       </DialogContent>

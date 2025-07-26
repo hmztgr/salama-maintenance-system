@@ -15,15 +15,16 @@ interface IssueFormProps {
   onSuccess?: (issueId: string) => void;
   onCancel?: () => void;
   initialData?: Partial<IssueFormData>;
+  consoleLogs?: string;
 }
 
-export function IssueForm({ onSuccess, onCancel, initialData }: IssueFormProps) {
+export function IssueForm({ onSuccess, onCancel, initialData, consoleLogs }: IssueFormProps) {
   const { createIssue, loading } = useIssues();
   const { uploadAttachments, uploading, uploadProgress } = useIssueAttachments();
   
   const [formData, setFormData] = useState<IssueFormData>({
     title: initialData?.title || '',
-    description: initialData?.description || DESCRIPTION_TEMPLATE,
+    description: initialData?.description || '',
     category: initialData?.category || 'bug',
     priority: initialData?.priority || 'medium',
     tags: initialData?.tags || [],
@@ -97,9 +98,16 @@ export function IssueForm({ onSuccess, onCancel, initialData }: IssueFormProps) 
     if (!validateForm()) return;
 
     try {
+      // Prepare description with console logs if available
+      let finalDescription = formData.description;
+      if (consoleLogs && consoleLogs.trim()) {
+        finalDescription += `\n\n**سجلات وحدة التحكم**:\n\`\`\`\n${consoleLogs}\n\`\`\``;
+      }
+
       // Create issue first
       const issueData = {
         ...formData,
+        description: finalDescription,
         attachments: [], // We'll update this after uploading
         environment: {
           browser: navigator.userAgent,

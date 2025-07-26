@@ -143,17 +143,12 @@ export function IssueForm({ onSuccess, onCancel, initialData, consoleLogs }: Iss
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader>
-        <CardTitle className="text-2xl font-bold text-center">
-          إبلاغ عن مشكلة جديدة
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+    <Card className="w-full border-0 shadow-none">
+      <CardContent className="p-0">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Basic Information */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold border-b pb-2">
+          <div className="space-y-3">
+            <h3 className="text-base font-semibold border-b pb-2">
               {ARABIC_LABELS.basicInfo}
             </h3>
             
@@ -181,7 +176,7 @@ export function IssueForm({ onSuccess, onCancel, initialData, consoleLogs }: Iss
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                   placeholder={ARABIC_LABELS.descriptionPlaceholder}
-                  rows={8}
+                  rows={6}
                   className={errors.description ? 'border-red-500' : ''}
                 />
                 {errors.description && (

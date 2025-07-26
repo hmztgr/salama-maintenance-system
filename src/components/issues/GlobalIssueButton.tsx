@@ -30,7 +30,6 @@ export function GlobalIssueButton({
     const originalConsoleWarn = console.warn;
     const originalConsoleLog = console.log;
 
-    const logs: string[] = [];
     let errors = 0;
 
     // Override console methods to capture logs
@@ -39,9 +38,8 @@ export function GlobalIssueButton({
       const logEntry = `[ERROR] ${new Date().toISOString()}: ${args.map(arg => 
         typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
       ).join(' ')}`;
-      logs.push(logEntry);
       setConsoleLogs(prev => [...prev.slice(-50), logEntry]); // Keep last 50 logs
-      setErrorCount(errors);
+      setErrorCount(prev => prev + 1);
       originalConsoleError.apply(console, args);
     };
 
@@ -49,7 +47,6 @@ export function GlobalIssueButton({
       const logEntry = `[WARN] ${new Date().toISOString()}: ${args.map(arg => 
         typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
       ).join(' ')}`;
-      logs.push(logEntry);
       setConsoleLogs(prev => [...prev.slice(-50), logEntry]);
       originalConsoleWarn.apply(console, args);
     };
@@ -58,7 +55,6 @@ export function GlobalIssueButton({
       const logEntry = `[LOG] ${new Date().toISOString()}: ${args.map(arg => 
         typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
       ).join(' ')}`;
-      logs.push(logEntry);
       setConsoleLogs(prev => [...prev.slice(-50), logEntry]);
       originalConsoleLog.apply(console, args);
     };
@@ -115,7 +111,7 @@ export function GlobalIssueButton({
           )}
         </div>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>إبلاغ عن مشكلة جديدة</span>
@@ -133,10 +129,10 @@ export function GlobalIssueButton({
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-4">
-          {/* Console Logs Preview */}
+        <div className="flex flex-col h-full">
+          {/* Console Logs Preview - Fixed height */}
           {consoleLogs.length > 0 && (
-            <div className="bg-gray-50 border rounded-lg p-4">
+            <div className="bg-gray-50 border rounded-lg p-4 mb-4 flex-shrink-0">
               <h4 className="font-medium mb-2 flex items-center gap-2">
                 <span>سجلات وحدة التحكم الأخيرة</span>
                 {errorCount > 0 && (
@@ -145,21 +141,34 @@ export function GlobalIssueButton({
                   </Badge>
                 )}
               </h4>
-              <div className="bg-black text-green-400 p-3 rounded text-xs font-mono max-h-32 overflow-y-auto">
+              <div className="bg-black text-green-400 p-3 rounded text-xs font-mono h-32 overflow-y-auto">
                 <pre>{getRecentLogs()}</pre>
               </div>
               <p className="text-xs text-gray-600 mt-2">
                 سيتم تضمين هذه السجلات تلقائياً في المشكلة المبلغ عنها
               </p>
+              <button
+                type="button"
+                onClick={() => {
+                  console.error('Test error message');
+                  console.warn('Test warning message');
+                  console.log('Test log message');
+                }}
+                className="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
+              >
+                اختبار السجلات
+              </button>
             </div>
           )}
 
-          {/* Issue Form */}
-          <IssueForm 
-            onSuccess={handleFormSuccess}
-            onCancel={() => setIsOpen(false)}
-            consoleLogs={consoleLogs.length > 0 ? getRecentLogs() : undefined}
-          />
+          {/* Issue Form - Scrollable area */}
+          <div className="flex-1 overflow-y-auto">
+            <IssueForm 
+              onSuccess={handleFormSuccess}
+              onCancel={() => setIsOpen(false)}
+              consoleLogs={consoleLogs.length > 0 ? getRecentLogs() : undefined}
+            />
+          </div>
         </div>
       </DialogContent>
     </Dialog>

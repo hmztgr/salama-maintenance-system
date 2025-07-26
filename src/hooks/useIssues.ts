@@ -24,6 +24,16 @@ export function useIssues() {
   const [error, setError] = useState<string | null>(null);
   const { authState } = useAuth();
 
+  // Debug authentication state
+  useEffect(() => {
+    console.log('🔐 useIssues - Auth state changed:', {
+      user: authState.user,
+      isAuthenticated: authState.isAuthenticated,
+      isLoading: authState.isLoading,
+      error: authState.error
+    });
+  }, [authState]);
+
   // Create new issue
   const createIssue = useCallback(async (issueData: IssueFormData): Promise<string> => {
     try {

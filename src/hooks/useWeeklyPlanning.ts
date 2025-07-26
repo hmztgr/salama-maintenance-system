@@ -265,18 +265,60 @@ export function useWeeklyPlanning(weekNumber: number, year: number) {
       if (!visit) throw new Error('Visit not found');
 
       // Calculate new scheduled date
-      // Parse the date correctly from dd-mmm-yyyy format
-      const dateParts = visit.scheduledDate.split('-');
-      const parsedDay = parseInt(dateParts[0]);
-      const monthNamesArray = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      const parsedMonth = monthNamesArray.indexOf(dateParts[1]);
-      const parsedYear = parseInt(dateParts[2]);
+      // Parse the date more robustly to handle various formats
+      let currentDate: Date;
       
-      if (parsedMonth === -1 || isNaN(parsedDay) || isNaN(parsedYear)) {
-        throw new Error('Invalid date format in visit');
+      try {
+        // First, try to parse as ISO string (common in Firebase)
+        if (visit.scheduledDate.includes('T') && visit.scheduledDate.includes('Z')) {
+          currentDate = new Date(visit.scheduledDate);
+        } else if (visit.scheduledDate.includes('-') && visit.scheduledDate.length === 10) {
+          // Handle dd-mmm-yyyy or dd-mm-yyyy format
+          const dateParts = visit.scheduledDate.split('-');
+          const parsedDay = parseInt(dateParts[0]);
+          const monthPart = dateParts[1];
+          const parsedYear = parseInt(dateParts[2]);
+          
+          let monthIndex: number;
+          
+          // Check if month is numeric (e.g., "07" for July)
+          if (/^\d{1,2}$/.test(monthPart)) {
+            monthIndex = parseInt(monthPart) - 1; // Convert to 0-based index
+            if (monthIndex < 0 || monthIndex > 11) {
+              throw new Error(`Invalid numeric month: ${monthPart}`);
+            }
+          } else {
+            // Handle text month names (e.g., "Jan", "Jul")
+            const monthNames: Record<string, number> = {
+              'jan': 0, 'feb': 1, 'mar': 2, 'apr': 3, 'may': 4, 'jun': 5,
+              'jul': 6, 'aug': 7, 'sep': 8, 'oct': 9, 'nov': 10, 'dec': 11
+            };
+            monthIndex = monthNames[monthPart.toLowerCase()];
+            
+            if (monthIndex === undefined) {
+              throw new Error(`Invalid month name: ${monthPart}`);
+            }
+          }
+          
+          if (isNaN(parsedDay) || isNaN(parsedYear)) {
+            throw new Error('Invalid day or year in date');
+          }
+          
+          currentDate = new Date(parsedYear, monthIndex, parsedDay);
+        } else {
+          // Try standard Date parsing as fallback
+          currentDate = new Date(visit.scheduledDate);
+        }
+        
+        // Validate the parsed date
+        if (isNaN(currentDate.getTime())) {
+          throw new Error('Failed to parse date');
+        }
+      } catch (parseError) {
+        console.error('Date parsing error:', parseError, 'for visit:', visit.id, 'date:', visit.scheduledDate);
+        throw new Error(`Invalid date format in visit: ${visit.scheduledDate}`);
       }
       
-      const currentDate = new Date(parsedYear, parsedMonth, parsedDay);
       const daysDiff = toDay - fromDay;
       const newDate = new Date(currentDate);
       newDate.setDate(currentDate.getDate() + daysDiff);

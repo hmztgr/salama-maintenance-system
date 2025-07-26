@@ -224,6 +224,10 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
   const [showErrorsOnly, setShowErrorsOnly] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
   const [processingComplete, setProcessingComplete] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<{
+    type: 'error' | 'warning' | null;
+    field: string | null;
+  }>({ type: null, field: null });
 
   // Get data for validation
   const { companies } = useCompaniesFirebase();
@@ -735,8 +739,45 @@ ${suggestions}
   const filteredRows = importRows.filter(row => {
     if (showApprovedOnly && !row.approved) return false;
     if (showErrorsOnly && row.isValid) return false;
+    
+    // Apply active filter
+    if (activeFilter.type && activeFilter.field) {
+      if (activeFilter.type === 'error') {
+        return row.errors.some(error => 
+          `${error.field}: ${error.error}` === activeFilter.field
+        );
+      } else if (activeFilter.type === 'warning') {
+        return row.warnings.some(warning => 
+          `${warning.field}: ${warning.error}` === activeFilter.field
+        );
+      }
+    }
+    
     return true;
   });
+
+  // Calculate error and warning summaries
+  const errorSummary = useMemo(() => {
+    const summary: Record<string, number> = {};
+    importRows.forEach(row => {
+      row.errors.forEach(error => {
+        const key = `${error.field}: ${error.error}`;
+        summary[key] = (summary[key] || 0) + 1;
+      });
+    });
+    return summary;
+  }, [importRows]);
+
+  const warningSummary = useMemo(() => {
+    const summary: Record<string, number> = {};
+    importRows.forEach(row => {
+      row.warnings.forEach(warning => {
+        const key = `${warning.field}: ${warning.error}`;
+        summary[key] = (summary[key] || 0) + 1;
+      });
+    });
+    return summary;
+  }, [importRows]);
 
   const stats = {
     total: importRows.length,
@@ -803,6 +844,67 @@ ${suggestions}
                   </CardContent>
                 </Card>
               </div>
+
+              {/* Error and Warning Summary */}
+              {(Object.keys(errorSummary).length > 0 || Object.keys(warningSummary).length > 0) && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-right">ملخص الأخطاء والتحذيرات</h3>
+                  
+                  {/* Error Summary */}
+                  {Object.keys(errorSummary).length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-md font-medium text-red-700 text-right">الأخطاء</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {Object.entries(errorSummary).map(([errorKey, count]) => (
+                          <Button
+                            key={errorKey}
+                            variant={activeFilter.type === 'error' && activeFilter.field === errorKey ? "default" : "outline"}
+                            size="sm"
+                            className="text-red-700 border-red-300 hover:bg-red-50"
+                            onClick={() => setActiveFilter({ type: 'error', field: errorKey })}
+                          >
+                            {count} {errorKey}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Warning Summary */}
+                  {Object.keys(warningSummary).length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-md font-medium text-yellow-700 text-right">التحذيرات</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {Object.entries(warningSummary).map(([warningKey, count]) => (
+                          <Button
+                            key={warningKey}
+                            variant={activeFilter.type === 'warning' && activeFilter.field === warningKey ? "default" : "outline"}
+                            size="sm"
+                            className="text-yellow-700 border-yellow-300 hover:bg-yellow-50"
+                            onClick={() => setActiveFilter({ type: 'warning', field: warningKey })}
+                          >
+                            {count} {warningKey}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Clear Filter Button */}
+                  {activeFilter.type && (
+                    <div className="flex justify-end">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setActiveFilter({ type: null, field: null })}
+                        className="text-gray-600"
+                      >
+                        إلغاء التصفية
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Filter Controls */}
               <div className="flex items-center gap-4 justify-end">

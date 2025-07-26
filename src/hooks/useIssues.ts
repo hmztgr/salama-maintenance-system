@@ -30,7 +30,10 @@ export function useIssues() {
       user: authState.user,
       isAuthenticated: authState.isAuthenticated,
       isLoading: authState.isLoading,
-      error: authState.error
+      error: authState.error,
+      userUid: authState.user?.uid,
+      userRole: authState.user?.role,
+      userDisplayName: authState.user?.displayName
     });
   }, [authState]);
 
@@ -45,14 +48,16 @@ export function useIssues() {
         userUid: authState.user?.uid
       });
       
-      // Wait a bit if still loading
+      // Wait for authentication to be fully loaded
+      let attempts = 0;
+      while (authState.isLoading && attempts < 5) {
+        console.log(`⏳ Waiting for auth to load... attempt ${attempts + 1}`);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        attempts++;
+      }
+      
       if (authState.isLoading) {
-        console.log('⏳ Waiting for auth to load...');
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        if (authState.isLoading) {
-          throw new Error('جاري التحقق من المصادقة...');
-        }
+        throw new Error('جاري التحقق من المصادقة...');
       }
       
       // Check if user is authenticated
@@ -62,9 +67,14 @@ export function useIssues() {
       }
       
       // Check if user object exists and has uid
-      if (!authState.user || !authState.user.uid) {
-        console.error('❌ User object missing or no UID:', authState);
-        throw new Error('بيانات المستخدم غير صحيحة');
+      if (!authState.user) {
+        console.error('❌ User object is null:', authState);
+        throw new Error('بيانات المستخدم غير متوفرة');
+      }
+      
+      if (!authState.user.uid) {
+        console.error('❌ User UID is missing:', authState.user);
+        throw new Error('معرف المستخدم غير متوفر');
       }
 
       const issueDoc = {

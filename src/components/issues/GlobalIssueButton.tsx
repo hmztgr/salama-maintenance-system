@@ -141,8 +141,10 @@ export function GlobalIssueButton({
                   </Badge>
                 )}
               </h4>
-              <div className="bg-black text-green-400 p-2 rounded text-xs font-mono max-h-24 overflow-y-auto overflow-x-hidden">
-                <pre className="whitespace-pre-wrap break-words">{getRecentLogs()}</pre>
+              <div className="flex justify-center">
+                <div className="bg-black text-green-400 p-2 rounded text-xs font-mono max-h-24 w-1/2 overflow-y-auto overflow-x-hidden">
+                  <pre className="whitespace-pre-wrap break-words">{getRecentLogs()}</pre>
+                </div>
               </div>
               <p className="text-xs text-gray-600 mt-2">
                 سيتم تضمين هذه السجلات تلقائياً في المشكلة المبلغ عنها

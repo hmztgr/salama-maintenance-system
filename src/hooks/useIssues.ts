@@ -72,8 +72,48 @@ export function useIssues() {
         throw new Error('بيانات المستخدم غير متوفرة');
       }
       
+      // Log the full user object to debug
+      console.log('🔍 Full user object:', JSON.stringify(authState.user, null, 2));
+      
+      // Check if user has uid property
       if (!authState.user.uid) {
         console.error('❌ User UID is missing:', authState.user);
+        
+        // Try to get UID from different possible locations
+        const possibleUid = (authState.user as any).id || (authState.user as any).userId || (authState.user as any).firebaseUid;
+        if (possibleUid) {
+          console.log('✅ Found UID in alternative location:', possibleUid);
+          // Use the alternative UID
+          const issueDoc = {
+            title: issueData.title,
+            description: issueData.description,
+            category: issueData.category,
+            priority: issueData.priority,
+            status: 'open' as const,
+            reportedBy: possibleUid,
+            reportedByName: authState.user.displayName || authState.user.email || 'مستخدم',
+            assignedTo: null,
+            assignedByName: null,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            resolvedAt: null,
+            closedAt: null,
+            tags: issueData.tags,
+            attachments: issueData.attachments,
+            customFields: issueData.customFields,
+            environment: {
+              browser: navigator.userAgent,
+              os: navigator.platform,
+              device: window.innerWidth < 768 ? 'mobile' : 'desktop',
+              url: window.location.href
+            }
+          };
+
+          const docRef = await addDoc(collection(db, 'issues'), issueDoc);
+          await sendIssueNotification(docRef.id, issueData);
+          return docRef.id;
+        }
+        
         throw new Error('معرف المستخدم غير متوفر');
       }
 

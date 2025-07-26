@@ -228,6 +228,7 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
     type: 'error' | 'warning' | null;
     field: string | null;
   }>({ type: null, field: null });
+  const [skippedRowsCount, setSkippedRowsCount] = useState<number>(0);
 
   // Get data for validation
   const { companies } = useCompaniesFirebase();
@@ -336,10 +337,16 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
       }
 
       row.push(current.trim());
-      result.push(row);
+      
+      // Only add the row if it has at least one non-empty cell
+      if (row.some(cell => cell && cell.trim().length > 0)) {
+        result.push(row);
+      } else {
+        console.log(`🚫 Skipping completely empty row during CSV parsing`);
+      }
     }
 
-    return result.filter(row => row.some(cell => cell.length > 0));
+    return result;
   };
 
   // Get field configurations for normalization
@@ -632,8 +639,27 @@ ${suggestions}
         entityType
       });
 
-      const processedRows: ImportRow[] = dataRows.map((row, index) => {
-        const rowNumber = index + 2; // +2 because we start from row 2 (after headers)
+      // Filter out completely empty rows before processing
+      const nonEmptyDataRows = dataRows.filter((row, index) => {
+        // Check if the row has at least one non-empty cell
+        const hasData = row.some(cell => cell && cell.trim().length > 0);
+        
+        if (!hasData) {
+          console.log(`🚫 Skipping empty row ${index + 2} (all cells empty)`);
+        }
+        
+        return hasData;
+      });
+
+      const skippedCount = dataRows.length - nonEmptyDataRows.length;
+      setSkippedRowsCount(skippedCount);
+      console.log(`📊 Processing ${nonEmptyDataRows.length} non-empty rows out of ${dataRows.length} total rows (skipped ${skippedCount} empty rows)`);
+
+      const processedRows: ImportRow[] = nonEmptyDataRows.map((row, index) => {
+        // Calculate the actual row number in the original CSV file
+        const originalRowIndex = dataRows.indexOf(row);
+        const rowNumber = originalRowIndex + 2; // +2 because we start from row 2 (after headers)
+        
         const rowData: Record<string, string> = {};
 
         // Map row data to standard field names using the header mapping
@@ -812,7 +838,7 @@ ${suggestions}
           {processingComplete && (
             <>
               {/* Statistics */}
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
                 <Card>
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
@@ -843,6 +869,14 @@ ${suggestions}
                     <div className="text-sm text-gray-600">سجلات مختارة</div>
                   </CardContent>
                 </Card>
+                {skippedRowsCount > 0 && (
+                  <Card>
+                    <CardContent className="p-4 text-center">
+                      <div className="text-2xl font-bold text-gray-600">{skippedRowsCount}</div>
+                      <div className="text-sm text-gray-600">صفوف فارغة تم تجاهلها</div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
 
               {/* Error and Warning Summary */}

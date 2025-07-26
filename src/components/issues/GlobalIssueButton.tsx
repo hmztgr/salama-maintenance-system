@@ -111,7 +111,7 @@ export function GlobalIssueButton({
           )}
         </div>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden">
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>إبلاغ عن مشكلة جديدة</span>
@@ -129,10 +129,10 @@ export function GlobalIssueButton({
           </DialogDescription>
         </DialogHeader>
         
-        <div className="flex flex-col h-full">
-          {/* Console Logs Preview - Fixed height */}
+        <div className="space-y-4">
+          {/* Console Logs Preview */}
           {consoleLogs.length > 0 && (
-            <div className="bg-gray-50 border rounded-lg p-4 mb-4 flex-shrink-0">
+            <div className="bg-gray-50 border rounded-lg p-4">
               <h4 className="font-medium mb-2 flex items-center gap-2">
                 <span>سجلات وحدة التحكم الأخيرة</span>
                 {errorCount > 0 && (
@@ -141,7 +141,7 @@ export function GlobalIssueButton({
                   </Badge>
                 )}
               </h4>
-              <div className="bg-black text-green-400 p-3 rounded text-xs font-mono h-32 overflow-y-auto">
+              <div className="bg-black text-green-400 p-3 rounded text-xs font-mono max-h-32 overflow-y-auto">
                 <pre>{getRecentLogs()}</pre>
               </div>
               <p className="text-xs text-gray-600 mt-2">
@@ -161,14 +161,12 @@ export function GlobalIssueButton({
             </div>
           )}
 
-          {/* Issue Form - Scrollable area */}
-          <div className="flex-1 overflow-y-auto">
-            <IssueForm 
-              onSuccess={handleFormSuccess}
-              onCancel={() => setIsOpen(false)}
-              consoleLogs={consoleLogs.length > 0 ? getRecentLogs() : undefined}
-            />
-          </div>
+          {/* Issue Form */}
+          <IssueForm 
+            onSuccess={handleFormSuccess}
+            onCancel={() => setIsOpen(false)}
+            consoleLogs={consoleLogs.length > 0 ? getRecentLogs() : undefined}
+          />
         </div>
       </DialogContent>
     </Dialog>

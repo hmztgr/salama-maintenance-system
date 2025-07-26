@@ -262,7 +262,7 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
       }
     },
     contractsAdvanced: {
-      required: ['companyId', 'contractStartDate', 'branchIds', 'regularVisitsPerYear'],
+      required: ['companyId', 'contractStartDate', 'branchIds', 'fireExtinguisherMaintenance', 'alarmSystemMaintenance', 'fireSuppressionMaintenance', 'gasFireSuppression', 'foamFireSuppression'],
       validations: {
         companyId: { pattern: /^\d{4}$/ },
         contractStartDate: { pattern: /^\d{1,2}-[A-Za-z]{3}-\d{2,4}$/ },
@@ -510,6 +510,28 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
               });
             }
           }
+        }
+      }
+    }
+
+    // Business logic validation for contractsAdvanced
+    if (entityType === 'contractsAdvanced') {
+      // Check if either contractEndDate OR contractPeriodMonths is provided
+      if (fieldName === 'contractEndDate' || fieldName === 'contractPeriodMonths') {
+        const contractEndDate = rowData.contractEndDate;
+        const contractPeriodMonths = rowData.contractPeriodMonths;
+        
+        // If both are empty, add error to both fields
+        if ((!contractEndDate || contractEndDate.trim() === '') && 
+            (!contractPeriodMonths || contractPeriodMonths.trim() === '')) {
+          errors.push({
+            row: rowNumber,
+            field: fieldName,
+            value: normalized.originalValue,
+            error: 'تاريخ انتهاء العقد أو مدة العقد: أحدهما مطلوب',
+            suggestion: 'أدخل إما تاريخ انتهاء العقد أو مدة العقد بالشهور',
+            severity: 'error'
+          });
         }
       }
     }

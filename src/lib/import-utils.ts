@@ -281,11 +281,39 @@ export function validateNormalizedValue(
 }
 
 /**
+ * Validate business logic rules for specific entity types
+ */
+export function validateBusinessLogic(
+  normalizedData: Record<string, string>,
+  entityType: string
+): { isValid: boolean; errors: Record<string, string[]> } {
+  const errors: Record<string, string[]> = {};
+  let isValid = true;
+
+  // Business logic for contractsAdvanced
+  if (entityType === 'contractsAdvanced') {
+    const contractEndDate = normalizedData.contractEndDate;
+    const contractPeriodMonths = normalizedData.contractPeriodMonths;
+    
+    // Either contractEndDate OR contractPeriodMonths must be provided
+    if ((!contractEndDate || contractEndDate.trim() === '') && 
+        (!contractPeriodMonths || contractPeriodMonths.trim() === '')) {
+      errors.contractEndDate = ['تاريخ انتهاء العقد أو مدة العقد: أحدهما مطلوب'];
+      errors.contractPeriodMonths = ['تاريخ انتهاء العقد أو مدة العقد: أحدهما مطلوب'];
+      isValid = false;
+    }
+  }
+
+  return { isValid, errors };
+}
+
+/**
  * Process a complete row of data with normalization
  */
 export function processImportRow(
   rowData: Record<string, string>,
-  fieldConfigs: ImportFieldConfig[]
+  fieldConfigs: ImportFieldConfig[],
+  entityType?: string
 ): {
   originalData: Record<string, string>;
   normalizedData: Record<string, string>;
@@ -315,6 +343,21 @@ export function processImportRow(
     const validation = validateNormalizedValue(normalized.normalizedValue, config);
     if (!validation.isValid) {
       errors[config.fieldName] = validation.errors;
+      isValid = false;
+    }
+  }
+
+  // Apply business logic validation
+  if (entityType) {
+    const businessValidation = validateBusinessLogic(normalizedData, entityType);
+    if (!businessValidation.isValid) {
+      // Merge business logic errors
+      Object.entries(businessValidation.errors).forEach(([field, fieldErrors]) => {
+        if (!errors[field]) {
+          errors[field] = [];
+        }
+        errors[field].push(...fieldErrors);
+      });
       isValid = false;
     }
   }
@@ -358,8 +401,8 @@ export const ENTITY_FIELD_CONFIGS: Record<string, ImportFieldConfig[]> = {
   contractsAdvanced: [
     { fieldName: 'companyId', type: 'id', required: true, padZeros: 4, normalize: true },
     { fieldName: 'contractStartDate', type: 'date', required: true },
-    { fieldName: 'contractEndDate', type: 'date', required: true },
-    { fieldName: 'contractPeriodMonths', type: 'number', required: true },
+    { fieldName: 'contractEndDate', type: 'date', required: false }, // Either endDate OR periodMonths
+    { fieldName: 'contractPeriodMonths', type: 'number', required: false }, // Either endDate OR periodMonths
     { fieldName: 'contractValue', type: 'number', required: false },
     { fieldName: 'branchIds', type: 'text', required: true },
     { fieldName: 'fireExtinguisherMaintenance', type: 'boolean', required: true },

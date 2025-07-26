@@ -111,7 +111,7 @@ export function GlobalIssueButton({
           )}
         </div>
       </DialogTrigger>
-      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>إبلاغ عن مشكلة جديدة</span>
@@ -142,7 +142,7 @@ export function GlobalIssueButton({
                 )}
               </h4>
               <div className="flex justify-center">
-                <div className="bg-black text-green-400 p-2 rounded text-xs font-mono max-h-24 w-1/3 overflow-y-auto overflow-x-hidden">
+                <div className="bg-black text-green-400 p-2 rounded text-xs font-mono max-h-24 w-1/4 overflow-y-auto overflow-x-hidden">
                   <pre className="whitespace-pre-wrap break-words">{getRecentLogs()}</pre>
                 </div>
               </div>

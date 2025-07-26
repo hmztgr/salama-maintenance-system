@@ -19,6 +19,7 @@ import { DataMigration } from './admin/DataMigration';
 import { UserProfile } from './profile/UserProfile';
 import { ReportsDashboard } from './reports/ReportsDashboard';
 import EmergencyTicketsPage from '@/app/emergency-tickets/page';
+import IssuesPage from '@/app/issues/page';
 
 export interface MainDashboardProps {
   className?: string;
@@ -173,16 +174,7 @@ export function MainDashboard({ className = '' }: MainDashboardProps) {
 
         {activeTab === 'emergency-tickets' && <EmergencyTicketsPage />}
 
-        {activeTab === 'issues' && (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900">تتبع المشاكل</h2>
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <p className="text-yellow-800">
-                نظام تتبع المشاكل قيد التطوير. سيتم إضافته قريباً.
-              </p>
-            </div>
-          </div>
-        )}
+        {activeTab === 'issues' && <IssuesPage />}
 
         {activeTab === 'admin' && (
           <div className="space-y-6">

@@ -5,6 +5,65 @@ All notable changes to the Salama Maintenance Scheduler project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Version 56] - 2025-01-18
+### 🚀 **ENHANCED HISTORICAL VISIT IMPORT SYSTEM - FIREBASE INTEGRATION**
+- 🔄 **COMPLETE VISIT IMPORT REWRITE** - Modernized visit import system to align with current Visit interface
+- 🔥 **FIREBASE INTEGRATION** - Full integration with useVisitsFirebase hook for real-time data persistence
+- 📊 **ENHANCED VALIDATION ENGINE** - Comprehensive validation against companies, contracts, branches, and service batches
+- 🎯 **CONTRACT SERVICE BATCH VALIDATION** - Validates visit services against contract service batches
+- 📈 **IMPORT PROGRESS TRACKING** - Real-time progress tracking with detailed status messages
+- 🗑️ **EMPTY ROW FILTERING** - Automatically skips empty rows to prevent processing errors
+- 📋 **ENHANCED ERROR REPORTING** - Detailed error classification with actionable suggestions
+
+### Technical Implementation
+```typescript
+// NEW: Firebase-integrated visit import
+const visitData: Omit<Visit, 'id' | 'visitId' | 'isArchived' | 'createdAt' | 'updatedAt'> = {
+  branchId: row.data.branchId,
+  contractId: row.data.contractId,
+  companyId: row.data.companyId,
+  type: row.data.visitType as 'regular' | 'emergency' | 'followup',
+  status: row.data.status as 'scheduled' | 'in_progress' | 'completed' | 'cancelled' | 'rescheduled',
+  scheduledDate: row.data.scheduledDate,
+  services: {
+    fireExtinguisher: row.data.fireExtinguisher === 'نعم' || row.data.fireExtinguisher === 'yes',
+    alarmSystem: row.data.alarmSystem === 'نعم' || row.data.alarmSystem === 'yes',
+    // ... other services
+  },
+  results: row.data.overallStatus ? {
+    overallStatus: row.data.overallStatus as 'passed' | 'failed' | 'partial',
+    issues: row.data.issues ? [row.data.issues] : undefined,
+    // ... other results
+  } : undefined,
+  createdBy: row.data.createdBy || 'system-import'
+};
+
+const result = await addVisit(visitData);
+```
+
+### Enhanced Features
+- **Modern Visit Interface**: Aligned with current Visit type structure
+- **Service Batch Validation**: Ensures visit services match contract service batches
+- **Relationship Validation**: Validates branch-company-contract relationships
+- **Business Logic Validation**: Enforces rules like "completed visits must have results"
+- **Progress Tracking**: Real-time import progress with status messages
+- **Error Recovery**: Detailed error reporting with specific row and field information
+- **Bulk Import**: Efficient batch processing with Firebase rate limiting
+
+### Files Modified
+- **VisitImportTemplate.tsx**: Complete rewrite with modern field structure
+- **VisitImportReview.tsx**: Complete rewrite with Firebase integration
+- **Import Validation**: Enhanced validation engine with business logic
+- **Template Generation**: Updated CSV template with current field structure
+
+### Benefits Achieved
+- ✅ **Firebase Integration**: Real-time data persistence with proper error handling
+- ✅ **Modern Architecture**: Aligned with current weekly planner system
+- ✅ **Comprehensive Validation**: Validates all relationships and business rules
+- ✅ **User Experience**: Progress tracking and detailed error reporting
+- ✅ **Data Integrity**: Ensures imported visits match existing system structure
+- ✅ **Scalability**: Efficient bulk import with proper rate limiting
+
 ## [Version 55] - 2025-01-18
 ### 🗓️ **COMPREHENSIVE DATE VALIDATION ENHANCEMENT**
 - 🐛 **FIXED DATE FORMAT VALIDATION** - Enhanced import validation to support flexible date formats

@@ -27,19 +27,21 @@ export function VisitImportTemplate({ onClose }: VisitImportTemplateProps) {
   const [showReview, setShowReview] = useState(false);
   const [importResults, setImportResults] = useState<ImportResults | null>(null);
 
-  // Visit template configuration
+  // Modern visit template configuration aligned with current Visit interface
   const templateConfig = {
     title: 'استيراد بيانات الزيارات التاريخية',
-    description: 'قالب لاستيراد بيانات الزيارات التاريخية مع التحقق من العقود والفروع',
+    description: 'قالب لاستيراد بيانات الزيارات التاريخية مع التحقق من العقود والفروع والخدمات',
     headers: [
       'branchId',
       'contractId',
+      'companyId',
       'visitType',
+      'status',
       'scheduledDate',
       'scheduledTime',
       'completedDate',
       'completedTime',
-      'status',
+      'duration',
       'assignedTeam',
       'assignedTechnician',
       'fireExtinguisher',
@@ -51,17 +53,20 @@ export function VisitImportTemplate({ onClose }: VisitImportTemplateProps) {
       'issues',
       'recommendations',
       'nextVisitDate',
-      'notes'
+      'notes',
+      'createdBy'
     ],
     headerLabels: [
       'معرف الفرع*',
       'معرف العقد*',
+      'معرف الشركة*',
       'نوع الزيارة*',
+      'حالة الزيارة*',
       'تاريخ الجدولة*',
       'وقت الجدولة',
       'تاريخ التنفيذ',
       'وقت التنفيذ',
-      'حالة الزيارة*',
+      'مدة الزيارة (دقائق)',
       'الفريق المختص',
       'الفني المختص',
       'صيانة الطفايات',
@@ -73,17 +78,20 @@ export function VisitImportTemplate({ onClose }: VisitImportTemplateProps) {
       'المشاكل المكتشفة',
       'التوصيات',
       'تاريخ الزيارة القادمة',
-      'ملاحظات'
+      'ملاحظات',
+      'تم الإنشاء بواسطة'
     ],
     sampleData: [
       '0001-RIY-001-0001',
       'CON-0001-001',
+      '0001',
       'regular',
+      'completed',
       '15-Jan-2024',
       '09:00',
       '15-Jan-2024',
       '11:30',
-      'completed',
+      '150',
       'فريق الرياض',
       'أحمد محمد',
       'نعم',
@@ -95,20 +103,24 @@ export function VisitImportTemplate({ onClose }: VisitImportTemplateProps) {
       'بطارية طفاية منتهية الصلاحية',
       'استبدال البطارية في الطفاية رقم 3',
       '15-Apr-2024',
-      'زيارة صيانة دورية ناجحة'
+      'زيارة صيانة دورية ناجحة',
+      'system-import'
     ],
     validationRules: [
-      'معرف الفرع: مطلوب، يجب أن يكون موجود في النظام',
-      'معرف العقد: مطلوب، يجب أن يكون مرتبط بالفرع',
+      'معرف الفرع: مطلوب، يجب أن يكون موجود في النظام (تنسيق: 0001-RIY-001-0001)',
+      'معرف العقد: مطلوب، يجب أن يكون مرتبط بالفرع والشركة',
+      'معرف الشركة: مطلوب، يجب أن يكون موجود في النظام (تنسيق: 0001)',
       'نوع الزيارة: مطلوب، regular/emergency/followup',
+      'حالة الزيارة: مطلوب، scheduled/completed/cancelled/in_progress/rescheduled',
       'تاريخ الجدولة: مطلوب، تنسيق d-mmm-yyyy أو dd-mmm-yyyy أو d-mmm-yy أو dd-mmm-yy',
       'وقت الجدولة: اختياري، تنسيق HH:mm',
-      'تاريخ التنفيذ: اختياري، تنسيق d-mmm-yyyy أو dd-mmm-yyyy أو d-mmm-yy أو dd-mmm-yy',
+      'تاريخ التنفيذ: اختياري، للزيارات المكتملة',
       'وقت التنفيذ: اختياري، تنسيق HH:mm',
-      'حالة الزيارة: مطلوب، scheduled/completed/cancelled',
-      'الخدمات: نعم/لا، يجب أن تتطابق مع العقد',
-      'النتيجة العامة: passed/failed/partial للزيارات المكتملة',
-      'التواريخ: يجب أن تكون ضمن فترة العقد'
+      'مدة الزيارة: اختياري، بالدقائق (رقم صحيح)',
+      'الخدمات: نعم/لا، يجب أن تتطابق مع خدمات العقد',
+      'النتيجة العامة: passed/failed/partial للزيارات المكتملة فقط',
+      'التواريخ: يجب أن تكون ضمن فترة العقد',
+      'المشاكل والتوصيات: للزيارات المكتملة فقط'
     ]
   };
 
@@ -124,7 +136,8 @@ export function VisitImportTemplate({ onClose }: VisitImportTemplateProps) {
       // Add title and description as comments
       content += `# ${templateConfig.title}\n`;
       content += `# ${templateConfig.description}\n`;
-      content += `# تاريخ الإنشاء: ${new Date().toLocaleDateString('ar-SA')}\n\n`;
+      content += `# تاريخ الإنشاء: ${new Date().toLocaleDateString('ar-SA')}\n`;
+      content += `# نظام إدارة الصيانة - سلمة\n\n`;
 
       // Add validation rules as comments
       content += '# قواعد التحقق والتحقق من صحة البيانات:\n';
@@ -136,9 +149,11 @@ export function VisitImportTemplate({ onClose }: VisitImportTemplateProps) {
       // Add field descriptions
       content += '# وصف الحقول:\n';
       content += '# نوع الزيارة: regular (دورية), emergency (طارئة), followup (متابعة)\n';
-      content += '# حالة الزيارة: scheduled (مجدولة), completed (مكتملة), cancelled (ملغية)\n';
+      content += '# حالة الزيارة: scheduled (مجدولة), completed (مكتملة), cancelled (ملغية), in_progress (قيد التنفيذ), rescheduled (إعادة جدولة)\n';
       content += '# النتيجة العامة: passed (ناجح), failed (فاشل), partial (جزئي)\n';
-      content += '# الخدمات: نعم/لا أو yes/no أو true/false\n\n';
+      content += '# الخدمات: نعم/لا أو yes/no أو true/false\n';
+      content += '# التواريخ: تنسيق d-mmm-yyyy أو dd-mmm-yyyy أو d-mmm-yy أو dd-mmm-yy\n';
+      content += '# الأوقات: تنسيق HH:mm (مثال: 09:00, 14:30)\n\n';
 
       // Add headers
       content += templateConfig.headerLabels.join(',') + '\n';
@@ -156,7 +171,7 @@ export function VisitImportTemplate({ onClose }: VisitImportTemplateProps) {
       const url = URL.createObjectURL(blob);
 
       link.setAttribute('href', url);
-      link.setAttribute('download', `template_visits_import.csv`);
+      link.setAttribute('download', `template_visits_import_${new Date().toISOString().split('T')[0]}.csv`);
       link.style.visibility = 'hidden';
 
       document.body.appendChild(link);
@@ -190,9 +205,6 @@ export function VisitImportTemplate({ onClose }: VisitImportTemplateProps) {
   const handleImportComplete = (results: ImportResults) => {
     setImportResults(results);
     setShowReview(false);
-
-    // Here you would typically save the imported data to your data store
-    console.log('Visit import completed:', results);
 
     // Show success message
     const message = `تم استيراد الزيارات بنجاح!\n\n` +
@@ -360,13 +372,15 @@ export function VisitImportTemplate({ onClose }: VisitImportTemplateProps) {
           <div className="bg-blue-50 border border-blue-200 rounded p-4">
             <h4 className="font-medium text-blue-800 text-right mb-2">ملاحظات مهمة للزيارات:</h4>
             <ul className="space-y-1 text-sm text-blue-700 text-right">
-              <li>• معرفات الفروع والعقود يجب أن تكون موجودة في النظام</li>
+              <li>• معرفات الفروع والعقود والشركات يجب أن تكون موجودة في النظام</li>
               <li>• تواريخ الزيارات يجب أن تكون ضمن فترة العقد</li>
               <li>• نوع الزيارة: regular (دورية), emergency (طارئة), followup (متابعة)</li>
-              <li>• حالة الزيارة: scheduled, completed, cancelled</li>
+              <li>• حالة الزيارة: scheduled, completed, cancelled, in_progress, rescheduled</li>
               <li>• الخدمات المطلوبة يجب أن تتطابق مع خدمات العقد</li>
               <li>• النتيجة العامة مطلوبة فقط للزيارات المكتملة</li>
               <li>• استخدم تنسيق d-mmm-yyyy أو dd-mmm-yyyy أو d-mmm-yy أو dd-mmm-yy للتواريخ و HH:mm للأوقات</li>
+              <li>• مدة الزيارة بالدقائق (رقم صحيح)</li>
+              <li>• المشاكل والتوصيات للزيارات المكتملة فقط</li>
             </ul>
           </div>
 

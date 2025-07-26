@@ -121,17 +121,17 @@ const COLUMN_MAPPINGS = {
   contractsAdvanced: {
     companyId: ['companyId', 'company_id', 'معرف الشركة*', 'معرف الشركة', 'Company ID', 'معرف', 'رقم الشركة'],
     contractStartDate: ['contractStartDate', 'contract_start_date', 'تاريخ بداية العقد*', 'تاريخ البداية', 'Start Date', 'بداية العقد', 'تاريخ بدء'],
-    contractEndDate: ['contractEndDate', 'contract_end_date', 'تاريخ انتهاء العقد*', 'تاريخ الانتهاء', 'End Date', 'انتهاء العقد', 'تاريخ انتهاء'],
-    contractPeriodMonths: ['contractPeriodMonths', 'contract_period_months', 'مدة العقد بالشهور*', 'مدة العقد', 'Contract Period', 'مدة العقد', 'مدة عقد'],
+    contractEndDate: ['contractEndDate', 'contract_end_date', 'تاريخ انتهاء العقد*', 'تاريخ انتهاء العقد', 'تاريخ الانتهاء', 'End Date', 'انتهاء العقد', 'تاريخ انتهاء'],
+    contractPeriodMonths: ['contractPeriodMonths', 'contract_period_months', 'مدة العقد بالشهور*', 'مدة العقد بالأشهر', 'مدة العقد', 'Contract Period', 'مدة العقد', 'مدة عقد'],
     contractValue: ['contractValue', 'contract_value', 'قيمة العقد', 'Contract Value', 'القيمة', 'قيمة', 'سعر'],
     branchIds: ['branchIds', 'branch_ids', 'معرفات الفروع*', 'معرفات الفروع', 'Branch IDs', 'فروع', 'معرفات فروع'],
     fireExtinguisherMaintenance: ['fireExtinguisherMaintenance', 'fire_extinguisher', 'صيانة الطفايات*', 'صيانة الطفايات', 'Fire Extinguisher', 'طفايات', 'صيانة طفايات'],
-    alarmSystemMaintenance: ['alarmSystemMaintenance', 'alarm_system', 'صيانة نظام الإنذار*', 'نظام الإنذار', 'Alarm System', 'إنذار', 'صيانة إنذار'],
-    fireSuppressionMaintenance: ['fireSuppressionMaintenance', 'fire_suppression', 'صيانة نظام الإطفاء*', 'نظام الإطفاء', 'Fire Suppression', 'إطفاء', 'صيانة إطفاء'],
-    gasFireSuppression: ['gasFireSuppression', 'gas_suppression', 'نظام الإطفاء بالغاز*', 'إطفاء الغاز', 'Gas Suppression', 'غاز', 'إطفاء غاز'],
-    foamFireSuppression: ['foamFireSuppression', 'foam_suppression', 'نظام الإطفاء بالفوم*', 'إطفاء الفوم', 'Foam Suppression', 'فوم', 'إطفاء فوم'],
-    regularVisitsPerYear: ['regularVisitsPerYear', 'regular_visits', 'عدد الزيارات العادية سنوياً*', 'الزيارات العادية', 'Regular Visits', 'زيارات عادية', 'زيارات'],
-    emergencyVisitsPerYear: ['emergencyVisitsPerYear', 'emergency_visits', 'عدد الزيارات الطارئة سنوياً*', 'الزيارات الطارئة', 'Emergency Visits', 'زيارات طارئة', 'طوارئ'],
+    alarmSystemMaintenance: ['alarmSystemMaintenance', 'alarm_system', 'صيانة نظام الإنذار*', 'صيانة نظام الإنذار', 'نظام الإنذار', 'Alarm System', 'إنذار', 'صيانة إنذار'],
+    fireSuppressionMaintenance: ['fireSuppressionMaintenance', 'fire_suppression', 'صيانة نظام الإطفاء*', 'صيانة نظام الإطفاء', 'نظام الإطفاء', 'Fire Suppression', 'إطفاء', 'صيانة إطفاء'],
+    gasFireSuppression: ['gasFireSuppression', 'gas_suppression', 'نظام الإطفاء بالغاز*', 'نظام الإطفاء بالغاز', 'إطفاء الغاز', 'Gas Suppression', 'غاز', 'إطفاء غاز'],
+    foamFireSuppression: ['foamFireSuppression', 'foam_suppression', 'نظام الإطفاء بالفوم*', 'نظام الإطفاء بالفوم', 'إطفاء الفوم', 'Foam Suppression', 'فوم', 'إطفاء فوم'],
+    regularVisitsPerYear: ['regularVisitsPerYear', 'regular_visits', 'عدد الزيارات العادية سنوياً*', 'عدد الزيارات العادية سنوياً', 'الزيارات العادية', 'Regular Visits', 'زيارات عادية', 'زيارات'],
+    emergencyVisitsPerYear: ['emergencyVisitsPerYear', 'emergency_visits', 'عدد الزيارات الطارئة سنوياً*', 'عدد الزيارات الطارئة سنوياً', 'الزيارات الطارئة', 'Emergency Visits', 'زيارات طارئة', 'طوارئ'],
     emergencyVisitCost: ['emergencyVisitCost', 'emergency_visit_cost', 'تكلفة الزيارة الطارئة*', 'تكلفة الزيارة الطارئة', 'Emergency Visit Cost', 'تكلفة زيارة طارئة', 'تكلفة طوارئ'],
     batchNotes: ['batchNotes', 'batch_notes', 'ملاحظات الدفعة*', 'ملاحظات الدفعة', 'Batch Notes', 'ملاحظات الدفعة', 'ملاحظات دفعة'],
     contractNotes: ['contractNotes', 'contract_notes', 'ملاحظات العقد*', 'ملاحظات العقد', 'Contract Notes', 'ملاحظات العقد', 'ملاحظات عقد']
@@ -262,7 +262,7 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
       }
     },
     contractsAdvanced: {
-      required: ['companyId', 'contractStartDate', 'branchIds', 'fireExtinguisherMaintenance', 'alarmSystemMaintenance', 'fireSuppressionMaintenance', 'gasFireSuppression', 'foamFireSuppression'],
+      required: ['companyId', 'contractStartDate', 'branchIds', 'fireExtinguisherMaintenance', 'alarmSystemMaintenance', 'fireSuppressionMaintenance'],
       validations: {
         companyId: { pattern: /^\d{4}$/ },
         contractStartDate: { pattern: /^\d{1,2}-[A-Za-z]{3}-\d{2,4}$/ },

@@ -128,32 +128,10 @@ export function VisitImportTemplate({ onClose }: VisitImportTemplateProps) {
     setIsGenerating(true);
 
     try {
-      // Create comprehensive CSV content with UTF-8 BOM for Arabic support
+      // Create clean CSV content with UTF-8 BOM for Arabic support
       const BOM = '\uFEFF';
 
       let content = `${BOM}`;
-
-      // Add title and description as comments
-      content += `# ${templateConfig.title}\n`;
-      content += `# ${templateConfig.description}\n`;
-      content += `# تاريخ الإنشاء: ${new Date().toLocaleDateString('ar-SA')}\n`;
-      content += `# نظام إدارة الصيانة - سلمة\n\n`;
-
-      // Add validation rules as comments
-      content += '# قواعد التحقق والتحقق من صحة البيانات:\n';
-      templateConfig.validationRules.forEach(rule => {
-        content += `# ${rule}\n`;
-      });
-      content += '\n';
-
-      // Add field descriptions
-      content += '# وصف الحقول:\n';
-      content += '# نوع الزيارة: regular (دورية), emergency (طارئة), followup (متابعة)\n';
-      content += '# حالة الزيارة: scheduled (مجدولة), completed (مكتملة), cancelled (ملغية), in_progress (قيد التنفيذ), rescheduled (إعادة جدولة)\n';
-      content += '# النتيجة العامة: passed (ناجح), failed (فاشل), partial (جزئي)\n';
-      content += '# الخدمات: نعم/لا أو yes/no أو true/false\n';
-      content += '# التواريخ: تنسيق d-mmm-yyyy أو dd-mmm-yyyy أو d-mmm-yy أو dd-mmm-yy\n';
-      content += '# الأوقات: تنسيق HH:mm (مثال: 09:00, 14:30)\n\n';
 
       // Add headers
       content += templateConfig.headerLabels.join(',') + '\n';

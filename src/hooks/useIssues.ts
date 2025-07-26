@@ -40,16 +40,31 @@ export function useIssues() {
       console.log('🔐 Auth state check:', { 
         user: authState.user, 
         isAuthenticated: authState.isAuthenticated,
-        isLoading: authState.isLoading 
+        isLoading: authState.isLoading,
+        userRole: authState.user?.role,
+        userUid: authState.user?.uid
       });
       
+      // Wait a bit if still loading
       if (authState.isLoading) {
-        throw new Error('جاري التحقق من المصادقة...');
+        console.log('⏳ Waiting for auth to load...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        if (authState.isLoading) {
+          throw new Error('جاري التحقق من المصادقة...');
+        }
       }
       
-      if (!authState.user || !authState.user.uid) {
-        console.error('❌ Authentication failed:', authState);
+      // Check if user is authenticated
+      if (!authState.isAuthenticated) {
+        console.error('❌ User not authenticated:', authState);
         throw new Error('يجب تسجيل الدخول أولاً');
+      }
+      
+      // Check if user object exists and has uid
+      if (!authState.user || !authState.user.uid) {
+        console.error('❌ User object missing or no UID:', authState);
+        throw new Error('بيانات المستخدم غير صحيحة');
       }
 
       const issueDoc = {

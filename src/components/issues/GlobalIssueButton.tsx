@@ -111,7 +111,7 @@ export function GlobalIssueButton({
           )}
         </div>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>إبلاغ عن مشكلة جديدة</span>

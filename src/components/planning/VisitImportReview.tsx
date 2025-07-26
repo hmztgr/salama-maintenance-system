@@ -121,29 +121,29 @@ export function VisitImportReview({ file, onClose, onImportComplete }: VisitImpo
   const validationConfig = useMemo(() => ({
     required: ['branchId', 'contractId', 'companyId', 'visitType', 'status', 'scheduledDate'],
     validations: {
-      branchId: { pattern: /^[0-9]{4}-[A-Z]{3}-[0-9]{3}-[0-9]{4}$/ },
-      contractId: { pattern: /^CON-[0-9]{4}-[0-9]{3}$/ },
-      companyId: { pattern: /^[0-9]{4}$/ },
-      visitType: { enum: ['regular', 'emergency', 'followup'] },
-      status: { enum: ['scheduled', 'completed', 'cancelled', 'in_progress', 'rescheduled'] },
-      scheduledDate: { pattern: /^\d{1,2}-[A-Za-z]{3}-\d{2,4}$/ },
-      scheduledTime: { pattern: /^\d{2}:\d{2}$/ },
-      completedDate: { pattern: /^\d{1,2}-[A-Za-z]{3}-\d{2,4}$/ },
-      completedTime: { pattern: /^\d{2}:\d{2}$/ },
-      duration: { min: 15, max: 480, type: 'number' },
-      assignedTeam: { maxLength: 100 },
-      assignedTechnician: { maxLength: 100 },
-      fireExtinguisher: { enum: ['نعم', 'لا', 'yes', 'no', 'true', 'false'] },
-      alarmSystem: { enum: ['نعم', 'لا', 'yes', 'no', 'true', 'false'] },
-      fireSuppression: { enum: ['نعم', 'لا', 'yes', 'no', 'true', 'false'] },
-      gasSystem: { enum: ['نعم', 'لا', 'yes', 'no', 'true', 'false'] },
-      foamSystem: { enum: ['نعم', 'لا', 'yes', 'no', 'true', 'false'] },
-      overallStatus: { enum: ['passed', 'failed', 'partial'] },
-      issues: { maxLength: 1000 },
-      recommendations: { maxLength: 1000 },
-      nextVisitDate: { pattern: /^\d{1,2}-[A-Za-z]{3}-\d{2,4}$/ },
-      notes: { maxLength: 500 },
-      createdBy: { maxLength: 100 }
+      branchId: { type: 'id', pattern: /^[0-9]{4}-[A-Z]{3}-[0-9]{3}-[0-9]{4}$/ },
+      contractId: { type: 'id', pattern: /^CON-[0-9]{4}-[0-9]{3}$/ },
+      companyId: { type: 'id', pattern: /^[0-9]{4}$/ },
+      visitType: { type: 'text', enum: ['regular', 'emergency', 'followup'] },
+      status: { type: 'text', enum: ['scheduled', 'completed', 'cancelled', 'in_progress', 'rescheduled'] },
+      scheduledDate: { type: 'date', pattern: /^\d{1,2}-[A-Za-z]{3}-\d{2,4}$/ },
+      scheduledTime: { type: 'text', pattern: /^\d{2}:\d{2}$/ },
+      completedDate: { type: 'date', pattern: /^\d{1,2}-[A-Za-z]{3}-\d{2,4}$/ },
+      completedTime: { type: 'text', pattern: /^\d{2}:\d{2}$/ },
+      duration: { type: 'number', min: 15, max: 480 },
+      assignedTeam: { type: 'text', maxLength: 100 },
+      assignedTechnician: { type: 'text', maxLength: 100 },
+      fireExtinguisher: { type: 'boolean', enum: ['نعم', 'لا', 'yes', 'no', 'true', 'false'] },
+      alarmSystem: { type: 'boolean', enum: ['نعم', 'لا', 'yes', 'no', 'true', 'false'] },
+      fireSuppression: { type: 'boolean', enum: ['نعم', 'لا', 'yes', 'no', 'true', 'false'] },
+      gasSystem: { type: 'boolean', enum: ['نعم', 'لا', 'yes', 'no', 'true', 'false'] },
+      foamSystem: { type: 'boolean', enum: ['نعم', 'لا', 'yes', 'no', 'true', 'false'] },
+      overallStatus: { type: 'text', enum: ['passed', 'failed', 'partial'] },
+      issues: { type: 'text', maxLength: 1000 },
+      recommendations: { type: 'text', maxLength: 1000 },
+      nextVisitDate: { type: 'date', pattern: /^\d{1,2}-[A-Za-z]{3}-\d{2,4}$/ },
+      notes: { type: 'text', maxLength: 500 },
+      createdBy: { type: 'text', maxLength: 100 }
     }
   }), []);
 
@@ -199,10 +199,10 @@ export function VisitImportReview({ file, onClose, onImportComplete }: VisitImpo
     if (!fieldConfig) return errors;
 
     // Normalize the value
-    const normalized = normalizeImportValue(value, { fieldName, ...fieldConfig });
+    const normalized = normalizeImportValue(value, { fieldName, ...fieldConfig } as ImportFieldConfig);
     
     // Validate the normalized value
-    const validation = validateNormalizedValue(normalized.normalizedValue, { fieldName, ...fieldConfig });
+    const validation = validateNormalizedValue(normalized.normalizedValue, { fieldName, ...fieldConfig } as ImportFieldConfig);
     
     // Add normalization warnings
     normalized.warnings.forEach(warning => {

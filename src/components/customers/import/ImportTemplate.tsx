@@ -266,20 +266,10 @@ export function ImportTemplate({ entityType, onClose }: ImportTemplateProps) {
     setIsGenerating(true);
 
     try {
-      // Create comprehensive CSV content with UTF-8 BOM for Arabic support
+      // Create clean CSV content with UTF-8 BOM for Arabic support
       const BOM = '\uFEFF';
 
       let content = `${BOM}`;
-
-      // Add title and description as comments
-      content += `# ${currentConfig.title}\n`;
-      content += `# ${currentConfig.description}\n`;
-      content += `# تاريخ الإنشاء: ${new Date().toLocaleDateString('ar-SA')}\n\n`;
-
-      // Add simple header comment
-      content += '# قالب استيراد بيانات ' + currentConfig.title.replace('استيراد بيانات ', '') + '\n';
-      content += '# يرجى ملء البيانات في الصفوف أدناه\n';
-      content += '\n';
 
       // Add headers
       content += currentConfig.headerLabels.join(',') + '\n';

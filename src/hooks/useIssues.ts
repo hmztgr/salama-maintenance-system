@@ -114,6 +114,39 @@ export function useIssues() {
           return docRef.id;
         }
         
+        // If no UID found, use email as identifier
+        if (authState.user.email) {
+          console.log('✅ Using email as user identifier:', authState.user.email);
+          const issueDoc = {
+            title: issueData.title,
+            description: issueData.description,
+            category: issueData.category,
+            priority: issueData.priority,
+            status: 'open' as const,
+            reportedBy: authState.user.email,
+            reportedByName: authState.user.displayName || authState.user.email || 'مستخدم',
+            assignedTo: null,
+            assignedByName: null,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            resolvedAt: null,
+            closedAt: null,
+            tags: issueData.tags,
+            attachments: issueData.attachments,
+            customFields: issueData.customFields,
+            environment: {
+              browser: navigator.userAgent,
+              os: navigator.platform,
+              device: window.innerWidth < 768 ? 'mobile' : 'desktop',
+              url: window.location.href
+            }
+          };
+
+          const docRef = await addDoc(collection(db, 'issues'), issueDoc);
+          await sendIssueNotification(docRef.id, issueData);
+          return docRef.id;
+        }
+        
         throw new Error('معرف المستخدم غير متوفر');
       }
 

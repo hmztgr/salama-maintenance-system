@@ -130,8 +130,8 @@
 
 ---
 
-### **9. Weekly Planner Date Issue - DATES ARE WRONG**
-**Status**: 🟡 **IN PROGRESS - DEBUGGING WEEK CALCULATION**
+### **9. Weekly Planner Date Issue - DATES ARE WRONG** ✅ **RESOLVED**
+**Status**: 🟢 **CONFIRMED FIXED**
 **Reported**: 2025-01-24
 **Description**: Weekly planner showing incorrect dates. Today is Sunday, July 27th, but the planner shows July 27th as Friday. Also, annual planner week 30 shows incorrect date range. User also reported "endless loop" when expanding objects in console logs.
 
@@ -141,10 +141,12 @@
 - `src/hooks/useWeeklyPlanning.ts` - Removed excessive debug logging that was causing console loops
 - `src/components/planning/WeekStatusOverview.tsx` - Removed excessive debug logging
 - `src/components/planning/WeeklyPlanner.tsx` - Added test function call to verify week calculations
+- `src/components/planning/WeeklyPlannerGrid.tsx` - Fixed getStartOfWeek function to use ISO 8601 standard and updated weekDays array order
 
 **Root Cause**: The system was using two different week calculation systems:
 1. `getWeekStartDate()` used Sunday as first day of week (traditional US system)
 2. `getWeekStartDateByNumber()` used Monday as first day of week (ISO 8601 system)
+3. `WeeklyPlannerGrid.getStartOfWeek()` used custom Saturday-based calculation
 This created a mismatch where the same date could be in different weeks depending on which function was used.
 
 **Solution Applied**:
@@ -153,10 +155,14 @@ This created a mismatch where the same date could be in different weeks dependin
 3. Made all week calculation functions consistent with ISO 8601 standard
 4. Removed all excessive debug logging that was causing console loops
 5. Added testWeekCalculations function to verify date logic
+6. **FIXED**: Updated `WeeklyPlannerGrid.getStartOfWeek()` to use proper ISO 8601 calculation
+7. **FIXED**: Changed weekDays array from Saturday-first to Monday-first order
 
-**User Feedback**: "still teh same also why is this happening? whenever i expand a "[[Prototype]]" or "[[Prototype]]" i keep getting new lines it feel like its never ending is this normal? all of it within "Saving week data: Object" and not even expanded all of it its still expanding if i keep expanding it"
+**User Feedback**: "still having the same issue it shows the 27th as friday and 1st of january as monday" - Console logs showed date calculations were correct, but UI display was wrong due to WeeklyPlannerGrid using different week calculation.
 
-**Action Required**: User needs to test the application and check console logs for the testWeekCalculations output to verify if the date calculations are now working correctly.
+**Final User Feedback**: "perfect it shows 27th as sunday and the 1st of january as wednesday now"
+
+**Resolution**: Issue completely resolved. Weekly planner now correctly displays dates according to ISO 8601 standard.
 
 ---
 
@@ -180,11 +186,11 @@ This created a mismatch where the same date could be in different weeks dependin
 ## 📊 **ISSUE SUMMARY**
 
 ### **By Status**:
-- 🔴 **Critical Issues**: 6
+- 🔴 **Critical Issues**: 5
 - 🟡 **Medium Priority**: 3
 - 🔍 **Needs Investigation**: 1
-- 🟢 **Resolved**: 1
-- **Total Pending**: 10
+- 🟢 **Resolved**: 2
+- **Total Pending**: 9
 
 ### **By Category**:
 - **Branch Selection**: 1 issue
@@ -193,7 +199,7 @@ This created a mismatch where the same date could be in different weeks dependin
 - **Data Integration**: 1 issue
 - **Data Display**: 3 issues
 - **File Upload**: 1 issue
-- **Date Format**: 2 issues
+- **Date Format**: 1 issue
 - **UI/UX**: 1 issue
 - **Data Export**: 1 issue
 
@@ -210,7 +216,7 @@ This created a mismatch where the same date could be in different weeks dependin
 - [ ] **Emergency Visit Integration**: Complete an emergency visit and check if it appears in planners
 - [ ] **Visit Logs Names**: Check if visit logs show actual branch/company names
 - [ ] **Issue Form Dialog Size**: Test issue submission dialog to ensure no horizontal scrolling required
-- [ ] **Weekly Planner Dates**: Check if weekly planner shows correct dates (Sunday should be Sunday, not Friday) - **FIXED, AWAITING CONFIRMATION**
+- [x] **Weekly Planner Dates**: Check if weekly planner shows correct dates (Sunday should be Sunday, not Friday) - **✅ CONFIRMED FIXED**
 
 #### **Medium Priority**:
 - [ ] **Visit Logs Dates**: Check if visit logs show Georgian dates instead of Hijri
@@ -294,6 +300,18 @@ This created a mismatch where the same date could be in different weeks dependin
 - Added testWeekCalculations function to verify date logic
 - Added test call in WeeklyPlanner component to debug week calculations
 - Status changed to 🟡 IN PROGRESS - DEBUGGING WEEK CALCULATION
+
+### **2025-01-24 - Issue #9 Fixed (Fourth Fix)**
+- User reported dates still incorrect despite correct date calculations in console logs
+- Root cause: WeeklyPlannerGrid.getStartOfWeek() was using custom Saturday-based calculation instead of ISO 8601
+- Fixed getStartOfWeek function to use proper ISO 8601 week calculation (Monday as first day)
+- Changed weekDays array from Saturday-first to Monday-first order to match ISO 8601
+- Status changed to 🟡 FIXED - AWAITING CONFIRMATION
+
+### **2025-01-24 - Issue #9 Resolved**
+- User confirmed: "perfect it shows 27th as sunday and the 1st of january as wednesday now"
+- Issue completely resolved and confirmed working
+- Status changed to 🟢 CONFIRMED FIXED
 
 ---
 

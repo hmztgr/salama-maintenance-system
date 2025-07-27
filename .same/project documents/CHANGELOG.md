@@ -5,6 +5,59 @@ All notable changes to the Salama Maintenance Scheduler project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Version 58] - 2025-01-24
+### 🐛 **WEEKLY PLANNER DATE DISPLAY FIX - ISO 8601 ALIGNMENT**
+- 🗓️ **FIXED DATE MAPPING** - Weekly planner now correctly displays dates according to ISO 8601 standard
+- 🔧 **ALIGNED WEEK CALCULATIONS** - Fixed WeeklyPlannerGrid.getStartOfWeek() to use proper ISO 8601 calculation
+- 📅 **CORRECTED DAY ORDER** - Changed weekDays array from Saturday-first to Monday-first order
+- ✅ **CONFIRMED FIX** - July 27, 2025 now correctly shows as Sunday, January 1, 2025 as Wednesday
+- 🧹 **CONSOLE LOGGING CLEANUP** - Removed excessive debug logging that was causing endless loops
+
+### Technical Implementation
+```typescript
+// FIXED: WeeklyPlannerGrid week calculation alignment
+function getStartOfWeek(weekNumber: number, year: number): Date {
+  // Use ISO 8601 week calculation (Monday as first day)
+  const firstDayOfYear = new Date(year, 0, 1);
+  const firstThursdayOfYear = new Date(firstDayOfYear);
+  
+  // Find the first Thursday of the year
+  while (firstThursdayOfYear.getDay() !== 4) { // 4 = Thursday
+    firstThursdayOfYear.setDate(firstThursdayOfYear.getDate() + 1);
+  }
+  
+  // Calculate the start of week 1 (Monday of the week containing first Thursday)
+  const startOfWeek1 = new Date(firstThursdayOfYear);
+  startOfWeek1.setDate(firstThursdayOfYear.getDate() - 3); // Go back 3 days to Monday
+  
+  // Calculate the start of the requested week
+  const startOfWeek = new Date(startOfWeek1);
+  startOfWeek.setDate(startOfWeek1.getDate() + (weekNumber - 1) * 7);
+  
+  return startOfWeek;
+}
+
+// FIXED: Week days order alignment
+const weekDays = ['الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت', 'الأحد'];
+```
+
+### Root Cause Analysis
+The issue was caused by inconsistent week calculation systems:
+1. **date-handler.ts** functions used ISO 8601 (Monday as first day)
+2. **WeeklyPlannerGrid.tsx** used custom Saturday-based calculation
+3. **weekDays array** was ordered Saturday-first instead of Monday-first
+
+### Resolution
+- **Unified all week calculations** to use ISO 8601 standard
+- **Fixed WeeklyPlannerGrid.getStartOfWeek()** to use proper ISO 8601 calculation
+- **Updated weekDays array** to Monday-first order
+- **Removed excessive console logging** that was causing endless loops
+
+### User Confirmation
+- ✅ **July 27, 2025** now correctly displays as **Sunday**
+- ✅ **January 1, 2025** now correctly displays as **Wednesday**
+- ✅ **All dates** now align with ISO 8601 standard
+
 ## [Version 57] - 2025-01-18
 ### 🐛 **GLOBAL ISSUE TRACKING SYSTEM - CONSOLE LOG CAPTURE**
 - 🚀 **GLOBAL ISSUE SUBMISSION** - Added issue reporting from any page with floating action button

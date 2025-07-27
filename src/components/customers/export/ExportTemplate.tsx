@@ -140,6 +140,15 @@ export function ExportTemplate({ entityType, data, onClose, companies, branches 
   };
 
   const formatFieldValue = (item: Company | Contract | Branch, fieldKey: string): string => {
+    // Debug logging for all field processing
+    if (entityType === 'contracts') {
+      console.log('🔍 formatFieldValue called:', {
+        fieldKey,
+        contractId: (item as Contract).contractId,
+        companyId: (item as Contract).companyId
+      });
+    }
+
     const value = (item as unknown as Record<string, unknown>)[fieldKey];
 
     // Debug logging for contract exports
@@ -315,6 +324,12 @@ export function ExportTemplate({ entityType, data, onClose, companies, branches 
       });
 
       content += headers.join(',') + '\n';
+
+      // Debug logging for selected fields
+      console.log('🔍 Export configuration:', {
+        selectedFields: exportConfig.selectedFields,
+        totalDataItems: filteredData.length
+      });
 
       // Add data rows
       filteredData.forEach((item) => {

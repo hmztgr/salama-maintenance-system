@@ -128,7 +128,7 @@ export async function updateUserProfile(
  * Check if user has required role
  */
 export function hasRequiredRole(userRole: UserRole, requiredRole: UserRole): boolean {
-  const roleHierarchy = { viewer: 1, supervisor: 2, admin: 3 };
+  const roleHierarchy = { viewer: 1, supervisor: 2, operations_manager: 3, admin: 4 };
   return roleHierarchy[userRole] >= roleHierarchy[requiredRole];
 }
 

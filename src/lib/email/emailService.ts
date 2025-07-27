@@ -223,6 +223,7 @@ class EmailService {
   ): EmailTemplate {
     const roleNames = {
       admin: 'مدير النظام',
+      operations_manager: 'مدير العمليات',
       supervisor: 'مشرف',
       viewer: 'مستخدم'
     };

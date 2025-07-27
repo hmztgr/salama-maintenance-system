@@ -87,6 +87,7 @@ export function InvitationManagement() {
   const getRoleDisplayName = (role: UserRole) => {
     const names = {
       admin: 'مدير النظام',
+      operations_manager: 'مدير العمليات',
       supervisor: 'مشرف',
       viewer: 'مستخدم'
     };

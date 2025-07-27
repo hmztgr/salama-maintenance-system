@@ -184,6 +184,7 @@ export function UserManagement() {
   const getRoleDisplay = (role: UserRole) => {
     const displays = {
       admin: { name: 'مدير النظام', color: 'bg-red-100 text-red-800', icon: Crown },
+      operations_manager: { name: 'مدير العمليات', color: 'bg-purple-100 text-purple-800', icon: Shield },
       supervisor: { name: 'مشرف', color: 'bg-blue-100 text-blue-800', icon: Shield },
       viewer: { name: 'مستخدم', color: 'bg-gray-100 text-gray-800', icon: Eye }
     };

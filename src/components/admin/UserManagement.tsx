@@ -344,6 +344,7 @@ export function UserManagement() {
                 <SelectContent>
                   <SelectItem value="all">جميع الأدوار</SelectItem>
                   <SelectItem value="admin">مدير النظام</SelectItem>
+                  <SelectItem value="operations_manager">مدير العمليات</SelectItem>
                   <SelectItem value="supervisor">مشرف</SelectItem>
                   <SelectItem value="viewer">مستخدم</SelectItem>
                 </SelectContent>
@@ -844,6 +845,7 @@ function CreateUserModal({ permissionGroups, roleDefinitions, onClose, onSuccess
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="admin">مدير النظام</SelectItem>
+                  <SelectItem value="operations_manager">مدير العمليات</SelectItem>
                   <SelectItem value="supervisor">مشرف</SelectItem>
                   <SelectItem value="viewer">مستخدم</SelectItem>
                 </SelectContent>

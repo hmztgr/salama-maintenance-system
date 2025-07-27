@@ -276,6 +276,7 @@ export function InvitationManagement() {
                 <SelectContent>
                   <SelectItem value="all">جميع الصلاحيات</SelectItem>
                   <SelectItem value="admin">مدير النظام</SelectItem>
+                  <SelectItem value="operations_manager">مدير العمليات</SelectItem>
                   <SelectItem value="supervisor">مشرف</SelectItem>
                   <SelectItem value="viewer">مستخدم</SelectItem>
                 </SelectContent>
@@ -640,6 +641,7 @@ function CreateInvitationForm({ onClose, onSuccess, actions }: CreateInvitationF
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="admin">مدير النظام</SelectItem>
+                  <SelectItem value="operations_manager">مدير العمليات</SelectItem>
                   <SelectItem value="supervisor">مشرف</SelectItem>
                   <SelectItem value="viewer">مستخدم</SelectItem>
                 </SelectContent>

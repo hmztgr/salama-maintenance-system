@@ -329,6 +329,7 @@ export function AdvancedRoleManagement() {
                     <SelectContent>
                       <SelectItem value="all">جميع الأدوار</SelectItem>
                       <SelectItem value="admin">مدير النظام</SelectItem>
+                      <SelectItem value="operations_manager">مدير العمليات</SelectItem>
                       <SelectItem value="supervisor">مشرف</SelectItem>
                       <SelectItem value="viewer">مستخدم</SelectItem>
                     </SelectContent>
@@ -1012,6 +1013,7 @@ function UserDetailsModal({ user, permissions, permissionGroups, actions, onClos
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="admin">مدير النظام</SelectItem>
+                    <SelectItem value="operations_manager">مدير العمليات</SelectItem>
                     <SelectItem value="supervisor">مشرف</SelectItem>
                     <SelectItem value="viewer">مستخدم</SelectItem>
                   </SelectContent>

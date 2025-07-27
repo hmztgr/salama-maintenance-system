@@ -25,7 +25,7 @@ import {
 
 // Firebase imports for invitation validation
 import { collection, query, where, getDocs, doc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase/config';
+import { db, auth } from '@/lib/firebase/config';
 import { createUser } from '@/lib/firebase/auth';
 
 // Enhanced client-side invitation acceptance with Firebase integration
@@ -190,6 +190,13 @@ export function InvitationAcceptance() {
         invitation: invitation
       });
 
+      console.log('🔧 Firebase config check:', {
+        auth: !!auth,
+        db: !!db,
+        email: formData.email,
+        password: formData.password ? '***' : 'missing'
+      });
+
       // Check if user already exists
       const existingUserQuery = query(
         collection(db, 'users'),
@@ -204,6 +211,8 @@ export function InvitationAcceptance() {
       }
 
       // Create user in Firebase Authentication and Firestore
+      console.log('🚀 Starting user creation in Firebase Auth...');
+      
       const userProfile = await createUser(
         formData.email,
         formData.password,
@@ -243,8 +252,24 @@ export function InvitationAcceptance() {
 
       setRegistrationSuccess(true);
     } catch (error) {
-      console.error('Registration error:', error);
-      setFormErrors({ general: 'حدث خطأ أثناء إنشاء الحساب' });
+      console.error('❌ Registration error:', error);
+      
+      // Provide more specific error messages
+      let errorMessage = 'حدث خطأ أثناء إنشاء الحساب';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('auth/email-already-in-use')) {
+          errorMessage = 'يوجد حساب بالفعل لهذا البريد الإلكتروني';
+        } else if (error.message.includes('auth/weak-password')) {
+          errorMessage = 'كلمة المرور ضعيفة جداً';
+        } else if (error.message.includes('auth/invalid-email')) {
+          errorMessage = 'البريد الإلكتروني غير صحيح';
+        } else {
+          errorMessage = `خطأ: ${error.message}`;
+        }
+      }
+      
+      setFormErrors({ general: errorMessage });
     } finally {
       setIsSubmitting(false);
     }

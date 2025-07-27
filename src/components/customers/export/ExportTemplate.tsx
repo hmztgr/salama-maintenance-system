@@ -30,6 +30,16 @@ interface ExportConfig {
 
 export function ExportTemplate({ entityType, data, onClose, companies, branches }: ExportTemplateProps) {
   const [isExporting, setIsExporting] = useState(false);
+  
+  // Debug logging for component props
+  console.log('🔍 ExportTemplate props:', {
+    entityType,
+    dataLength: data.length,
+    companiesLength: companies?.length,
+    branchesLength: branches?.length,
+    hasCompanies: !!companies,
+    hasBranches: !!branches
+  });
   const [exportConfig, setExportConfig] = useState<ExportConfig>({
     includeArchived: false,
     selectedFields: [],
@@ -144,6 +154,8 @@ export function ExportTemplate({ entityType, data, onClose, companies, branches 
     if (entityType === 'contracts') {
       console.log('🔍 formatFieldValue called:', {
         fieldKey,
+        fieldKeyType: typeof fieldKey,
+        fieldKeyLength: fieldKey.length,
         entityType,
         contractId: (item as Contract).contractId,
         companyId: (item as Contract).companyId
@@ -151,6 +163,16 @@ export function ExportTemplate({ entityType, data, onClose, companies, branches 
     }
 
     const value = (item as unknown as Record<string, unknown>)[fieldKey];
+    
+    // Debug logging for contract exports to see what fields are being processed
+    if (entityType === 'contracts') {
+      console.log('🔍 Field processing:', {
+        fieldKey,
+        value,
+        valueType: typeof value,
+        hasValue: value !== null && value !== undefined
+      });
+    }
 
     // Debug logging for contract exports
     if (entityType === 'contracts' && fieldKey === 'contractId') {
@@ -194,7 +216,13 @@ export function ExportTemplate({ entityType, data, onClose, companies, branches 
       }
       return '';
     } else if (entityType === 'contracts' && fieldKey.includes('company')) {
-      console.log('🔍 Company field not matched:', { fieldKey, entityType });
+      console.log('🔍 Company field not matched:', { 
+        fieldKey, 
+        entityType,
+        fieldKeyExact: `"${fieldKey}"`,
+        expectedExact: '"companyName"',
+        fieldKeyCharCodes: Array.from(fieldKey).map(c => c.charCodeAt(0))
+      });
     }
 
     // Handle branch information for contracts
@@ -219,7 +247,13 @@ export function ExportTemplate({ entityType, data, onClose, companies, branches 
       }
       return '';
     } else if (entityType === 'contracts' && fieldKey.includes('branch')) {
-      console.log('🔍 Branch field not matched:', { fieldKey, entityType });
+      console.log('🔍 Branch field not matched:', { 
+        fieldKey, 
+        entityType,
+        fieldKeyExact: `"${fieldKey}"`,
+        expectedExact: '"branchIds" or "branchNames"',
+        fieldKeyCharCodes: Array.from(fieldKey).map(c => c.charCodeAt(0))
+      });
     }
 
     // Handle branch names for contracts
@@ -335,6 +369,12 @@ export function ExportTemplate({ entityType, data, onClose, companies, branches 
       // Debug logging for selected fields
       console.log('🔍 Export configuration:', {
         selectedFields: exportConfig.selectedFields,
+        selectedFieldsDetails: exportConfig.selectedFields.map(fieldKey => ({
+          fieldKey,
+          fieldKeyType: typeof fieldKey,
+          fieldKeyLength: fieldKey.length,
+          charCodes: Array.from(fieldKey).map(c => c.charCodeAt(0))
+        })),
         totalDataItems: filteredData.length
       });
 

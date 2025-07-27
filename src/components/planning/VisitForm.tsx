@@ -72,7 +72,7 @@ export function VisitForm({ visit, onSuccess, onCancel }: VisitFormProps) {
       contracts.some(contract => 
         contract.contractId === formData.contractId &&
         contract.serviceBatches?.some(batch => 
-          batch.branchIds.includes(branch.branchId)
+          batch.branchIds && Array.isArray(batch.branchIds) && batch.branchIds.includes(branch.branchId)
         )
       ) : true
     ) &&

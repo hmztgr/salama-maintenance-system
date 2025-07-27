@@ -83,7 +83,7 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
         const company = companies.find(c => c.companyId === branch.companyId);
         const branchContracts = contracts.filter(contract => 
           contract.serviceBatches?.some(batch => 
-            batch.branchIds.includes(branch.branchId)
+            batch.branchIds && Array.isArray(batch.branchIds) && batch.branchIds.includes(branch.branchId)
           ) && !contract.isArchived
         );
         const branchVisits = visits.filter(v => v.branchId === branch.branchId);
@@ -155,7 +155,7 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
         filtered = filtered.filter(branch => {
           const branchContracts = contracts.filter(contract => 
             contract.serviceBatches?.some(batch => 
-              batch.branchIds.includes(branch.branchId)
+              batch.branchIds && Array.isArray(batch.branchIds) && batch.branchIds.includes(branch.branchId)
             ) && !contract.isArchived
           );
           return branchContracts.some(contract => {
@@ -168,7 +168,7 @@ export function AutomatedVisitPlanner({ className = '' }: AutomatedVisitPlannerP
         filtered = filtered.filter(branch => {
           const branchContracts = contracts.filter(contract => 
             contract.serviceBatches?.some(batch => 
-              batch.branchIds.includes(branch.branchId)
+              batch.branchIds && Array.isArray(batch.branchIds) && batch.branchIds.includes(branch.branchId)
             ) && !contract.isArchived
           );
           return branchContracts.some(contract => {

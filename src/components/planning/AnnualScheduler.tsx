@@ -152,7 +152,7 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
       // Find contracts that include this branch in their service batches
       const branchContracts = contracts.filter(contract => 
         contract.serviceBatches?.some(batch => 
-          batch.branchIds.includes(branch.branchId)
+          batch.branchIds && Array.isArray(batch.branchIds) && batch.branchIds.includes(branch.branchId)
         )
       );
       
@@ -167,7 +167,7 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
 
       branchContracts.forEach(contract => {
         contract.serviceBatches?.forEach(batch => {
-          if (batch.branchIds.includes(branch.branchId)) {
+          if (batch.branchIds && Array.isArray(batch.branchIds) && batch.branchIds.includes(branch.branchId)) {
             Object.keys(aggregatedServices).forEach(service => {
               if (batch.services[service as keyof typeof batch.services]) {
                 aggregatedServices[service as keyof typeof aggregatedServices] = true;
@@ -180,7 +180,7 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
       // Calculate total regular visits for this branch
       const totalRegularVisits = branchContracts.reduce((sum, contract) => {
         return sum + contract.serviceBatches?.reduce((batchSum, batch) => {
-          return batch.branchIds.includes(branch.branchId) ? 
+          return (batch.branchIds && Array.isArray(batch.branchIds) && batch.branchIds.includes(branch.branchId)) ? 
             batchSum + (batch.regularVisitsPerYear || 0) : batchSum;
         }, 0) || 0;
       }, 0);
@@ -412,7 +412,7 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
     // Get the branch's contracts that include this branch in their service batches
     const branchContracts = contracts.filter(contract => 
       contract.serviceBatches?.some(batch => 
-        batch.branchIds.includes(branch.branchId)
+        batch.branchIds && Array.isArray(batch.branchIds) && batch.branchIds.includes(branch.branchId)
       )
     );
 
@@ -424,7 +424,7 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
     // Get services from the first service batch that includes this branch
     const firstContract = branchContracts[0];
     const relevantBatch = firstContract.serviceBatches?.find(batch => 
-      batch.branchIds.includes(branch.branchId)
+      batch.branchIds && Array.isArray(batch.branchIds) && batch.branchIds.includes(branch.branchId)
     );
 
     if (!relevantBatch) {
@@ -492,7 +492,7 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
       const branch = branchData.branch;
       const branchContracts = contracts.filter(contract => 
         contract.serviceBatches?.some(batch => 
-          batch.branchIds.includes(branch.branchId)
+          batch.branchIds && Array.isArray(batch.branchIds) && batch.branchIds.includes(branch.branchId)
         ) && !contract.isArchived
       );
 
@@ -503,7 +503,7 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
         // Find the service batch that includes this branch
         const firstContract = branchContracts[0];
         const relevantBatch = firstContract.serviceBatches?.find(batch => 
-          batch.branchIds.includes(branch.branchId)
+          batch.branchIds && Array.isArray(batch.branchIds) && batch.branchIds.includes(branch.branchId)
         );
 
         if (relevantBatch) {
@@ -992,7 +992,7 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
                           <div className="text-xs text-blue-600 mt-1">
                             عقود: {contracts.filter(contract => 
                               contract.serviceBatches?.some(batch => 
-                                batch.branchIds.includes(branch.branchId)
+                                batch.branchIds && Array.isArray(batch.branchIds) && batch.branchIds.includes(branch.branchId)
                               ) && !contract.isArchived
                             ).length} | زيارات: {visits.filter(v => v.branchId === branch.branchId).length}
                           </div>
@@ -1045,14 +1045,14 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
                             {(() => {
                               const branchContracts = contracts.filter(contract => 
                                 contract.serviceBatches?.some(batch => 
-                                  batch.branchIds.includes(branch.branchId)
+                                  batch.branchIds && Array.isArray(batch.branchIds) && batch.branchIds.includes(branch.branchId)
                                 ) && !contract.isArchived
                               );
                               
                               // Calculate total visits from all service batches for this branch
                               const totalRegularVisits = branchContracts.reduce((sum, contract) => {
                                 const branchBatches = contract.serviceBatches?.filter(batch => 
-                                  batch.branchIds.includes(branch.branchId)
+                                  batch.branchIds && Array.isArray(batch.branchIds) && batch.branchIds.includes(branch.branchId)
                                 ) || [];
                                 return sum + branchBatches.reduce((batchSum, batch) => 
                                   batchSum + (batch.regularVisitsPerYear || 0), 0
@@ -1061,7 +1061,7 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
                               
                               const totalEmergencyVisits = branchContracts.reduce((sum, contract) => {
                                 const branchBatches = contract.serviceBatches?.filter(batch => 
-                                  batch.branchIds.includes(branch.branchId)
+                                  batch.branchIds && Array.isArray(batch.branchIds) && batch.branchIds.includes(branch.branchId)
                                 ) || [];
                                 return sum + branchBatches.reduce((batchSum, batch) => 
                                   batchSum + (batch.emergencyVisitsPerYear || 0), 0

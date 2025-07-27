@@ -59,7 +59,7 @@ export function BranchDetailView({
 
   // Get branch contracts
   const branchContracts = contracts.filter(contract => 
-    contract.serviceBatches?.some(batch => batch.branchIds.includes(branch.branchId))
+    contract.serviceBatches?.some(batch => batch.branchIds && Array.isArray(batch.branchIds) && batch.branchIds.includes(branch.branchId))
   );
 
   // Calculate branch statistics

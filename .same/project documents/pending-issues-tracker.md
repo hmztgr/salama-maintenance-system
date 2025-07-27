@@ -130,7 +130,47 @@
 
 ---
 
-### **9. Weekly Planner Date Issue - DATES ARE WRONG** ✅ **RESOLVED**
+### **9. Annual Planner New Visit Creation - BROKEN** ❌ **STILL OCCURRING**
+**Status**: 🔴 **PENDING USER CONFIRMATION**
+**Reported**: 2025-01-24
+**Last Updated**: 2025-01-24
+**Description**: Creating new planned visits in the annual planner is not working. Error occurs when clicking the "+" button to add a new visit.
+
+**Error Details**:
+- Error: `TypeError: Cannot read properties of undefined (reading 'includes')`
+- Location: AnnualScheduler component when adding new visit
+- Branches affected: 0017-JED-001-0001, 0029-JED-001-0001, and others
+- Current visits count: 112
+
+**Console Logs**:
+- Empty date string warnings in parseCustomDate (repeated frequently)
+- Failed to add visit with undefined property error
+- AnnualScheduler rendering 179 branches successfully
+
+**Previous Fix Attempt**:
+- Added null checks and array validation before calling `.includes()` on `batch.branchIds`
+- Fixed all 10 instances of `batch.branchIds.includes()` calls in AnnualScheduler.tsx
+- Added proper validation: `batch.branchIds && Array.isArray(batch.branchIds) && batch.branchIds.includes(branch.branchId)`
+
+**Current Status**: The TypeError was occurring because there were unprotected `batch.branchIds.includes()` calls in multiple files throughout the codebase, not just in AnnualScheduler.tsx.
+
+**Comprehensive Fix Applied**:
+- Fixed all unprotected `batch.branchIds.includes()` calls in the following files:
+  - `src/components/planning/AnnualScheduler.tsx` - All 10 instances already had proper null checks
+  - `src/components/planning/VisitForm.tsx` - Fixed 1 instance
+  - `src/components/planning/AutomatedVisitPlanner.tsx` - Fixed 3 instances
+  - `src/components/planning/VisitImportReview.tsx` - Fixed 1 instance
+  - `src/components/customers/ContractDetailView.tsx` - Fixed 1 instance
+  - `src/components/customers/BranchDetailView.tsx` - Fixed 1 instance
+  - `src/components/admin/DemoDataGenerator.tsx` - Fixed 2 instances
+
+**Total Fixes Applied**: 9 additional instances across 7 files, in addition to the 10 instances already fixed in AnnualScheduler.tsx.
+
+**Action Required**: User needs to test creating new planned visits in the annual planner and confirm the TypeError is now resolved.
+
+---
+
+### **10. Weekly Planner Date Issue - DATES ARE WRONG** ✅ **RESOLVED**
 **Status**: 🟢 **CONFIRMED FIXED**
 **Reported**: 2025-01-24
 **Description**: Weekly planner showing incorrect dates. Today is Sunday, July 27th, but the planner shows July 27th as Friday. Also, annual planner week 30 shows incorrect date range. User also reported "endless loop" when expanding objects in console logs.
@@ -166,7 +206,7 @@ This created a mismatch where the same date could be in different weeks dependin
 
 ---
 
-### **10. Contract Export Empty Columns - COMPANY/BRANCH DATA MISSING** ✅ **RESOLVED**
+### **11. Contract Export Empty Columns - COMPANY/BRANCH DATA MISSING** ✅ **RESOLVED**
 **Status**: 🟢 **CONFIRMED FIXED**
 **Reported**: 2025-01-24
 **Resolved**: 2025-01-24
@@ -189,7 +229,7 @@ This created a mismatch where the same date could be in different weeks dependin
 - 🔴 **Critical Issues**: 5
 - 🟡 **Medium Priority**: 3
 - 🔍 **Needs Investigation**: 1
-- 🟢 **Resolved**: 2
+- 🟢 **Resolved**: 3
 - **Total Pending**: 9
 
 ### **By Category**:

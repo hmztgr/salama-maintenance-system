@@ -309,7 +309,7 @@ export function VisitImportReview({ file, onClose, onImportComplete }: VisitImpo
 
           // Check if branch is included in contract service batches
           const branchInContract = contract.serviceBatches?.some(batch => 
-            batch.branchIds.includes(branchId)
+            batch.branchIds && Array.isArray(batch.branchIds) && batch.branchIds.includes(branchId)
           );
           if (!branchInContract) {
             errors.push({

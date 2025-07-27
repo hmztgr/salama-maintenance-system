@@ -65,7 +65,7 @@ export function ContractDetailView({
 
   // Get contract branches
   const contractBranches = branches.filter(branch => 
-    contract.serviceBatches?.some(batch => batch.branchIds.includes(branch.branchId))
+    contract.serviceBatches?.some(batch => batch.branchIds && Array.isArray(batch.branchIds) && batch.branchIds.includes(branch.branchId))
   );
 
   // Extract services from all service batches

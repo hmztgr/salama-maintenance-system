@@ -334,13 +334,13 @@ export function DemoDataGenerator() {
         // Find contracts that include this branch in their service batches
         const relevantContracts = generatedContracts.filter(contract => 
           contract.companyId === branch.companyId &&
-          contract.serviceBatches.some(batch => batch.branchIds.includes(branch.branchId))
+          contract.serviceBatches.some(batch => batch.branchIds && Array.isArray(batch.branchIds) && batch.branchIds.includes(branch.branchId))
         );
 
         for (const contract of relevantContracts) {
           // Find the service batch that includes this branch
           const serviceBatch = contract.serviceBatches.find(batch => 
-            batch.branchIds.includes(branch.branchId)
+            batch.branchIds && Array.isArray(batch.branchIds) && batch.branchIds.includes(branch.branchId)
           );
           
           if (!serviceBatch) continue;

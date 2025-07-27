@@ -32,14 +32,13 @@ export function ExportTemplate({ entityType, data, onClose, companies, branches 
   const [isExporting, setIsExporting] = useState(false);
   
   // Debug logging for component props
-  console.log('🔍 ExportTemplate props:', {
-    entityType,
-    dataLength: data.length,
-    companiesLength: companies?.length,
-    branchesLength: branches?.length,
-    hasCompanies: !!companies,
-    hasBranches: !!branches
-  });
+  console.log('🔍 ExportTemplate props:');
+  console.log('  - entityType:', entityType);
+  console.log('  - dataLength:', data.length);
+  console.log('  - companiesLength:', companies?.length);
+  console.log('  - branchesLength:', branches?.length);
+  console.log('  - hasCompanies:', !!companies);
+  console.log('  - hasBranches:', !!branches);
   const [exportConfig, setExportConfig] = useState<ExportConfig>({
     includeArchived: false,
     selectedFields: [],
@@ -152,38 +151,35 @@ export function ExportTemplate({ entityType, data, onClose, companies, branches 
   const formatFieldValue = (item: Company | Contract | Branch, fieldKey: string): string => {
     // Debug logging for all field processing
     if (entityType === 'contracts') {
-      console.log('🔍 formatFieldValue called:', {
-        fieldKey,
-        fieldKeyType: typeof fieldKey,
-        fieldKeyLength: fieldKey.length,
-        entityType,
-        contractId: (item as Contract).contractId,
-        companyId: (item as Contract).companyId
-      });
+      console.log('🔍 formatFieldValue called:');
+      console.log('  - fieldKey:', fieldKey);
+      console.log('  - fieldKeyType:', typeof fieldKey);
+      console.log('  - fieldKeyLength:', fieldKey.length);
+      console.log('  - entityType:', entityType);
+      console.log('  - contractId:', (item as Contract).contractId);
+      console.log('  - companyId:', (item as Contract).companyId);
     }
 
     const value = (item as unknown as Record<string, unknown>)[fieldKey];
     
     // Debug logging for contract exports to see what fields are being processed
     if (entityType === 'contracts') {
-      console.log('🔍 Field processing:', {
-        fieldKey,
-        value,
-        valueType: typeof value,
-        hasValue: value !== null && value !== undefined
-      });
+      console.log('🔍 Field processing:');
+      console.log('  - fieldKey:', fieldKey);
+      console.log('  - value:', value);
+      console.log('  - valueType:', typeof value);
+      console.log('  - hasValue:', value !== null && value !== undefined);
     }
 
     // Debug logging for contract exports
     if (entityType === 'contracts' && fieldKey === 'contractId') {
-      console.log('🔍 Processing contract:', {
-        contractId: (item as Contract).contractId,
-        companyId: (item as Contract).companyId,
-        hasServiceBatches: !!(item as Contract).serviceBatches,
-        serviceBatchesLength: (item as Contract).serviceBatches?.length,
-        companiesCount: companies?.length,
-        branchesCount: branches?.length
-      });
+      console.log('🔍 Processing contract:');
+      console.log('  - contractId:', (item as Contract).contractId);
+      console.log('  - companyId:', (item as Contract).companyId);
+      console.log('  - hasServiceBatches:', !!(item as Contract).serviceBatches);
+      console.log('  - serviceBatchesLength:', (item as Contract).serviceBatches?.length);
+      console.log('  - companiesCount:', companies?.length);
+      console.log('  - branchesCount:', branches?.length);
     }
 
     if (value === null || value === undefined) {
@@ -204,38 +200,35 @@ export function ExportTemplate({ entityType, data, onClose, companies, branches 
     if (fieldKey === 'companyName' && entityType === 'contracts') {
       console.log('🔍 Company name condition met!');
       const contract = item as Contract;
-      console.log('🔍 Company name lookup:', {
-        contractId: contract.contractId,
-        companyId: contract.companyId,
-        companiesCount: companies?.length,
-        foundCompany: companies?.find(c => c.companyId === contract.companyId)
-      });
+      console.log('🔍 Company name lookup:');
+      console.log('  - contractId:', contract.contractId);
+      console.log('  - companyId:', contract.companyId);
+      console.log('  - companiesCount:', companies?.length);
+      console.log('  - foundCompany:', companies?.find(c => c.companyId === contract.companyId));
       if (companies) {
         const company = companies.find(c => c.companyId === contract.companyId);
         return company?.companyName || '';
       }
       return '';
     } else if (entityType === 'contracts' && fieldKey.includes('company')) {
-      console.log('🔍 Company field not matched:', { 
-        fieldKey, 
-        entityType,
-        fieldKeyExact: `"${fieldKey}"`,
-        expectedExact: '"companyName"',
-        fieldKeyCharCodes: Array.from(fieldKey).map(c => c.charCodeAt(0))
-      });
+      console.log('🔍 Company field not matched:');
+      console.log('  - fieldKey:', fieldKey);
+      console.log('  - entityType:', entityType);
+      console.log('  - fieldKeyExact:', `"${fieldKey}"`);
+      console.log('  - expectedExact:', '"companyName"');
+      console.log('  - fieldKeyCharCodes:', Array.from(fieldKey).map(c => c.charCodeAt(0)));
     }
 
     // Handle branch information for contracts
     if (fieldKey === 'branchIds' && entityType === 'contracts') {
       console.log('🔍 Branch IDs condition met!');
       const contract = item as Contract;
-      console.log('🔍 Branch IDs lookup:', {
-        contractId: contract.contractId,
-        hasServiceBatches: !!contract.serviceBatches,
-        serviceBatchesCount: contract.serviceBatches?.length,
-        branchesCount: branches?.length,
-        serviceBatches: contract.serviceBatches
-      });
+      console.log('🔍 Branch IDs lookup:');
+      console.log('  - contractId:', contract.contractId);
+      console.log('  - hasServiceBatches:', !!contract.serviceBatches);
+      console.log('  - serviceBatchesCount:', contract.serviceBatches?.length);
+      console.log('  - branchesCount:', branches?.length);
+      console.log('  - serviceBatches:', contract.serviceBatches);
       if (contract.serviceBatches && branches) {
         const allBranchIds = new Set<string>();
         contract.serviceBatches.forEach(batch => {
@@ -247,13 +240,12 @@ export function ExportTemplate({ entityType, data, onClose, companies, branches 
       }
       return '';
     } else if (entityType === 'contracts' && fieldKey.includes('branch')) {
-      console.log('🔍 Branch field not matched:', { 
-        fieldKey, 
-        entityType,
-        fieldKeyExact: `"${fieldKey}"`,
-        expectedExact: '"branchIds" or "branchNames"',
-        fieldKeyCharCodes: Array.from(fieldKey).map(c => c.charCodeAt(0))
-      });
+      console.log('🔍 Branch field not matched:');
+      console.log('  - fieldKey:', fieldKey);
+      console.log('  - entityType:', entityType);
+      console.log('  - fieldKeyExact:', `"${fieldKey}"`);
+      console.log('  - expectedExact:', '"branchIds" or "branchNames"');
+      console.log('  - fieldKeyCharCodes:', Array.from(fieldKey).map(c => c.charCodeAt(0)));
     }
 
     // Handle branch names for contracts
@@ -367,15 +359,15 @@ export function ExportTemplate({ entityType, data, onClose, companies, branches 
       content += headers.join(',') + '\n';
 
       // Debug logging for selected fields
-      console.log('🔍 Export configuration:', {
-        selectedFields: exportConfig.selectedFields,
-        selectedFieldsDetails: exportConfig.selectedFields.map(fieldKey => ({
-          fieldKey,
-          fieldKeyType: typeof fieldKey,
-          fieldKeyLength: fieldKey.length,
-          charCodes: Array.from(fieldKey).map(c => c.charCodeAt(0))
-        })),
-        totalDataItems: filteredData.length
+      console.log('🔍 Export configuration:');
+      console.log('  - selectedFields:', exportConfig.selectedFields);
+      console.log('  - totalDataItems:', filteredData.length);
+      console.log('  - selectedFieldsDetails:');
+      exportConfig.selectedFields.forEach((fieldKey, index) => {
+        console.log(`    ${index + 1}. fieldKey: "${fieldKey}"`);
+        console.log(`       type: ${typeof fieldKey}`);
+        console.log(`       length: ${fieldKey.length}`);
+        console.log(`       charCodes: [${Array.from(fieldKey).map(c => c.charCodeAt(0)).join(', ')}]`);
       });
 
       // Add data rows

@@ -14,7 +14,7 @@ import { useVisitsFirebase } from '@/hooks/useVisitsFirebase';
 import { useAuth } from '@/contexts/AuthContextFirebase';
 import { useSearch } from '@/hooks/useSearch';
 import { SearchAndFilter } from '@/components/common/SearchAndFilter';
-import { formatDateForDisplay, getWeekStartDate, getWeekEndDate, getWeekNumber, getCurrentDate } from '@/lib/date-handler';
+import { formatDateForDisplay, getWeekStartDateByNumber, getWeekEndDateByNumber, getWeekNumber, getCurrentDate } from '@/lib/date-handler';
 import { SafeStorage } from '@/lib/storage';
 import { Branch, Visit } from '@/types/customer';
 import { AutomatedVisitPlanner } from './AutomatedVisitPlanner';
@@ -281,25 +281,21 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
     const weeks: WeekData[] = [];
 
     for (let weekNum = 1; weekNum <= 52; weekNum++) {
-      // Calculate week start/end dates for the selected year
-      const yearStart = new Date(selectedYear, 0, 1);
-      const weekStart = new Date(yearStart);
-      weekStart.setDate(yearStart.getDate() + (weekNum - 1) * 7);
-
-      const startDate = formatDateForDisplay(weekStart);
-      const endDate = getWeekEndDate(startDate);
+      // Calculate week start/end dates for the selected year using proper ISO week calculation
+      const startDate = getWeekStartDateByNumber(weekNum, selectedYear);
+      const endDate = getWeekEndDateByNumber(weekNum, selectedYear);
 
       // Enhanced debug logging for multiple weeks
       if (weekNum <= 3 || weekNum === 26 || weekNum === 52) {
+        const startDateObj = parseCustomDate(startDate);
+        const endDateObj = parseCustomDate(endDate);
         console.log(`🗓️ Week ${weekNum} date calculation:`, {
-          yearStart: yearStart.toISOString(),
-          weekStart: weekStart.toISOString(),
           startDate,
           endDate,
           selectedYear,
-          weekStartDay: weekStart.getDay(), // 0=Sunday, 1=Monday, etc.
-          parsedStartDate: parseCustomDate(startDate).toISOString(),
-          parsedEndDate: parseCustomDate(endDate).toISOString()
+          weekStartDay: startDateObj.getDay(), // 0=Sunday, 1=Monday, etc.
+          parsedStartDate: startDateObj.toISOString(),
+          parsedEndDate: endDateObj.toISOString()
         });
       }
 

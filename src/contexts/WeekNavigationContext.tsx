@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { getCurrentWeekStart } from '@/lib/date-handler';
+import { getCurrentWeekStart, getWeekNumber, getWeekStartDateByNumber } from '@/lib/date-handler';
 
 interface WeekNavigationContextType {
   currentWeek: string;
@@ -40,9 +40,7 @@ export function WeekNavigationProvider({ children }: { children: ReactNode }) {
       }
       
       const date = new Date(parseInt(year), monthIndex, parseInt(day));
-      const yearStart = new Date(date.getFullYear(), 0, 1);
-      const days = Math.floor((date.getTime() - yearStart.getTime()) / (24 * 60 * 60 * 1000));
-      return Math.ceil((days + yearStart.getDay() + 1) / 7);
+      return getWeekNumber(date);
     } catch (error) {
       console.error('Error calculating week number:', error);
       return 1;
@@ -67,20 +65,16 @@ export function WeekNavigationProvider({ children }: { children: ReactNode }) {
       const weekParam = searchParams.get('week');
       const yearParam = searchParams.get('year');
       
-      if (weekParam && yearParam) {
-        const week = parseInt(weekParam);
-        const year = parseInt(yearParam);
-        
-        if (week >= 1 && week <= 52 && year >= 2020 && year <= 2030) {
-          const yearStart = new Date(year, 0, 1);
-          const targetWeekStart = new Date(yearStart);
-          targetWeekStart.setDate(yearStart.getDate() + (week - 1) * 7);
+              if (weekParam && yearParam) {
+          const week = parseInt(weekParam);
+          const year = parseInt(yearParam);
           
-          // Format as YYYY-MM-DD
-          const formattedWeek = targetWeekStart.toISOString().split('T')[0];
-          setCurrentWeek(formattedWeek);
+          if (week >= 1 && week <= 52 && year >= 2020 && year <= 2030) {
+            // Use the proper week calculation functions
+            const weekStartDate = getWeekStartDateByNumber(week, year);
+            setCurrentWeek(weekStartDate);
+          }
         }
-      }
     } catch (error) {
       // Ignore errors during build time
       console.log('WeekNavigationContext: Error reading search params during build');

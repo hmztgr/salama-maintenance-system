@@ -316,18 +316,74 @@ export function getWeekEndDate(dateString: string): string {
 }
 
 /**
- * Get the week number of the year
+ * Get the week number of the year (ISO 8601 standard)
  * @param date - Date object
  * @returns Week number (1-53)
  */
 export function getWeekNumber(date: Date): number {
   try {
-    const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
-    const pastDaysOfYear = (date.getTime() - firstDayOfYear.getTime()) / 86400000;
-    return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+    // ISO 8601 week calculation
+    const target = new Date(date.valueOf());
+    const dayNr = (date.getDay() + 6) % 7;
+    target.setDate(target.getDate() - dayNr + 3);
+    const firstThursday = target.valueOf();
+    target.setMonth(0, 1);
+    if (target.getDay() !== 4) {
+      target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7);
+    }
+    return 1 + Math.ceil((firstThursday - target.valueOf()) / 604800000);
   } catch (error) {
     console.error('Error getting week number:', error);
     return 1;
+  }
+}
+
+/**
+ * Get the start date of a specific week number in a year
+ * @param weekNumber - Week number (1-53)
+ * @param year - Year
+ * @returns Week start date in dd-mmm-yyyy format
+ */
+export function getWeekStartDateByNumber(weekNumber: number, year: number): string {
+  try {
+    // Find the first Thursday of the year
+    const firstThursday = new Date(year, 0, 1);
+    while (firstThursday.getDay() !== 4) { // 4 = Thursday
+      firstThursday.setDate(firstThursday.getDate() + 1);
+    }
+    
+    // Calculate the start of the target week
+    const weekStart = new Date(firstThursday);
+    weekStart.setDate(firstThursday.getDate() - 3 + (weekNumber - 1) * 7);
+    
+    return formatDateForDisplay(weekStart);
+  } catch (error) {
+    console.error('Error getting week start date by number:', error);
+    return getCurrentDate();
+  }
+}
+
+/**
+ * Get the end date of a specific week number in a year
+ * @param weekNumber - Week number (1-53)
+ * @param year - Year
+ * @returns Week end date in dd-mmm-yyyy format
+ */
+export function getWeekEndDateByNumber(weekNumber: number, year: number): string {
+  try {
+    const weekStart = getWeekStartDateByNumber(weekNumber, year);
+    const startDate = parseStandardDate(weekStart);
+    if (!startDate) {
+      throw new Error('Invalid week start date');
+    }
+    
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + 6); // Add 6 days to get to Saturday
+    
+    return formatDateForDisplay(endDate);
+  } catch (error) {
+    console.error('Error getting week end date by number:', error);
+    return getCurrentDate();
   }
 }
 

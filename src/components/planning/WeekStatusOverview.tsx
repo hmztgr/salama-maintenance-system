@@ -34,15 +34,7 @@ export function WeekStatusOverview({
     const emergencyVisits = weekData.visits.filter(v => v.type === 'emergency').length;
     const completionRate = totalVisits > 0 ? Math.round((completedVisits / totalVisits) * 100) : 0;
 
-    console.log('📊 Week Stats Calculation:', {
-      weekNumber: weekData.weekNumber,
-      totalVisits,
-      completedVisits,
-      pendingVisits,
-      emergencyVisits,
-      completionRate,
-      visitStatuses: weekData.visits.map(v => ({ id: v.id, status: v.status, dayOfWeek: (v as any).dayOfWeek }))
-    });
+    // Debug logging removed to prevent console loops
 
     return {
       totalVisits,

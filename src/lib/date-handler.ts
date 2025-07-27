@@ -278,14 +278,7 @@ export function getWeekStartDate(dateString: string): string {
 
     const result = formatDateForDisplay(startDate);
     
-    // Debug logging for week start calculation (simplified to prevent loops)
-    console.log('🔍 getWeekStartDate debug:', {
-      inputDate: dateString,
-      dayOfWeek,
-      dayOfWeekName: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek],
-      daysToMonday,
-      result
-    });
+    // Debug logging removed to prevent console loops
 
     return result;
   } catch (error) {
@@ -400,14 +393,7 @@ export function getCurrentWeekStart(): string {
   const currentDate = getCurrentDate();
   const weekStart = getWeekStartDate(currentDate);
   
-  // Debug logging for week calculation (simplified to prevent loops)
-  const now = new Date();
-  console.log('🔍 Week calculation debug:', {
-    currentDate,
-    weekStart,
-    currentDayOfWeek: now.getDay(),
-    currentDayName: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][now.getDay()]
-  });
+  // Debug logging removed to prevent console loops
   
   return weekStart;
 }
@@ -468,4 +454,46 @@ export function validateAndFixDate(dateString: string): { isValid: boolean; fixe
     fixedDate: getCurrentDate(),
     originalDate
   };
+}
+
+/**
+ * Test function to verify week calculations
+ * This function can be called to test if week calculations are working correctly
+ */
+export function testWeekCalculations(): void {
+  console.log('🧪 Testing Week Calculations:');
+  
+  // Test July 27, 2025 (Sunday)
+  const testDate = new Date(2025, 6, 27); // July 27, 2025
+  const testDateStr = formatDateForDisplay(testDate);
+  
+  console.log('Test Date:', testDateStr, 'Day of week:', testDate.getDay(), '(0=Sunday)');
+  
+  // Test week number calculation
+  const weekNumber = getWeekNumber(testDate);
+  console.log('Week Number:', weekNumber);
+  
+  // Test week start/end calculation
+  const weekStart = getWeekStartDate(testDateStr);
+  const weekEnd = getWeekEndDate(testDateStr);
+  console.log('Week Start:', weekStart);
+  console.log('Week End:', weekEnd);
+  
+  // Test week start/end by number
+  const weekStartByNumber = getWeekStartDateByNumber(weekNumber, 2025);
+  const weekEndByNumber = getWeekEndDateByNumber(weekNumber, 2025);
+  console.log('Week Start by Number:', weekStartByNumber);
+  console.log('Week End by Number:', weekEndByNumber);
+  
+  // Test January 1, 2025 (Wednesday)
+  const jan1 = new Date(2025, 0, 1);
+  const jan1Str = formatDateForDisplay(jan1);
+  console.log('Jan 1, 2025:', jan1Str, 'Day of week:', jan1.getDay(), '(3=Wednesday)');
+  
+  const jan1WeekNumber = getWeekNumber(jan1);
+  const jan1WeekStart = getWeekStartDate(jan1Str);
+  const jan1WeekEnd = getWeekEndDate(jan1Str);
+  console.log('Jan 1 Week Number:', jan1WeekNumber);
+  console.log('Jan 1 Week Start:', jan1WeekStart);
+  console.log('Jan 1 Week End:', jan1WeekEnd);
 }

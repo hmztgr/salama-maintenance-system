@@ -36,19 +36,7 @@ export function useWeeklyPlanning(weekNumber: number, year: number) {
       setLoading(true);
       setError(null);
 
-      console.log('🔍 Weekly Planning Debug:', {
-        totalVisits: visits.length,
-        weekNumber,
-        year,
-        branchesCount: branches.length,
-        companiesCount: companies.length,
-        sampleVisits: visits.slice(0, 3).map(v => ({
-          id: v.id,
-          scheduledDate: v.scheduledDate,
-          branchId: v.branchId,
-          companyId: v.companyId
-        }))
-      });
+      // Debug logging removed to prevent console loops
 
       // Filter visits for the specific week and year
       const weekVisits = visits.filter(visit => {
@@ -114,19 +102,7 @@ export function useWeeklyPlanning(weekNumber: number, year: number) {
           
           const isInWeek = visitWeek === weekNumber && visitYear === year;
           
-          // Only log if this visit is in the target week to reduce spam
-          if (isInWeek) {
-            console.log('📅 Visit Week Check:', {
-              visitId: visit.id,
-              scheduledDate: visit.scheduledDate,
-              parsedDate: visitDate.toISOString(),
-              visitWeek,
-              visitYear,
-              targetWeek: weekNumber,
-              targetYear: year,
-              isInWeek
-            });
-          }
+          // Debug logging removed to prevent console loops
           
           return isInWeek;
         } catch (error) {
@@ -146,15 +122,7 @@ export function useWeeklyPlanning(weekNumber: number, year: number) {
         (window as any).invalidDateWarningLogged = true;
       }
       
-      console.log('✅ Filtered Week Visits:', {
-        weekVisitsCount: weekVisits.length,
-        totalVisits: visits.length,
-        invalidDateCount,
-        weekVisits: weekVisits.map(v => ({
-          id: v.id,
-          scheduledDate: v.scheduledDate
-        }))
-      });
+      // Debug logging removed to prevent console loops
 
       // Enhance visits with company and branch names
       const enhancedVisits: WeeklyVisit[] = weekVisits.map(visit => {
@@ -403,7 +371,7 @@ export function useWeeklyPlanning(weekNumber: number, year: number) {
   const saveWeekData = useCallback(async (data: WeeklyPlanningData) => {
     try {
       // Save to backend (implement based on your data store)
-      console.log('Saving week data:', data);
+      // Debug logging removed to prevent console loops
     } catch (err) {
       console.error('Failed to save week data:', err);
       throw err;

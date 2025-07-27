@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Calendar, Download, Printer, Check } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContextFirebase';
 import { useWeekNavigation } from '@/contexts/WeekNavigationContext';
+import { testWeekCalculations } from '@/lib/date-handler';
 
 export interface WeeklyPlannerProps {
   weekNumber?: number;
@@ -36,6 +37,11 @@ export function WeeklyPlanner({
   const [showMoveDialog, setShowMoveDialog] = useState(false);
   const [selectedVisit, setSelectedVisit] = useState<Visit | null>(null);
   const [weekStatus, setWeekStatus] = useState<'draft' | 'approved'>('draft');
+
+  // Test week calculations on component mount
+  useEffect(() => {
+    testWeekCalculations();
+  }, []);
 
   // Helper function to get week number
   function getWeekNumber(date: Date): number {

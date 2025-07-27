@@ -131,13 +131,24 @@
 ---
 
 ### **9. Weekly Planner Date Issue - DATES ARE WRONG**
-**Status**: 🔴 **PENDING USER CONFIRMATION**
+**Status**: 🟡 **IN PROGRESS - AWAITING TESTING**
 **Reported**: 2025-01-24
 **Description**: Weekly planner showing incorrect dates. Today is Sunday, July 27th, but the planner shows July 27th as Friday.
 
+**Files Modified**:
+- `src/components/planning/AnnualScheduler.tsx` - Enhanced parseCustomDate to handle multiple date formats
+- `src/contexts/WeekNavigationContext.tsx` - Fixed date parsing for dd-mmm-yyyy format
+
+**Root Cause**: The system was receiving dates in multiple formats (mm/dd/yyyy, mm-dd-yyyy) but the date parsing functions only handled dd-mmm-yyyy format, causing parsing failures and incorrect date calculations.
+
+**Solution**: 
+1. Enhanced `parseCustomDate` function to handle multiple date formats: mm/dd/yyyy, mm-dd-yyyy, dd-mmm-yyyy, yyyy-mm-dd
+2. Fixed `WeekNavigationContext` to properly parse dd-mmm-yyyy format when calculating week numbers
+3. Added proper error handling and fallback mechanisms
+
 **User Feedback**: "i noticed that the dates on the weekly planner are wrong today is Sunday the 27th of july but in the weekly planner it shows 27th of july is friday"
 
-**Action Required**: Developer needs to investigate and fix the date calculation logic in the weekly planner.
+**Action Required**: User needs to test the weekly planner and confirm dates now display correctly.
 
 ---
 
@@ -161,8 +172,8 @@
 ## 📊 **ISSUE SUMMARY**
 
 ### **By Status**:
-- 🔴 **Critical Issues**: 7
-- 🟡 **Medium Priority**: 2
+- 🔴 **Critical Issues**: 6
+- 🟡 **Medium Priority**: 3
 - 🔍 **Needs Investigation**: 1
 - 🟢 **Resolved**: 1
 - **Total Pending**: 10
@@ -191,7 +202,7 @@
 - [ ] **Emergency Visit Integration**: Complete an emergency visit and check if it appears in planners
 - [ ] **Visit Logs Names**: Check if visit logs show actual branch/company names
 - [ ] **Issue Form Dialog Size**: Test issue submission dialog to ensure no horizontal scrolling required
-- [ ] **Weekly Planner Dates**: Check if weekly planner shows correct dates (Sunday should be Sunday, not Friday)
+- [ ] **Weekly Planner Dates**: Check if weekly planner shows correct dates (Sunday should be Sunday, not Friday) - **FIXED, AWAITING TESTING**
 
 #### **Medium Priority**:
 - [ ] **Visit Logs Dates**: Check if visit logs show Georgian dates instead of Hijri
@@ -243,6 +254,14 @@
 - Root cause: Computed field logic was placed after value check
 - Solution: Moved computed field logic to beginning of function
 - Updated statistics: 10 total pending issues (7 critical, 2 medium, 1 investigation, 1 resolved)
+
+### **2025-01-24 - Issue #9 In Progress**
+- Started work on Weekly Planner Date Issue
+- Root cause: Date parsing functions only handled dd-mmm-yyyy format
+- Solution: Enhanced parseCustomDate to handle multiple formats (mm/dd/yyyy, mm-dd-yyyy, dd-mmm-yyyy, yyyy-mm-dd)
+- Fixed WeekNavigationContext date parsing for dd-mmm-yyyy format
+- Status changed to 🟡 IN PROGRESS - AWAITING TESTING
+- Updated statistics: 10 total pending issues (6 critical, 3 medium, 1 investigation, 1 resolved)
 
 ---
 

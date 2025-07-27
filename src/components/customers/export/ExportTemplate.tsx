@@ -160,6 +160,78 @@ export function ExportTemplate({ entityType, data, onClose, companies, branches 
       console.log('  - companyId:', (item as Contract).companyId);
     }
 
+    // Handle computed fields for contracts first (before checking direct field values)
+    if (entityType === 'contracts') {
+      // Handle company name for contracts
+      if (fieldKey === 'companyName') {
+        console.log('🔍 Company name condition met!');
+        const contract = item as Contract;
+        console.log('🔍 Company name lookup:');
+        console.log('  - contractId:', contract.contractId);
+        console.log('  - companyId:', contract.companyId);
+        console.log('  - companiesCount:', companies?.length);
+        console.log('  - foundCompany:', companies?.find(c => c.companyId === contract.companyId));
+        if (companies) {
+          const company = companies.find(c => c.companyId === contract.companyId);
+          return company?.companyName || '';
+        }
+        return '';
+      }
+
+      // Handle branch IDs for contracts
+      if (fieldKey === 'branchIds') {
+        console.log('🔍 Branch IDs condition met!');
+        const contract = item as Contract;
+        console.log('🔍 Branch IDs lookup:');
+        console.log('  - contractId:', contract.contractId);
+        console.log('  - hasServiceBatches:', !!contract.serviceBatches);
+        console.log('  - serviceBatchesCount:', contract.serviceBatches?.length);
+        console.log('  - branchesCount:', branches?.length);
+        console.log('  - serviceBatches:', contract.serviceBatches);
+        if (contract.serviceBatches && branches) {
+          const allBranchIds = new Set<string>();
+          contract.serviceBatches.forEach(batch => {
+            batch.branchIds?.forEach(branchId => allBranchIds.add(branchId));
+          });
+          const result = Array.from(allBranchIds).join(',');
+          console.log('🔍 Branch IDs result:', result);
+          return result;
+        }
+        return '';
+      }
+
+      // Handle branch names for contracts
+      if (fieldKey === 'branchNames') {
+        console.log('🔍 Branch names condition met!');
+        const contract = item as Contract;
+        if (contract.serviceBatches && branches) {
+          const allBranchIds = new Set<string>();
+          contract.serviceBatches.forEach(batch => {
+            batch.branchIds?.forEach(branchId => allBranchIds.add(branchId));
+          });
+          const branchNames = Array.from(allBranchIds).map(branchId => {
+            const branch = branches.find(b => b.branchId === branchId);
+            return branch?.branchName || branchId;
+          });
+          return branchNames.join(',');
+        }
+        return '';
+      }
+
+      // Handle total branches for contracts
+      if (fieldKey === 'totalBranches') {
+        const contract = item as Contract;
+        if (contract.serviceBatches) {
+          const allBranchIds = new Set<string>();
+          contract.serviceBatches.forEach(batch => {
+            batch.branchIds?.forEach(branchId => allBranchIds.add(branchId));
+          });
+          return allBranchIds.size.toString();
+        }
+        return '0';
+      }
+    }
+
     const value = (item as unknown as Record<string, unknown>)[fieldKey];
     
     // Debug logging for contract exports to see what fields are being processed
@@ -196,87 +268,7 @@ export function ExportTemplate({ entityType, data, onClose, companies, branches 
       return value.join(',');
     }
 
-    // Handle company name for contracts
-    if (fieldKey === 'companyName' && entityType === 'contracts') {
-      console.log('🔍 Company name condition met!');
-      const contract = item as Contract;
-      console.log('🔍 Company name lookup:');
-      console.log('  - contractId:', contract.contractId);
-      console.log('  - companyId:', contract.companyId);
-      console.log('  - companiesCount:', companies?.length);
-      console.log('  - foundCompany:', companies?.find(c => c.companyId === contract.companyId));
-      if (companies) {
-        const company = companies.find(c => c.companyId === contract.companyId);
-        return company?.companyName || '';
-      }
-      return '';
-    } else if (entityType === 'contracts' && fieldKey.includes('company')) {
-      console.log('🔍 Company field not matched:');
-      console.log('  - fieldKey:', fieldKey);
-      console.log('  - entityType:', entityType);
-      console.log('  - fieldKeyExact:', `"${fieldKey}"`);
-      console.log('  - expectedExact:', '"companyName"');
-      console.log('  - fieldKeyCharCodes:', Array.from(fieldKey).map(c => c.charCodeAt(0)));
-    }
 
-    // Handle branch information for contracts
-    if (fieldKey === 'branchIds' && entityType === 'contracts') {
-      console.log('🔍 Branch IDs condition met!');
-      const contract = item as Contract;
-      console.log('🔍 Branch IDs lookup:');
-      console.log('  - contractId:', contract.contractId);
-      console.log('  - hasServiceBatches:', !!contract.serviceBatches);
-      console.log('  - serviceBatchesCount:', contract.serviceBatches?.length);
-      console.log('  - branchesCount:', branches?.length);
-      console.log('  - serviceBatches:', contract.serviceBatches);
-      if (contract.serviceBatches && branches) {
-        const allBranchIds = new Set<string>();
-        contract.serviceBatches.forEach(batch => {
-          batch.branchIds?.forEach(branchId => allBranchIds.add(branchId));
-        });
-        const result = Array.from(allBranchIds).join(',');
-        console.log('🔍 Branch IDs result:', result);
-        return result;
-      }
-      return '';
-    } else if (entityType === 'contracts' && fieldKey.includes('branch')) {
-      console.log('🔍 Branch field not matched:');
-      console.log('  - fieldKey:', fieldKey);
-      console.log('  - entityType:', entityType);
-      console.log('  - fieldKeyExact:', `"${fieldKey}"`);
-      console.log('  - expectedExact:', '"branchIds" or "branchNames"');
-      console.log('  - fieldKeyCharCodes:', Array.from(fieldKey).map(c => c.charCodeAt(0)));
-    }
-
-    // Handle branch names for contracts
-    if (fieldKey === 'branchNames' && entityType === 'contracts') {
-      const contract = item as Contract;
-      if (contract.serviceBatches && branches) {
-        const allBranchIds = new Set<string>();
-        contract.serviceBatches.forEach(batch => {
-          batch.branchIds?.forEach(branchId => allBranchIds.add(branchId));
-        });
-        const branchNames = Array.from(allBranchIds).map(branchId => {
-          const branch = branches.find(b => b.branchId === branchId);
-          return branch?.branchName || branchId;
-        });
-        return branchNames.join(',');
-      }
-      return '';
-    }
-
-    // Handle total branches for contracts
-    if (fieldKey === 'totalBranches' && entityType === 'contracts') {
-      const contract = item as Contract;
-      if (contract.serviceBatches) {
-        const allBranchIds = new Set<string>();
-        contract.serviceBatches.forEach(batch => {
-          batch.branchIds?.forEach(branchId => allBranchIds.add(branchId));
-        });
-        return allBranchIds.size.toString();
-      }
-      return '0';
-    }
 
     // Handle serviceBatches for advanced contracts
     if (fieldKey === 'serviceBatches' && Array.isArray(value)) {

@@ -131,27 +131,32 @@
 ---
 
 ### **9. Weekly Planner Date Issue - DATES ARE WRONG**
-**Status**: 🟡 **IN PROGRESS - FIXING WEEK CALCULATION INCONSISTENCY**
+**Status**: 🟡 **IN PROGRESS - DEBUGGING WEEK CALCULATION**
 **Reported**: 2025-01-24
 **Description**: Weekly planner showing incorrect dates. Today is Sunday, July 27th, but the planner shows July 27th as Friday. Also, annual planner week 30 shows incorrect date range. User also reported "endless loop" when expanding objects in console logs.
 
 **Files Modified**:
-- `src/lib/date-handler.ts` - Fixed week calculation inconsistency between functions, made all use ISO 8601 standard (Monday as first day)
+- `src/lib/date-handler.ts` - Fixed week calculation inconsistency between functions, made all use ISO 8601 standard (Monday as first day), added testWeekCalculations function
 - `src/components/customers/export/ExportTemplate.tsx` - Fixed console logging to prevent endless loops when expanding objects
+- `src/hooks/useWeeklyPlanning.ts` - Removed excessive debug logging that was causing console loops
+- `src/components/planning/WeekStatusOverview.tsx` - Removed excessive debug logging
+- `src/components/planning/WeeklyPlanner.tsx` - Added test function call to verify week calculations
 
 **Root Cause**: The system was using two different week calculation systems:
 1. `getWeekStartDate()` used Sunday as first day of week (traditional US system)
 2. `getWeekStartDateByNumber()` used Monday as first day of week (ISO 8601 system)
 This created a mismatch where the same date could be in different weeks depending on which function was used.
 
-**Solution**:
+**Solution Applied**:
 1. Updated `getWeekStartDate()` and `getWeekEndDate()` to use ISO 8601 standard (Monday as first day)
 2. Fixed console logging in ExportTemplate to prevent circular references and endless loops
 3. Made all week calculation functions consistent with ISO 8601 standard
+4. Removed all excessive debug logging that was causing console loops
+5. Added testWeekCalculations function to verify date logic
 
-**User Feedback**: "i still see day 27th as friday and just to confirm i checked 1-1-2025 and i see it shows as monday, also i tried to expand some objects to see more details but i noticed it feel like its an endless loop everytime i expand an arrow i get the same lines again and again and again ... is this normal?"
+**User Feedback**: "still teh same also why is this happening? whenever i expand a "[[Prototype]]" or "[[Prototype]]" i keep getting new lines it feel like its never ending is this normal? all of it within "Saving week data: Object" and not even expanded all of it its still expanding if i keep expanding it"
 
-**Action Required**: User needs to test both weekly planner and annual planner to confirm dates now display correctly, and verify console logging no longer causes endless loops.
+**Action Required**: User needs to test the application and check console logs for the testWeekCalculations output to verify if the date calculations are now working correctly.
 
 ---
 
@@ -281,6 +286,14 @@ This created a mismatch where the same date could be in different weeks dependin
 - Fixed console logging in ExportTemplate to prevent circular references
 - Made all week calculation functions consistent with ISO 8601 standard
 - Status changed to 🟡 IN PROGRESS - FIXING WEEK CALCULATION INCONSISTENCY
+
+### **2025-01-24 - Issue #9 In Progress (Third Fix)**
+- User reported console logging still causing endless loops with [[Prototype]] expansion
+- Root cause: Excessive debug logging throughout the application
+- Removed all excessive console.log statements from useWeeklyPlanning, WeekStatusOverview, and other components
+- Added testWeekCalculations function to verify date logic
+- Added test call in WeeklyPlanner component to debug week calculations
+- Status changed to 🟡 IN PROGRESS - DEBUGGING WEEK CALCULATION
 
 ---
 

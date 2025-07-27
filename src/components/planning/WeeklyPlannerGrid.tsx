@@ -31,7 +31,7 @@ export function WeeklyPlannerGrid({
 }: WeeklyPlannerGridProps) {
   const [showAddVisitDialog, setShowAddVisitDialog] = useState(false);
   const [selectedDayIndex, setSelectedDayIndex] = useState<number | null>(null);
-  const weekDays = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
+  const weekDays = ['الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت', 'الأحد'];
 
   // Calculate dates for the week
   const weekDates = useMemo(() => {
@@ -49,14 +49,22 @@ export function WeeklyPlannerGrid({
 
   // Helper function to get start of week
   function getStartOfWeek(weekNumber: number, year: number): Date {
+    // Use ISO 8601 week calculation (Monday as first day)
     const firstDayOfYear = new Date(year, 0, 1);
-    const startOfWeek = new Date(firstDayOfYear);
-    startOfWeek.setDate(firstDayOfYear.getDate() + (weekNumber - 1) * 7);
+    const firstThursdayOfYear = new Date(firstDayOfYear);
     
-    // Adjust to Saturday (day 6 in our system)
-    const dayOfWeek = startOfWeek.getDay();
-    const daysToSaturday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-    startOfWeek.setDate(startOfWeek.getDate() - daysToSaturday);
+    // Find the first Thursday of the year
+    while (firstThursdayOfYear.getDay() !== 4) { // 4 = Thursday
+      firstThursdayOfYear.setDate(firstThursdayOfYear.getDate() + 1);
+    }
+    
+    // Calculate the start of week 1 (Monday of the week containing first Thursday)
+    const startOfWeek1 = new Date(firstThursdayOfYear);
+    startOfWeek1.setDate(firstThursdayOfYear.getDate() - 3); // Go back 3 days to Monday
+    
+    // Calculate the start of the requested week
+    const startOfWeek = new Date(startOfWeek1);
+    startOfWeek.setDate(startOfWeek1.getDate() + (weekNumber - 1) * 7);
     
     return startOfWeek;
   }

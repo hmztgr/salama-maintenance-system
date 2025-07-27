@@ -144,6 +144,7 @@ export function ExportTemplate({ entityType, data, onClose, companies, branches 
     if (entityType === 'contracts') {
       console.log('🔍 formatFieldValue called:', {
         fieldKey,
+        entityType,
         contractId: (item as Contract).contractId,
         companyId: (item as Contract).companyId
       });
@@ -179,6 +180,7 @@ export function ExportTemplate({ entityType, data, onClose, companies, branches 
 
     // Handle company name for contracts
     if (fieldKey === 'companyName' && entityType === 'contracts') {
+      console.log('🔍 Company name condition met!');
       const contract = item as Contract;
       console.log('🔍 Company name lookup:', {
         contractId: contract.contractId,
@@ -191,10 +193,13 @@ export function ExportTemplate({ entityType, data, onClose, companies, branches 
         return company?.companyName || '';
       }
       return '';
+    } else if (entityType === 'contracts' && fieldKey.includes('company')) {
+      console.log('🔍 Company field not matched:', { fieldKey, entityType });
     }
 
     // Handle branch information for contracts
     if (fieldKey === 'branchIds' && entityType === 'contracts') {
+      console.log('🔍 Branch IDs condition met!');
       const contract = item as Contract;
       console.log('🔍 Branch IDs lookup:', {
         contractId: contract.contractId,
@@ -213,6 +218,8 @@ export function ExportTemplate({ entityType, data, onClose, companies, branches 
         return result;
       }
       return '';
+    } else if (entityType === 'contracts' && fieldKey.includes('branch')) {
+      console.log('🔍 Branch field not matched:', { fieldKey, entityType });
     }
 
     // Handle branch names for contracts

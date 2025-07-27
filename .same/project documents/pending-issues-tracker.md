@@ -130,23 +130,50 @@
 
 ---
 
+### **9. Weekly Planner Date Issue - DATES ARE WRONG**
+**Status**: 🔴 **PENDING USER CONFIRMATION**
+**Reported**: 2025-01-24
+**Description**: Weekly planner showing incorrect dates. Today is Sunday, July 27th, but the planner shows July 27th as Friday.
+
+**User Feedback**: "i noticed that the dates on the weekly planner are wrong today is Sunday the 27th of july but in the weekly planner it shows 27th of july is friday"
+
+**Action Required**: Developer needs to investigate and fix the date calculation logic in the weekly planner.
+
+---
+
+### **10. Contract Export Empty Columns - COMPANY/BRANCH DATA MISSING**
+**Status**: 🔴 **PENDING USER CONFIRMATION**
+**Reported**: 2025-01-24
+**Description**: Contract export columns for company names, branch IDs, and branch names are empty despite checkboxes being marked and data being available.
+
+**Files Modified**:
+- `src/components/customers/export/ExportTemplate.tsx` - Added new fields and lookup logic
+- `src/components/customers/NewCustomerManagement.tsx` - Pass companies and branches data
+
+**User Feedback**: "when i exported the contracts with company names, branchID, and branch names those 3 coloumns are empty but it should have data in it"
+
+**Action Required**: Developer needs to investigate why the lookup logic is not working and fix the data retrieval.
+
+---
+
 ## 📊 **ISSUE SUMMARY**
 
 ### **By Status**:
-- 🔴 **Critical Issues**: 6
+- 🔴 **Critical Issues**: 8
 - 🟡 **Medium Priority**: 2
 - 🔍 **Needs Investigation**: 1
-- **Total Pending**: 9
+- **Total Pending**: 11
 
 ### **By Category**:
 - **Branch Selection**: 1 issue
 - **Navigation**: 1 issue
 - **Drag-and-Drop**: 1 issue
 - **Data Integration**: 1 issue
-- **Data Display**: 2 issues
+- **Data Display**: 3 issues
 - **File Upload**: 1 issue
-- **Date Format**: 1 issue
+- **Date Format**: 2 issues
 - **UI/UX**: 1 issue
+- **Data Export**: 1 issue
 
 ---
 
@@ -161,6 +188,8 @@
 - [ ] **Emergency Visit Integration**: Complete an emergency visit and check if it appears in planners
 - [ ] **Visit Logs Names**: Check if visit logs show actual branch/company names
 - [ ] **Issue Form Dialog Size**: Test issue submission dialog to ensure no horizontal scrolling required
+- [ ] **Weekly Planner Dates**: Check if weekly planner shows correct dates (Sunday should be Sunday, not Friday)
+- [ ] **Contract Export**: Test contract export to ensure company names, branch IDs, and branch names are populated
 
 #### **Medium Priority**:
 - [ ] **Visit Logs Dates**: Check if visit logs show Georgian dates instead of Hijri
@@ -199,6 +228,12 @@
 ### **2025-01-24 - Issue #8 Added**
 - Added Issue Form Dialog Size issue (UI/UX category)
 - Updated statistics: 9 total pending issues (6 critical, 2 medium, 1 investigation)
+- Added to confirmation checklist for testing
+
+### **2025-01-24 - Issues #9 & #10 Added**
+- Added Weekly Planner Date Issue (Date Format category)
+- Added Contract Export Empty Columns issue (Data Export category)
+- Updated statistics: 11 total pending issues (8 critical, 2 medium, 1 investigation)
 - Added to confirmation checklist for testing
 
 ---

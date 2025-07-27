@@ -258,7 +258,7 @@ export function addWeeksToDate(dateString: string, weeks: number): string {
 }
 
 /**
- * Get the start date of the week (Sunday)
+ * Get the start date of the week (Monday - ISO 8601 standard)
  * @param dateString - Date in dd-mmm-yyyy format
  * @returns Week start date in dd-mmm-yyyy format
  */
@@ -269,19 +269,21 @@ export function getWeekStartDate(dateString: string): string {
       throw new Error('Invalid date');
     }
 
+    // ISO 8601: Monday is day 1, Sunday is day 7
     const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Convert to Monday-based
+    
     const startDate = new Date(date);
-    startDate.setDate(date.getDate() - dayOfWeek);
+    startDate.setDate(date.getDate() - daysToMonday);
 
     const result = formatDateForDisplay(startDate);
     
-    // Debug logging for week start calculation
+    // Debug logging for week start calculation (simplified to prevent loops)
     console.log('🔍 getWeekStartDate debug:', {
       inputDate: dateString,
-      parsedDate: date,
       dayOfWeek,
       dayOfWeekName: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek],
-      startDate,
+      daysToMonday,
       result
     });
 
@@ -293,7 +295,7 @@ export function getWeekStartDate(dateString: string): string {
 }
 
 /**
- * Get the end date of the week (Saturday)
+ * Get the end date of the week (Sunday - ISO 8601 standard)
  * @param dateString - Date in dd-mmm-yyyy format
  * @returns Week end date in dd-mmm-yyyy format
  */
@@ -304,9 +306,12 @@ export function getWeekEndDate(dateString: string): string {
       throw new Error('Invalid date');
     }
 
+    // ISO 8601: Monday is day 1, Sunday is day 7
     const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const daysToSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek; // Convert to Sunday-based
+    
     const endDate = new Date(date);
-    endDate.setDate(date.getDate() + (6 - dayOfWeek));
+    endDate.setDate(date.getDate() + daysToSunday);
 
     return formatDateForDisplay(endDate);
   } catch (error) {
@@ -378,7 +383,7 @@ export function getWeekEndDateByNumber(weekNumber: number, year: number): string
     }
     
     const endDate = new Date(startDate);
-    endDate.setDate(startDate.getDate() + 6); // Add 6 days to get to Saturday
+    endDate.setDate(startDate.getDate() + 6); // Add 6 days to get to Sunday (ISO 8601)
     
     return formatDateForDisplay(endDate);
   } catch (error) {
@@ -395,13 +400,13 @@ export function getCurrentWeekStart(): string {
   const currentDate = getCurrentDate();
   const weekStart = getWeekStartDate(currentDate);
   
-  // Debug logging for week calculation
+  // Debug logging for week calculation (simplified to prevent loops)
+  const now = new Date();
   console.log('🔍 Week calculation debug:', {
     currentDate,
     weekStart,
-    currentDateObj: new Date(),
-    currentDayOfWeek: new Date().getDay(),
-    weekStartObj: parseStandardDate(weekStart)
+    currentDayOfWeek: now.getDay(),
+    currentDayName: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][now.getDay()]
   });
   
   return weekStart;

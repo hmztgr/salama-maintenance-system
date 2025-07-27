@@ -131,27 +131,27 @@
 ---
 
 ### **9. Weekly Planner Date Issue - DATES ARE WRONG**
-**Status**: 🟡 **FIXED - AWAITING CONFIRMATION**
+**Status**: 🟡 **IN PROGRESS - FIXING WEEK CALCULATION INCONSISTENCY**
 **Reported**: 2025-01-24
-**Description**: Weekly planner showing incorrect dates. Today is Sunday, July 27th, but the planner shows July 27th as Friday. Also, annual planner week 30 shows incorrect date range.
+**Description**: Weekly planner showing incorrect dates. Today is Sunday, July 27th, but the planner shows July 27th as Friday. Also, annual planner week 30 shows incorrect date range. User also reported "endless loop" when expanding objects in console logs.
 
 **Files Modified**:
-- `src/lib/date-handler.ts` - Implemented ISO 8601 week calculation standard
-- `src/components/planning/AnnualScheduler.tsx` - Fixed week calculation to use proper ISO week dates
-- `src/contexts/WeekNavigationContext.tsx` - Updated to use correct week number calculation
+- `src/lib/date-handler.ts` - Fixed week calculation inconsistency between functions, made all use ISO 8601 standard (Monday as first day)
+- `src/components/customers/export/ExportTemplate.tsx` - Fixed console logging to prevent endless loops when expanding objects
 
-**Root Cause**: The system was using incorrect week calculation methods that didn't account for the fact that January 1, 2025 was a Wednesday. The week calculations were simply adding 7 days from January 1st instead of using proper ISO 8601 week boundaries.
+**Root Cause**: The system was using two different week calculation systems:
+1. `getWeekStartDate()` used Sunday as first day of week (traditional US system)
+2. `getWeekStartDateByNumber()` used Monday as first day of week (ISO 8601 system)
+This created a mismatch where the same date could be in different weeks depending on which function was used.
 
-**Solution**: 
-1. Implemented ISO 8601 week calculation standard in `getWeekNumber` function
-2. Added `getWeekStartDateByNumber` and `getWeekEndDateByNumber` functions for proper week date calculations
-3. Updated annual scheduler to use the new week calculation functions
-4. Fixed WeekNavigationContext to use the correct week number calculation
-5. Enhanced `parseCustomDate` function to handle multiple date formats
+**Solution**:
+1. Updated `getWeekStartDate()` and `getWeekEndDate()` to use ISO 8601 standard (Monday as first day)
+2. Fixed console logging in ExportTemplate to prevent circular references and endless loops
+3. Made all week calculation functions consistent with ISO 8601 standard
 
-**User Feedback**: "i still see friday as the 27th not sunday also i just noticed that in the annual planner week 30 says from the 23rd of jul to the 26th of jul which is not correct .. year 2025 started on wednesday this means 1-january-2025 was a wednesday"
+**User Feedback**: "i still see day 27th as friday and just to confirm i checked 1-1-2025 and i see it shows as monday, also i tried to expand some objects to see more details but i noticed it feel like its an endless loop everytime i expand an arrow i get the same lines again and again and again ... is this normal?"
 
-**Action Required**: User needs to test both weekly planner and annual planner to confirm dates now display correctly.
+**Action Required**: User needs to test both weekly planner and annual planner to confirm dates now display correctly, and verify console logging no longer causes endless loops.
 
 ---
 
@@ -273,6 +273,14 @@
 - Added getWeekStartDateByNumber and getWeekEndDateByNumber functions
 - Status changed to 🟡 FIXED - AWAITING CONFIRMATION
 - Should now correctly show July 27th as Sunday and proper week 30 dates
+
+### **2025-01-24 - Issue #9 In Progress (Second Fix)**
+- User reported dates still incorrect and "endless loop" in console logs
+- Root cause: Week calculation inconsistency between functions
+- Fixed getWeekStartDate() and getWeekEndDate() to use ISO 8601 standard (Monday as first day)
+- Fixed console logging in ExportTemplate to prevent circular references
+- Made all week calculation functions consistent with ISO 8601 standard
+- Status changed to 🟡 IN PROGRESS - FIXING WEEK CALCULATION INCONSISTENCY
 
 ---
 

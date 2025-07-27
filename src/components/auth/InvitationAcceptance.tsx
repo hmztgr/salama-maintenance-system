@@ -26,6 +26,7 @@ import {
 // Firebase imports for invitation validation
 import { collection, query, where, getDocs, doc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
+import { createUser } from '@/lib/firebase/auth';
 
 // Enhanced client-side invitation acceptance with Firebase integration
 export function InvitationAcceptance() {
@@ -202,25 +203,29 @@ export function InvitationAcceptance() {
         return;
       }
 
-      // Create new user in Firebase
-      const newUser = {
-        username: formData.username,
-        email: formData.email,
-        fullName: formData.fullName,
-        phone: formData.phone || '',
-        role: invitation.role || 'viewer',
-        permissionGroups: invitation.permissionGroups || [],
-        customPermissions: [],
-        deniedPermissions: [],
-        isActive: true,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        createdBy: invitation.invitedBy || 'system'
-      };
+      // Create user in Firebase Authentication and Firestore
+      const userProfile = await createUser(
+        formData.email,
+        formData.password,
+        {
+          displayName: formData.fullName,
+          role: invitation.role || 'viewer',
+          phone: formData.phone || '',
+          invitedBy: invitation.invitedBy || 'system'
+        }
+      );
+      
+      console.log('✅ User created in Firebase Auth and Firestore:', userProfile);
 
-      // Add user to Firestore
-      const userDocRef = await addDoc(collection(db, 'users'), newUser);
-      console.log('✅ User created in Firestore with ID:', userDocRef.id);
+      // Update user profile with permission groups if they exist
+      if (invitation.permissionGroups && invitation.permissionGroups.length > 0) {
+        await updateDoc(doc(db, 'users', userProfile.uid), {
+          permissionGroups: invitation.permissionGroups,
+          customPermissions: [],
+          deniedPermissions: []
+        });
+        console.log('✅ User permission groups updated');
+      }
 
       // Mark invitation as accepted
       if (typeof window !== 'undefined' && token) {

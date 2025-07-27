@@ -27,13 +27,37 @@ export function WeekNavigationProvider({ children }: { children: ReactNode }) {
 
   // Get week number and year from current week
   const currentWeekNumber = (() => {
-    const date = new Date(currentWeek);
-    const yearStart = new Date(date.getFullYear(), 0, 1);
-    const days = Math.floor((date.getTime() - yearStart.getTime()) / (24 * 60 * 60 * 1000));
-    return Math.ceil((days + yearStart.getDay() + 1) / 7);
+    try {
+      // Parse the dd-mmm-yyyy format properly
+      const [day, month, year] = currentWeek.split('-');
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const monthIndex = monthNames.indexOf(month);
+      
+      if (monthIndex === -1) {
+        console.warn('Invalid month in currentWeek:', currentWeek);
+        return 1;
+      }
+      
+      const date = new Date(parseInt(year), monthIndex, parseInt(day));
+      const yearStart = new Date(date.getFullYear(), 0, 1);
+      const days = Math.floor((date.getTime() - yearStart.getTime()) / (24 * 60 * 60 * 1000));
+      return Math.ceil((days + yearStart.getDay() + 1) / 7);
+    } catch (error) {
+      console.error('Error calculating week number:', error);
+      return 1;
+    }
   })();
 
-  const currentYear = new Date(currentWeek).getFullYear();
+  const currentYear = (() => {
+    try {
+      const [day, month, year] = currentWeek.split('-');
+      return parseInt(year);
+    } catch (error) {
+      console.error('Error getting current year:', error);
+      return new Date().getFullYear();
+    }
+  })();
 
   // Handle URL parameters for week navigation
   useEffect(() => {

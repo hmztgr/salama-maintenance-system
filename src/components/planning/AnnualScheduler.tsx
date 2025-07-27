@@ -19,69 +19,82 @@ import { SafeStorage } from '@/lib/storage';
 import { Branch, Visit } from '@/types/customer';
 import { AutomatedVisitPlanner } from './AutomatedVisitPlanner';
 
-// Helper function to parse our custom date format (dd-mmm-yyyy) or ISO strings
+// Helper function to parse various date formats and convert to Date object
 const parseCustomDate = (dateStr: string): Date => {
-  if (!dateStr) {
+  if (!dateStr || dateStr.trim() === '') {
     console.warn('🗓️ Empty date string provided to parseCustomDate');
     return new Date();
   }
 
+  const cleanInput = dateStr.trim();
+
   // Handle ISO string format (e.g., "2024-12-30T21:00:00.000Z")
-  if (dateStr.includes('T') && dateStr.includes('Z')) {
-    const parsedDate = new Date(dateStr);
+  if (cleanInput.includes('T') && cleanInput.includes('Z')) {
+    const parsedDate = new Date(cleanInput);
     if (!isNaN(parsedDate.getTime())) {
       return parsedDate;
     }
   }
 
-  // Handle ISO format first (e.g., "2024-12-30T21:00:00.000Z")
-  if (dateStr.includes('T') && dateStr.includes('Z')) {
-    const isoDate = new Date(dateStr);
-    if (!isNaN(isoDate.getTime())) {
-      return isoDate;
+  // Handle mm/dd/yyyy format (e.g., "6/1/2024", "1/1/2025")
+  const mmddyyyyRegex = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+  const mmddMatch = cleanInput.match(mmddyyyyRegex);
+  if (mmddMatch) {
+    const [, month, day, year] = mmddMatch;
+    const parsedDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    if (!isNaN(parsedDate.getTime())) {
+      return parsedDate;
     }
   }
 
-  // Handle dd-mmm-yyyy format
-  const parts = dateStr.split('-');
-  if (parts.length !== 3) {
-    console.warn('🗓️ Invalid date format (should be dd-mmm-yyyy):', dateStr);
-    return new Date();
+  // Handle mm-dd-yyyy format (e.g., "6-1-2024")
+  const mmddyyyyDashRegex = /^(\d{1,2})-(\d{1,2})-(\d{4})$/;
+  const mmddDashMatch = cleanInput.match(mmddyyyyDashRegex);
+  if (mmddDashMatch) {
+    const [, month, day, year] = mmddDashMatch;
+    const parsedDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    if (!isNaN(parsedDate.getTime())) {
+      return parsedDate;
+    }
   }
 
-  const [day, month, year] = parts;
-  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const monthIndex = monthNames.indexOf(month);
-
-  if (monthIndex === -1) {
-    console.warn('🗓️ Invalid month name in date:', dateStr, 'month:', month);
-    return new Date();
+  // Handle dd-mmm-yyyy format (e.g., "27-Jul-2025")
+  const ddmmmyyyyRegex = /^(\d{1,2})-([A-Za-z]{3})-(\d{4})$/;
+  const ddmmmMatch = cleanInput.match(ddmmmyyyyRegex);
+  if (ddmmmMatch) {
+    const [, day, month, year] = ddmmmMatch;
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthIndex = monthNames.indexOf(month);
+    
+    if (monthIndex !== -1) {
+      const parsedDate = new Date(parseInt(year), monthIndex, parseInt(day));
+      if (!isNaN(parsedDate.getTime())) {
+        return parsedDate;
+      }
+    }
   }
 
-  const dayNum = parseInt(day);
-  const yearNum = parseInt(year);
-
-  if (isNaN(dayNum) || isNaN(yearNum)) {
-    console.warn('🗓️ Invalid day or year in date:', dateStr);
-    return new Date();
+  // Handle yyyy-mm-dd format (e.g., "2024-06-01")
+  const yyyymmddRegex = /^(\d{4})-(\d{1,2})-(\d{1,2})$/;
+  const yyyymmddMatch = cleanInput.match(yyyymmddRegex);
+  if (yyyymmddMatch) {
+    const [, year, month, day] = yyyymmddMatch;
+    const parsedDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    if (!isNaN(parsedDate.getTime())) {
+      return parsedDate;
+    }
   }
 
-  const parsedDate = new Date(yearNum, monthIndex, dayNum);
+  // Try standard Date parsing as fallback
+  const fallbackDate = new Date(cleanInput);
+  if (!isNaN(fallbackDate.getTime())) {
+    return fallbackDate;
+  }
 
-  // Only log for debugging specific issues (commented out to reduce spam)
-  // if (!isNaN(parsedDate.getTime())) {
-  // console.log('🗓️ parseCustomDate:', {
-  //   input: dateStr,
-  //   day: dayNum,
-  //   month: month,
-  //   monthIndex: monthIndex,
-  //   year: yearNum,
-  //   result: parsedDate.toISOString()
-  // });
-  // }
-
-  return parsedDate;
+  // If all parsing attempts fail, log warning and return current date
+  console.warn('🗓️ Could not parse date format:', dateStr, '- returning current date');
+  return new Date();
 };
 
 export interface AnnualSchedulerProps {

@@ -273,7 +273,19 @@ export function getWeekStartDate(dateString: string): string {
     const startDate = new Date(date);
     startDate.setDate(date.getDate() - dayOfWeek);
 
-    return formatDateForDisplay(startDate);
+    const result = formatDateForDisplay(startDate);
+    
+    // Debug logging for week start calculation
+    console.log('🔍 getWeekStartDate debug:', {
+      inputDate: dateString,
+      parsedDate: date,
+      dayOfWeek,
+      dayOfWeekName: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek],
+      startDate,
+      result
+    });
+
+    return result;
   } catch (error) {
     console.error('Error getting week start date:', error);
     return dateString;
@@ -324,7 +336,19 @@ export function getWeekNumber(date: Date): number {
  * @returns Current week start date in dd-mmm-yyyy format
  */
 export function getCurrentWeekStart(): string {
-  return getWeekStartDate(getCurrentDate());
+  const currentDate = getCurrentDate();
+  const weekStart = getWeekStartDate(currentDate);
+  
+  // Debug logging for week calculation
+  console.log('🔍 Week calculation debug:', {
+    currentDate,
+    weekStart,
+    currentDateObj: new Date(),
+    currentDayOfWeek: new Date().getDay(),
+    weekStartObj: parseStandardDate(weekStart)
+  });
+  
+  return weekStart;
 }
 
 /**

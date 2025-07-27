@@ -141,28 +141,31 @@
 
 ---
 
-### **10. Contract Export Empty Columns - COMPANY/BRANCH DATA MISSING**
-**Status**: 🔴 **PENDING USER CONFIRMATION**
+### **10. Contract Export Empty Columns - COMPANY/BRANCH DATA MISSING** ✅ **RESOLVED**
+**Status**: 🟢 **CONFIRMED FIXED**
 **Reported**: 2025-01-24
+**Resolved**: 2025-01-24
 **Description**: Contract export columns for company names, branch IDs, and branch names are empty despite checkboxes being marked and data being available.
 
 **Files Modified**:
-- `src/components/customers/export/ExportTemplate.tsx` - Added new fields and lookup logic
-- `src/components/customers/NewCustomerManagement.tsx` - Pass companies and branches data
+- `src/components/customers/export/ExportTemplate.tsx` - Fixed computed field logic placement
 
-**User Feedback**: "when i exported the contracts with company names, branchID, and branch names those 3 coloumns are empty but it should have data in it"
+**Root Cause**: The `formatFieldValue` function was checking for direct field values before handling computed fields, causing early returns with empty strings.
 
-**Action Required**: Developer needs to investigate why the lookup logic is not working and fix the data retrieval.
+**Solution**: Moved computed field logic (companyName, branchIds, branchNames) to the beginning of the function before the value check.
+
+**User Feedback**: "10. Contract Export Empty Columns - COMPANY/BRANCH DATA MISSING is fixed"
 
 ---
 
 ## 📊 **ISSUE SUMMARY**
 
 ### **By Status**:
-- 🔴 **Critical Issues**: 8
+- 🔴 **Critical Issues**: 7
 - 🟡 **Medium Priority**: 2
 - 🔍 **Needs Investigation**: 1
-- **Total Pending**: 11
+- 🟢 **Resolved**: 1
+- **Total Pending**: 10
 
 ### **By Category**:
 - **Branch Selection**: 1 issue
@@ -189,7 +192,6 @@
 - [ ] **Visit Logs Names**: Check if visit logs show actual branch/company names
 - [ ] **Issue Form Dialog Size**: Test issue submission dialog to ensure no horizontal scrolling required
 - [ ] **Weekly Planner Dates**: Check if weekly planner shows correct dates (Sunday should be Sunday, not Friday)
-- [ ] **Contract Export**: Test contract export to ensure company names, branch IDs, and branch names are populated
 
 #### **Medium Priority**:
 - [ ] **Visit Logs Dates**: Check if visit logs show Georgian dates instead of Hijri
@@ -235,6 +237,12 @@
 - Added Contract Export Empty Columns issue (Data Export category)
 - Updated statistics: 11 total pending issues (8 critical, 2 medium, 1 investigation)
 - Added to confirmation checklist for testing
+
+### **2025-01-24 - Issue #10 Resolved**
+- Fixed Contract Export Empty Columns issue
+- Root cause: Computed field logic was placed after value check
+- Solution: Moved computed field logic to beginning of function
+- Updated statistics: 10 total pending issues (7 critical, 2 medium, 1 investigation, 1 resolved)
 
 ---
 

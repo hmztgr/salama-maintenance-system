@@ -5,6 +5,55 @@ All notable changes to the Salama Maintenance Scheduler project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Version 60] - 2025-01-20
+### 📊 CONTRACT EXPORT ENHANCEMENT: Company Names & Branch Information
+**STATUS: ✅ CONTRACT EXPORT NOW INCLUDES COMPANY NAMES AND BRANCH DETAILS**
+
+#### 🏢 Enhanced Contract Export Features
+- ✅ **Company Names Added** - Contract exports now include company names alongside company IDs
+- ✅ **Branch Information Added** - Contract exports now include branch IDs, branch names, and total branch count
+- ✅ **Comprehensive Data** - Full relationship mapping between contracts, companies, and branches
+- ✅ **User-Friendly Export** - More informative exports with human-readable names
+
+#### 📋 New Export Fields for Contracts
+```typescript
+// NEW: Enhanced contract export fields
+{ key: 'companyName', label: 'اسم الشركة', required: false },
+{ key: 'branchIds', label: 'معرفات الفروع', required: false },
+{ key: 'branchNames', label: 'أسماء الفروع', required: false },
+{ key: 'totalBranches', label: 'عدد الفروع', required: false }
+```
+
+#### 🔧 Technical Implementation
+- **Enhanced ExportTemplate Props** - Added optional `companies` and `branches` props for related data
+- **Smart Field Processing** - Automatic lookup of company names and branch information
+- **Service Batch Integration** - Extracts branch information from contract service batches
+- **Data Relationship Mapping** - Links contracts to their associated companies and branches
+
+#### 📊 Export Data Structure
+- **Company Information**: `companyId` + `companyName` for complete company identification
+- **Branch Information**: `branchIds` (comma-separated) + `branchNames` (comma-separated) + `totalBranches` (count)
+- **Service Batch Processing**: Automatically extracts all branches from contract service batches
+- **Fallback Handling**: Graceful handling when related data is not available
+
+#### 🎯 User Experience Improvements
+✅ **Complete Information** - No more need to cross-reference company IDs manually
+✅ **Branch Overview** - See all branches associated with each contract
+✅ **Data Relationships** - Clear understanding of contract-company-branch relationships
+✅ **Export Flexibility** - Users can choose which fields to include in exports
+✅ **Arabic Support** - All new fields properly labeled in Arabic
+
+#### Files Modified
+- `src/components/customers/export/ExportTemplate.tsx` - Enhanced with company and branch data processing
+- `src/components/customers/NewCustomerManagement.tsx` - Updated to pass related data to export template
+
+#### Export Example
+```csv
+معرف العقد,معرف الشركة,اسم الشركة,معرفات الفروع,أسماء الفروع,عدد الفروع
+0001-001,0001,شركة سالمة للصيانة,0001-JED-001-0001;0001-JED-001-0002,فرع جدة الرئيسي;فرع جدة الفرعي,2
+0002-001,0002,شركة الأمان للخدمات,0002-RUH-001-0001,فرع الرياض,1
+```
+
 ## [Version 59] - 2025-01-20
 ### 🔧 FIREBASE STORAGE & FILE UPLOAD FIXES: Complete File Upload System with CORS and Security Rules
 **STATUS: ✅ FILE UPLOADS WORKING + FIREBASE STORAGE RULES DEPLOYED**

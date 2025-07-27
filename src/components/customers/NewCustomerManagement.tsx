@@ -1225,6 +1225,8 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                 importExportType === 'contracts' || importExportType === 'contractsAdvanced' ? contracts :
                 branches
               }
+              companies={companies}
+              branches={branches}
               onClose={() => setShowExportTemplate(false)}
             />
           </div>

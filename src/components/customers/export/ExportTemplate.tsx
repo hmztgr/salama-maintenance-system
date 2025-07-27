@@ -13,6 +13,9 @@ interface ExportTemplateProps {
   entityType: 'companies' | 'contracts' | 'contractsAdvanced' | 'branches';
   data: Company[] | Contract[] | Branch[];
   onClose?: () => void;
+  // Add optional props for related data to enhance exports
+  companies?: Company[];
+  branches?: Branch[];
 }
 
 interface ExportConfig {
@@ -25,7 +28,7 @@ interface ExportConfig {
   format: 'csv' | 'excel';
 }
 
-export function ExportTemplate({ entityType, data, onClose }: ExportTemplateProps) {
+export function ExportTemplate({ entityType, data, onClose, companies, branches }: ExportTemplateProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [exportConfig, setExportConfig] = useState<ExportConfig>({
     includeArchived: false,
@@ -58,6 +61,7 @@ export function ExportTemplate({ entityType, data, onClose }: ExportTemplateProp
       availableFields: [
         { key: 'contractId', label: 'معرف العقد', required: true },
         { key: 'companyId', label: 'معرف الشركة', required: true },
+        { key: 'companyName', label: 'اسم الشركة', required: false },
         { key: 'contractStartDate', label: 'تاريخ بداية العقد', required: true },
         { key: 'contractEndDate', label: 'تاريخ انتهاء العقد', required: true },
         { key: 'contractPeriodMonths', label: 'مدة العقد (بالأشهر)', required: false },
@@ -69,6 +73,9 @@ export function ExportTemplate({ entityType, data, onClose }: ExportTemplateProp
         { key: 'fireSuppressionMaintenance', label: 'صيانة نظام الإطفاء', required: false },
         { key: 'gasFireSuppression', label: 'نظام الإطفاء بالغاز', required: false },
         { key: 'foamFireSuppression', label: 'نظام الإطفاء بالفوم', required: false },
+        { key: 'branchIds', label: 'معرفات الفروع', required: false },
+        { key: 'branchNames', label: 'أسماء الفروع', required: false },
+        { key: 'totalBranches', label: 'عدد الفروع', required: false },
         { key: 'notes', label: 'ملاحظات', required: false },
         { key: 'createdAt', label: 'تاريخ الإنشاء', required: false }
       ]
@@ -147,6 +154,59 @@ export function ExportTemplate({ entityType, data, onClose }: ExportTemplateProp
     // Handle array values (like contractIds)
     if (Array.isArray(value)) {
       return value.join(',');
+    }
+
+    // Handle company name for contracts
+    if (fieldKey === 'companyName' && entityType === 'contracts') {
+      const contract = item as Contract;
+      if (companies) {
+        const company = companies.find(c => c.companyId === contract.companyId);
+        return company?.companyName || '';
+      }
+      return '';
+    }
+
+    // Handle branch information for contracts
+    if (fieldKey === 'branchIds' && entityType === 'contracts') {
+      const contract = item as Contract;
+      if (contract.serviceBatches && branches) {
+        const allBranchIds = new Set<string>();
+        contract.serviceBatches.forEach(batch => {
+          batch.branchIds?.forEach(branchId => allBranchIds.add(branchId));
+        });
+        return Array.from(allBranchIds).join(',');
+      }
+      return '';
+    }
+
+    // Handle branch names for contracts
+    if (fieldKey === 'branchNames' && entityType === 'contracts') {
+      const contract = item as Contract;
+      if (contract.serviceBatches && branches) {
+        const allBranchIds = new Set<string>();
+        contract.serviceBatches.forEach(batch => {
+          batch.branchIds?.forEach(branchId => allBranchIds.add(branchId));
+        });
+        const branchNames = Array.from(allBranchIds).map(branchId => {
+          const branch = branches.find(b => b.branchId === branchId);
+          return branch?.branchName || branchId;
+        });
+        return branchNames.join(',');
+      }
+      return '';
+    }
+
+    // Handle total branches for contracts
+    if (fieldKey === 'totalBranches' && entityType === 'contracts') {
+      const contract = item as Contract;
+      if (contract.serviceBatches) {
+        const allBranchIds = new Set<string>();
+        contract.serviceBatches.forEach(batch => {
+          batch.branchIds?.forEach(branchId => allBranchIds.add(branchId));
+        });
+        return allBranchIds.size.toString();
+      }
+      return '0';
     }
 
     // Handle serviceBatches for advanced contracts

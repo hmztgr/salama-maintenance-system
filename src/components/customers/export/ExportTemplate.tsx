@@ -142,6 +142,18 @@ export function ExportTemplate({ entityType, data, onClose, companies, branches 
   const formatFieldValue = (item: Company | Contract | Branch, fieldKey: string): string => {
     const value = (item as unknown as Record<string, unknown>)[fieldKey];
 
+    // Debug logging for contract exports
+    if (entityType === 'contracts' && fieldKey === 'contractId') {
+      console.log('🔍 Processing contract:', {
+        contractId: (item as Contract).contractId,
+        companyId: (item as Contract).companyId,
+        hasServiceBatches: !!(item as Contract).serviceBatches,
+        serviceBatchesLength: (item as Contract).serviceBatches?.length,
+        companiesCount: companies?.length,
+        branchesCount: branches?.length
+      });
+    }
+
     if (value === null || value === undefined) {
       return '';
     }
@@ -159,6 +171,12 @@ export function ExportTemplate({ entityType, data, onClose, companies, branches 
     // Handle company name for contracts
     if (fieldKey === 'companyName' && entityType === 'contracts') {
       const contract = item as Contract;
+      console.log('🔍 Company name lookup:', {
+        contractId: contract.contractId,
+        companyId: contract.companyId,
+        companiesCount: companies?.length,
+        foundCompany: companies?.find(c => c.companyId === contract.companyId)
+      });
       if (companies) {
         const company = companies.find(c => c.companyId === contract.companyId);
         return company?.companyName || '';
@@ -169,12 +187,21 @@ export function ExportTemplate({ entityType, data, onClose, companies, branches 
     // Handle branch information for contracts
     if (fieldKey === 'branchIds' && entityType === 'contracts') {
       const contract = item as Contract;
+      console.log('🔍 Branch IDs lookup:', {
+        contractId: contract.contractId,
+        hasServiceBatches: !!contract.serviceBatches,
+        serviceBatchesCount: contract.serviceBatches?.length,
+        branchesCount: branches?.length,
+        serviceBatches: contract.serviceBatches
+      });
       if (contract.serviceBatches && branches) {
         const allBranchIds = new Set<string>();
         contract.serviceBatches.forEach(batch => {
           batch.branchIds?.forEach(branchId => allBranchIds.add(branchId));
         });
-        return Array.from(allBranchIds).join(',');
+        const result = Array.from(allBranchIds).join(',');
+        console.log('🔍 Branch IDs result:', result);
+        return result;
       }
       return '';
     }

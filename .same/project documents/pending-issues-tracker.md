@@ -131,24 +131,27 @@
 ---
 
 ### **9. Weekly Planner Date Issue - DATES ARE WRONG**
-**Status**: 🟡 **IN PROGRESS - AWAITING TESTING**
+**Status**: 🟡 **FIXED - AWAITING CONFIRMATION**
 **Reported**: 2025-01-24
-**Description**: Weekly planner showing incorrect dates. Today is Sunday, July 27th, but the planner shows July 27th as Friday.
+**Description**: Weekly planner showing incorrect dates. Today is Sunday, July 27th, but the planner shows July 27th as Friday. Also, annual planner week 30 shows incorrect date range.
 
 **Files Modified**:
-- `src/components/planning/AnnualScheduler.tsx` - Enhanced parseCustomDate to handle multiple date formats
-- `src/contexts/WeekNavigationContext.tsx` - Fixed date parsing for dd-mmm-yyyy format
+- `src/lib/date-handler.ts` - Implemented ISO 8601 week calculation standard
+- `src/components/planning/AnnualScheduler.tsx` - Fixed week calculation to use proper ISO week dates
+- `src/contexts/WeekNavigationContext.tsx` - Updated to use correct week number calculation
 
-**Root Cause**: The system was receiving dates in multiple formats (mm/dd/yyyy, mm-dd-yyyy) but the date parsing functions only handled dd-mmm-yyyy format, causing parsing failures and incorrect date calculations.
+**Root Cause**: The system was using incorrect week calculation methods that didn't account for the fact that January 1, 2025 was a Wednesday. The week calculations were simply adding 7 days from January 1st instead of using proper ISO 8601 week boundaries.
 
 **Solution**: 
-1. Enhanced `parseCustomDate` function to handle multiple date formats: mm/dd/yyyy, mm-dd-yyyy, dd-mmm-yyyy, yyyy-mm-dd
-2. Fixed `WeekNavigationContext` to properly parse dd-mmm-yyyy format when calculating week numbers
-3. Added proper error handling and fallback mechanisms
+1. Implemented ISO 8601 week calculation standard in `getWeekNumber` function
+2. Added `getWeekStartDateByNumber` and `getWeekEndDateByNumber` functions for proper week date calculations
+3. Updated annual scheduler to use the new week calculation functions
+4. Fixed WeekNavigationContext to use the correct week number calculation
+5. Enhanced `parseCustomDate` function to handle multiple date formats
 
-**User Feedback**: "i noticed that the dates on the weekly planner are wrong today is Sunday the 27th of july but in the weekly planner it shows 27th of july is friday"
+**User Feedback**: "i still see friday as the 27th not sunday also i just noticed that in the annual planner week 30 says from the 23rd of jul to the 26th of jul which is not correct .. year 2025 started on wednesday this means 1-january-2025 was a wednesday"
 
-**Action Required**: User needs to test the weekly planner and confirm dates now display correctly.
+**Action Required**: User needs to test both weekly planner and annual planner to confirm dates now display correctly.
 
 ---
 
@@ -202,7 +205,7 @@
 - [ ] **Emergency Visit Integration**: Complete an emergency visit and check if it appears in planners
 - [ ] **Visit Logs Names**: Check if visit logs show actual branch/company names
 - [ ] **Issue Form Dialog Size**: Test issue submission dialog to ensure no horizontal scrolling required
-- [ ] **Weekly Planner Dates**: Check if weekly planner shows correct dates (Sunday should be Sunday, not Friday) - **FIXED, AWAITING TESTING**
+- [ ] **Weekly Planner Dates**: Check if weekly planner shows correct dates (Sunday should be Sunday, not Friday) - **FIXED, AWAITING CONFIRMATION**
 
 #### **Medium Priority**:
 - [ ] **Visit Logs Dates**: Check if visit logs show Georgian dates instead of Hijri
@@ -262,6 +265,14 @@
 - Fixed WeekNavigationContext date parsing for dd-mmm-yyyy format
 - Status changed to 🟡 IN PROGRESS - AWAITING TESTING
 - Updated statistics: 10 total pending issues (6 critical, 3 medium, 1 investigation, 1 resolved)
+
+### **2025-01-24 - Issue #9 Fixed**
+- Implemented ISO 8601 week calculation standard
+- Fixed annual scheduler week calculation to use proper ISO week dates
+- Updated WeekNavigationContext to use correct week number calculation
+- Added getWeekStartDateByNumber and getWeekEndDateByNumber functions
+- Status changed to 🟡 FIXED - AWAITING CONFIRMATION
+- Should now correctly show July 27th as Sunday and proper week 30 dates
 
 ---
 

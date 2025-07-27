@@ -86,7 +86,8 @@ export function useForgotPassword() {
       // For now, we'll use a mock implementation with demo users
       const demoUsers: UserInfo[] = [
         { email: 'admin@example.com', username: 'admin', fullName: 'مدير النظام' },
-        { email: 'supervisor@example.com', username: 'supervisor', fullName: 'مشرف العمليات' },
+        { email: 'operations@salamasaudi.com', username: 'operations_manager', fullName: 'مدير العمليات' },
+    { email: 'supervisor@example.com', username: 'supervisor', fullName: 'مشرف العمليات' },
         { email: 'user@example.com', username: 'user', fullName: 'مستخدم النظام' }
       ];
 

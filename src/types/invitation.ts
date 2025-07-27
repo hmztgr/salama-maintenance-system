@@ -3,7 +3,7 @@
 
 export type InvitationType = 'email' | 'link';
 export type InvitationStatus = 'pending' | 'sent' | 'opened' | 'accepted' | 'expired' | 'revoked';
-export type UserRole = 'admin' | 'supervisor' | 'viewer';
+export type UserRole = 'admin' | 'operations_manager' | 'supervisor' | 'viewer';
 
 export interface UserInvitation {
   id: string;

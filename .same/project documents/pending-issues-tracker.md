@@ -116,13 +116,27 @@
 
 ---
 
+### **8. Issue Form Dialog Size - REVERT SIZE CHANGES**
+**Status**: 🔴 **PENDING USER CONFIRMATION**
+**Reported**: 2025-01-24
+**Description**: The issue submission dialog needs to be resized to fit all content within the page width without requiring horizontal scrolling.
+
+**Files Modified**:
+- `src/components/issues/GlobalIssueButton.tsx` - Dialog sizing and console logs width adjustments
+
+**User Feedback**: "revert size changes, what i want is to make everything within the new issue form page without using horizontal scroll"
+
+**Action Required**: Developer needs to revert dialog size changes and ensure all content fits within page width without horizontal scrolling.
+
+---
+
 ## 📊 **ISSUE SUMMARY**
 
 ### **By Status**:
-- 🔴 **Critical Issues**: 5
+- 🔴 **Critical Issues**: 6
 - 🟡 **Medium Priority**: 2
 - 🔍 **Needs Investigation**: 1
-- **Total Pending**: 8
+- **Total Pending**: 9
 
 ### **By Category**:
 - **Branch Selection**: 1 issue
@@ -132,6 +146,7 @@
 - **Data Display**: 2 issues
 - **File Upload**: 1 issue
 - **Date Format**: 1 issue
+- **UI/UX**: 1 issue
 
 ---
 
@@ -145,6 +160,7 @@
 - [ ] **Friday Drag-and-Drop**: Test dropping visits on Friday in weekly planner
 - [ ] **Emergency Visit Integration**: Complete an emergency visit and check if it appears in planners
 - [ ] **Visit Logs Names**: Check if visit logs show actual branch/company names
+- [ ] **Issue Form Dialog Size**: Test issue submission dialog to ensure no horizontal scrolling required
 
 #### **Medium Priority**:
 - [ ] **Visit Logs Dates**: Check if visit logs show Georgian dates instead of Hijri
@@ -179,6 +195,11 @@
 - Listed all 8 pending issues from user feedback
 - Organized by priority and category
 - Added confirmation checklist for user testing
+
+### **2025-01-24 - Issue #8 Added**
+- Added Issue Form Dialog Size issue (UI/UX category)
+- Updated statistics: 9 total pending issues (6 critical, 2 medium, 1 investigation)
+- Added to confirmation checklist for testing
 
 ---
 

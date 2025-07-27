@@ -29,7 +29,9 @@ export function UserProfile() {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-900">الملف الشخصي</h2>
         <Badge variant="outline" className="text-sm">
-          {user.role === 'admin' ? 'مدير' : user.role === 'supervisor' ? 'مشرف' : 'فني'}
+          {user.role === 'admin' ? 'مدير النظام' : 
+         user.role === 'operations_manager' ? 'مدير العمليات' : 
+         user.role === 'supervisor' ? 'مشرف' : 'فني'}
         </Badge>
       </div>
 
@@ -56,7 +58,8 @@ export function UserProfile() {
                 <label className="text-sm font-medium text-gray-500">الصفة</label>
                 <p className="text-gray-900">
                   {user.role === 'admin' ? 'مدير النظام' :
-                   user.role === 'supervisor' ? 'مشرف الصيانة' : 'فني الصيانة'}
+                   user.role === 'operations_manager' ? 'مدير العمليات' :
+        user.role === 'supervisor' ? 'مشرف الصيانة' : 'فني الصيانة'}
                 </p>
               </div>
               <div>

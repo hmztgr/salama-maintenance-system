@@ -82,15 +82,15 @@ export function useWeeklyPlanning(weekNumber: number, year: number) {
               }
             } else {
               // Handle text month names (e.g., "Jan", "Jul")
-              const monthNames: Record<string, number> = {
-                'jan': 0, 'feb': 1, 'mar': 2, 'apr': 3, 'may': 4, 'jun': 5,
-                'jul': 6, 'aug': 7, 'sep': 8, 'oct': 9, 'nov': 10, 'dec': 11
-              };
+            const monthNames: Record<string, number> = {
+              'jan': 0, 'feb': 1, 'mar': 2, 'apr': 3, 'may': 4, 'jun': 5,
+              'jul': 6, 'aug': 7, 'sep': 8, 'oct': 9, 'nov': 10, 'dec': 11
+            };
               monthIndex = monthNames[monthPart.toLowerCase()];
-              
-              if (monthIndex === undefined) {
+            
+            if (monthIndex === undefined) {
                 console.warn('Invalid month name:', monthPart, 'in visit:', visit.id);
-                return false;
+              return false;
               }
             }
             
@@ -274,10 +274,10 @@ export function useWeeklyPlanning(weekNumber: number, year: number) {
           currentDate = new Date(visit.scheduledDate);
         } else if (visit.scheduledDate.includes('-') && visit.scheduledDate.length === 10) {
           // Handle dd-mmm-yyyy or dd-mm-yyyy format
-          const dateParts = visit.scheduledDate.split('-');
-          const parsedDay = parseInt(dateParts[0]);
+      const dateParts = visit.scheduledDate.split('-');
+      const parsedDay = parseInt(dateParts[0]);
           const monthPart = dateParts[1];
-          const parsedYear = parseInt(dateParts[2]);
+      const parsedYear = parseInt(dateParts[2]);
           
           let monthIndex: number;
           
@@ -336,7 +336,7 @@ export function useWeeklyPlanning(weekNumber: number, year: number) {
         });
         throw new Error('Cannot move visit more than 1 year from current date');
       }
-      
+
       // Format date in dd-mmm-yyyy format to match the system
       const day = newDate.getDate().toString().padStart(2, '0');
       const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

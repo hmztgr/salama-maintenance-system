@@ -30,7 +30,7 @@ interface ContractDetailViewProps {
   onBack: () => void;
   onEdit: () => void;
   onDelete: () => void;
-  hasPermission: (permission: 'admin' | 'supervisor' | 'viewer') => boolean;
+      hasPermission: (permission: 'admin' | 'operations_manager' | 'supervisor' | 'viewer') => boolean;
 }
 
 export function ContractDetailView({ 

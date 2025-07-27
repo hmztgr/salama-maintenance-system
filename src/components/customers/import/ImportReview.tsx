@@ -340,7 +340,7 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
       
       // Only add the row if it has at least one non-empty cell
       if (row.some(cell => cell && cell.trim().length > 0)) {
-        result.push(row);
+      result.push(row);
       } else {
         console.log(`🚫 Skipping completely empty row during CSV parsing`);
       }
@@ -397,14 +397,14 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
           c.companyName.toLowerCase() === normalized.normalizedValue.toLowerCase()
         );
         if (existingCompany) {
-          errors.push({
-            row: rowNumber,
-            field: fieldName,
+        errors.push({
+          row: rowNumber,
+          field: fieldName,
             value: normalized.originalValue,
             error: 'اسم الشركة موجود مسبقاً في النظام',
             suggestion: 'استخدم اسم مختلف أو تحقق من الشركة الموجودة',
             severity: 'warning'
-          });
+        });
         }
       }
     }
@@ -429,14 +429,14 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
 
         if (!company) {
           const triedValues = searchValues.filter(v => v !== value).join(', ');
-          errors.push({
-            row: rowNumber,
-            field: fieldName,
+      errors.push({
+        row: rowNumber,
+        field: fieldName,
             value: normalized.originalValue,
             error: 'معرف الشركة غير موجود في النظام',
             suggestion: `تأكد من إضافة الشركة أولاً في إدارة العملاء. القيم المحاولة: ${triedValues}`,
             severity: 'error'
-          });
+      });
         }
       }
     }
@@ -482,28 +482,28 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
                 if (companyById.companyName.toLowerCase() === companyName.trim().toLowerCase()) {
                   companyFound = true;
                 } else {
-                  errors.push({
-                    row: rowNumber,
-                    field: fieldName,
+          errors.push({
+            row: rowNumber,
+            field: fieldName,
                     value: normalized.originalValue,
                     error: 'اسم الشركة لا يتطابق مع معرف الشركة',
                     suggestion: `اسم الشركة يجب أن يكون: ${companyById.companyName}`,
-                    severity: 'error'
-                  });
+            severity: 'error'
+          });
                 }
               } else {
                 companyFound = true;
               }
-            } else {
-              errors.push({
-                row: rowNumber,
-                field: fieldName,
+        } else {
+          errors.push({
+            row: rowNumber,
+            field: fieldName,
                 value: normalized.originalValue,
                 error: 'معرف الشركة غير موجود في النظام',
                 suggestion: 'تأكد من إضافة الشركة أولاً أو استخدم اسم الشركة',
-                severity: 'error'
-              });
-            }
+            severity: 'error'
+          });
+        }
           } else if (companyName && companyName.trim() !== '') {
             const companyByName = companies.find(c => 
               c.companyName.toLowerCase() === companyName.trim().toLowerCase()
@@ -511,14 +511,14 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
             if (companyByName) {
               companyFound = true;
             } else {
-              errors.push({
-                row: rowNumber,
-                field: fieldName,
+      errors.push({
+        row: rowNumber,
+        field: fieldName,
                 value: normalized.originalValue,
                 error: 'اسم الشركة غير موجود في النظام',
                 suggestion: 'تأكد من إضافة الشركة أولاً أو استخدم معرف الشركة',
-                severity: 'error'
-              });
+        severity: 'error'
+      });
             }
           }
         }
@@ -535,14 +535,14 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
         // If both are empty, add error to both fields
         if ((!contractEndDate || contractEndDate.trim() === '') && 
             (!contractPeriodMonths || contractPeriodMonths.trim() === '')) {
-          errors.push({
-            row: rowNumber,
-            field: fieldName,
+      errors.push({
+        row: rowNumber,
+        field: fieldName,
             value: normalized.originalValue,
             error: 'تاريخ انتهاء العقد أو مدة العقد: أحدهما مطلوب',
             suggestion: 'أدخل إما تاريخ انتهاء العقد أو مدة العقد بالشهور',
-            severity: 'error'
-          });
+        severity: 'error'
+      });
         }
       }
     }

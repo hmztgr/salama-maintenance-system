@@ -1,5 +1,5 @@
 // Authentication types for role-based access control
-export type UserRole = 'admin' | 'supervisor' | 'viewer';
+export type UserRole = 'admin' | 'operations_manager' | 'supervisor' | 'viewer';
 
 export interface User {
   id: string;

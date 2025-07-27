@@ -78,6 +78,32 @@ const DEFAULT_ROLES: RoleDefinition[] = [
     defaultPermissions: SYSTEM_PERMISSIONS.map(p => p.id),
     isSystemRole: true,
     canBeModified: false,
+    level: 4
+  },
+  {
+    role: 'operations_manager',
+    name: 'مدير العمليات',
+    description: 'إدارة العمليات والموظفين مع استثناء إدارة النظام',
+    defaultPermissions: [
+      // Customer Management - Full access
+      'customer.create', 'customer.read', 'customer.update', 'customer.delete', 'customer.export', 'customer.import',
+      // Planning & Scheduling - Full access
+      'planning.create', 'planning.read', 'planning.update', 'planning.delete', 'planning.export', 'planning.import',
+      // Visits Management - Full access
+      'visits.create', 'visits.read', 'visits.update', 'visits.delete', 'visits.export', 'visits.import',
+      // Reports - Full access
+      'reports.read', 'reports.export', 'reports.manage',
+      // Issues Management - Full access
+      'issues.create', 'issues.read', 'issues.update', 'issues.delete', 'issues.export',
+      // Emergency Tickets - Full access
+      'emergency.create', 'emergency.read', 'emergency.update', 'emergency.delete',
+      // User Management - Limited access (no admin functions)
+      'user.profile.read', 'user.profile.update',
+      // System - Limited access (no admin functions)
+      'system.audit.read'
+    ],
+    isSystemRole: true,
+    canBeModified: true,
     level: 3
   },
   {

@@ -16,6 +16,10 @@ service cloud.firestore {
       return isAuthenticated() && getUserRole() == 'admin';
     }
     
+    function isOperationsManager() {
+      return isAuthenticated() && getUserRole() == 'operations_manager';
+    }
+    
     function isSupervisor() {
       return isAuthenticated() && getUserRole() == 'supervisor';
     }
@@ -33,7 +37,7 @@ service cloud.firestore {
     }
     
     function canWrite() {
-      return isAdmin() || isSupervisor(); // Only admin and supervisor can write
+      return isAdmin() || isOperationsManager() || isSupervisor(); // Admin, operations manager, and supervisor can write
     }
     
     function canDelete() {

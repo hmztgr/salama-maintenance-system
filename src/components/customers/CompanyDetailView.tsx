@@ -31,7 +31,7 @@ interface CompanyDetailViewProps {
   onAddBranch?: () => void;
   onAddContract?: () => void;
   onViewVisits?: () => void;
-  hasPermission: (permission: 'admin' | 'supervisor' | 'viewer') => boolean;
+      hasPermission: (permission: 'admin' | 'operations_manager' | 'supervisor' | 'viewer') => boolean;
 }
 
 export function CompanyDetailView({ 

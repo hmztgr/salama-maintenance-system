@@ -59,6 +59,16 @@ const DEFAULT_USERS: SimpleUser[] = [
   },
   {
     id: '2',
+    username: 'operations_manager',
+    email: 'operations@salamasaudi.com',
+    role: 'operations_manager',
+    name: 'مدير العمليات',
+    isActive: true,
+    createdAt: '01-Jan-2024',
+    updatedAt: '01-Jan-2024'
+  },
+  {
+    id: '3',
     username: 'supervisor',
     email: 'supervisor@salamasaudi.com',
     role: 'supervisor',
@@ -68,7 +78,7 @@ const DEFAULT_USERS: SimpleUser[] = [
     updatedAt: '01-Jan-2024'
   },
   {
-    id: '3',
+    id: '4',
     username: 'viewer',
     email: 'viewer@salamasaudi.com',
     role: 'viewer',
@@ -146,7 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const hasPermission = (requiredRole: UserRole): boolean => {
     if (!authState.user) return false;
 
-    const roleHierarchy = { viewer: 1, supervisor: 2, admin: 3 };
+    const roleHierarchy = { viewer: 1, supervisor: 2, operations_manager: 3, admin: 4 };
     const userLevel = roleHierarchy[authState.user.role];
     const requiredLevel = roleHierarchy[requiredRole];
 

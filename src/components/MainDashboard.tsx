@@ -127,7 +127,8 @@ export function MainDashboard({ className = '' }: MainDashboardProps) {
                 مرحباً، {authState.user.displayName || 'مستخدم'}
               </div>
               <div className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                {authState.user.role === 'admin' ? 'مدير' :
+                {authState.user.role === 'admin' ? 'مدير النظام' :
+                 authState.user.role === 'operations_manager' ? 'مدير العمليات' :
                  authState.user.role === 'supervisor' ? 'مشرف' : 'فني'}
               </div>
               <button

@@ -1,7 +1,7 @@
 // Advanced Role Management System Types
 // Supporting REQ-USER-008 and REQ-USER-009 from BRD Addendum
 
-export type UserRole = 'admin' | 'supervisor' | 'viewer';
+export type UserRole = 'admin' | 'operations_manager' | 'supervisor' | 'viewer';
 export type PermissionCategory = 'customer' | 'planning' | 'visits' | 'reports' | 'admin' | 'system';
 export type PermissionAction = 'create' | 'read' | 'update' | 'delete' | 'export' | 'import' | 'manage';
 

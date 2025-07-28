@@ -17,6 +17,7 @@ import { FirebaseDataTest } from './admin/FirebaseDataTest';
 import { FirebaseSimpleTest } from './admin/FirebaseSimpleTest';
 import { DataMigration } from './admin/DataMigration';
 import { BranchIdFixer } from './admin/BranchIdFixer';
+import FirebaseDataCleanup from './admin/FirebaseDataCleanup';
 import { UserProfile } from './profile/UserProfile';
 import { ReportsDashboard } from './reports/ReportsDashboard';
 import EmergencyTicketsPage from '@/app/emergency-tickets/page';
@@ -304,6 +305,16 @@ export function MainDashboard({ className = '' }: MainDashboardProps) {
                     🔧 إصلاح معرفات الفروع
                   </button>
                   <button
+                    onClick={() => setAdminSubTab('data-cleanup')}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                      adminSubTab === 'data-cleanup'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    🗑️ تنظيف البيانات
+                  </button>
+                  <button
                     onClick={() => setAdminSubTab('settings')}
                     className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                       adminSubTab === 'settings'
@@ -349,6 +360,9 @@ export function MainDashboard({ className = '' }: MainDashboardProps) {
 
                 {/* Branch ID Fixer */}
                 {adminSubTab === 'branch-fixer' && <BranchIdFixer />}
+
+                {/* Firebase Data Cleanup */}
+                {adminSubTab === 'data-cleanup' && <FirebaseDataCleanup />}
 
                 {/* System Settings (Placeholder) */}
                 {adminSubTab === 'settings' && (

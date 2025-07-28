@@ -57,7 +57,7 @@ export function useVisits() {
   const generateVisitId = useCallback((currentVisits?: Visit[]): string => {
     const year = new Date().getFullYear();
     const visitsToCheck = currentVisits || visitsRef.current;
-    const existingVisits = visitsToCheck.filter(v => v.visitId.includes(`VISIT-${year}`));
+    const existingVisits = visitsToCheck.filter(v => v.visitId && v.visitId.includes(`VISIT-${year}`));
     const nextNumber = (existingVisits.length + 1).toString().padStart(4, '0');
     return `VISIT-${year}-${nextNumber}`;
   }, []);

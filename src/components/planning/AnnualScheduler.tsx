@@ -19,10 +19,17 @@ import { SafeStorage } from '@/lib/storage';
 import { Branch, Visit } from '@/types/customer';
 import { AutomatedVisitPlanner } from './AutomatedVisitPlanner';
 
+// Cache for warning suppression to avoid spam
+const warningCache = new Set<string>();
+
 // Helper function to parse various date formats and convert to Date object
 const parseCustomDate = (dateStr: string): Date => {
   if (!dateStr || dateStr.trim() === '') {
-    console.warn('🗓️ Empty date string provided to parseCustomDate');
+    // Only log warning once per session for empty strings
+    if (!warningCache.has('empty')) {
+      console.warn('🗓️ Empty date string provided to parseCustomDate (suppressing further warnings)');
+      warningCache.add('empty');
+    }
     return new Date();
   }
 
@@ -92,8 +99,11 @@ const parseCustomDate = (dateStr: string): Date => {
     return fallbackDate;
   }
 
-  // If all parsing attempts fail, log warning and return current date
-  console.warn('🗓️ Could not parse date format:', dateStr, '- returning current date');
+  // If all parsing attempts fail, log warning only once per unique date string
+  if (!warningCache.has(dateStr)) {
+    console.warn('🗓️ Could not parse date format:', dateStr, '- returning current date');
+    warningCache.add(dateStr);
+  }
   return new Date();
 };
 
@@ -242,13 +252,16 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
 
   // Use search results for filtered branches with additional visit count filtering
   const filteredBranches = useMemo(() => {
-    console.log('🔍 AnnualScheduler search debug:', {
-      totalEnhancedBranches: enhancedBranches.length,
-      searchFilteredData: branchSearch.filteredData.length,
-      searchTerm: branchSearch.filters.searchTerm,
-      searchResultCount: branchSearch.resultCount,
-      regularVisitsFilter: branchSearch.filters.regularVisits
-    });
+    // Only log debug info in development mode
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 AnnualScheduler search debug:', {
+        totalEnhancedBranches: enhancedBranches.length,
+        searchFilteredData: branchSearch.filteredData.length,
+        searchTerm: branchSearch.filters.searchTerm,
+        searchResultCount: branchSearch.resultCount,
+        regularVisitsFilter: branchSearch.filters.regularVisits
+      });
+    }
     
     let filtered = branchSearch.filteredData.filter(branch => !branch.isArchived);
     
@@ -262,18 +275,24 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
         return visitCount >= minVisits && visitCount <= maxVisits;
       });
       
-      console.log('🔍 After visit count filtering:', filtered.length, { minVisits, maxVisits });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔍 After visit count filtering:', filtered.length, { minVisits, maxVisits });
+      }
     }
     
-    console.log('🔍 Final filtered branches for display:', filtered.length);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 Final filtered branches for display:', filtered.length);
+    }
     
     return filtered;
   }, [branchSearch.filteredData, enhancedBranches.length, branchSearch.filters.searchTerm, branchSearch.resultCount, branchSearch.filters.regularVisits]);
 
-  // Debug rendering
+  // Debug rendering (only in development)
   useEffect(() => {
-    console.log('🔍 AnnualScheduler rendering branches:', filteredBranches.length, filteredBranches.map(b => ({ id: b.branchId, name: b.branchName, company: b.companyName })));
-    console.log('🔍 AnnualScheduler table key:', `table-${filteredBranches.length}-${branchSearch.filters.searchTerm}`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 AnnualScheduler rendering branches:', filteredBranches.length, filteredBranches.map(b => ({ id: b.branchId, name: b.branchName, company: b.companyName })));
+      console.log('🔍 AnnualScheduler table key:', `table-${filteredBranches.length}-${branchSearch.filters.searchTerm}`);
+    }
   }, [filteredBranches, branchSearch.filters.searchTerm]);
 
   // Generate 52-week planning grid
@@ -285,8 +304,8 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
       const startDate = getWeekStartDateByNumber(weekNum, selectedYear);
       const endDate = getWeekEndDateByNumber(weekNum, selectedYear);
 
-      // Enhanced debug logging for multiple weeks
-      if (weekNum <= 3 || weekNum === 26 || weekNum === 52) {
+      // Enhanced debug logging for multiple weeks (reduced frequency)
+      if (weekNum === 1 || weekNum === 26 || weekNum === 52) {
         const startDateObj = parseCustomDate(startDate);
         const endDateObj = parseCustomDate(endDate);
         console.log(`🗓️ Week ${weekNum} date calculation:`, {
@@ -305,8 +324,8 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
         const start = parseCustomDate(startDate);
         const end = parseCustomDate(endDate);
 
-        // Enhanced debug logging for multiple weeks
-        const debugCondition = (weekNum <= 5 || weekNum === 26 || weekNum === 52) && visitDate.getFullYear() === selectedYear;
+        // Enhanced debug logging for multiple weeks (reduced frequency)
+        const debugCondition = (weekNum === 1 || weekNum === 26 || weekNum === 52) && visitDate.getFullYear() === selectedYear;
 
         if (debugCondition) {
           console.log(`🗓️ Week ${weekNum} visit check:`, {
@@ -377,27 +396,30 @@ export function AnnualScheduler({ className = '' }: AnnualSchedulerProps) {
       return counts;
     }, {} as Record<number, number>);
 
-    console.log('🗓️ Annual Scheduler Enhanced Debug:', {
-      selectedYear,
-      totalVisitsInSystem: visits.length,
-      totalVisitsFoundInYear: totalVisitsFound,
-      filteredBranchesCount: filteredBranches.length,
-      weeksGenerated: weeks.length,
-      sampleVisits: sampleVisits.map(v => ({
-        id: v.visitId,
-        scheduledDate: v.scheduledDate,
-        branchId: v.branchId,
-        isArchived: v.isArchived
-      })),
-      visitsByYear: visitYearCounts,
-      weeksSummary: weeks.slice(0, 3).map(w => ({
-        weekNum: w.weekNumber,
-        visitsCount: w.branches.reduce((sum, b) => sum + b.visits.length, 0),
-        branchesCount: w.branches.length,
-        startDate: w.startDate,
-        endDate: w.endDate
-      }))
-    });
+    // Only log debug info once per render cycle to reduce spam
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🗓️ Annual Scheduler Enhanced Debug:', {
+        selectedYear,
+        totalVisitsInSystem: visits.length,
+        totalVisitsFoundInYear: totalVisitsFound,
+        filteredBranchesCount: filteredBranches.length,
+        weeksGenerated: weeks.length,
+        sampleVisits: sampleVisits.map(v => ({
+          id: v.visitId,
+          scheduledDate: v.scheduledDate,
+          branchId: v.branchId,
+          isArchived: v.isArchived
+        })),
+        visitsByYear: visitYearCounts,
+        weeksSummary: weeks.slice(0, 3).map(w => ({
+          weekNum: w.weekNumber,
+          visitsCount: w.branches.reduce((sum, b) => sum + b.visits.length, 0),
+          branchesCount: w.branches.length,
+          startDate: w.startDate,
+          endDate: w.endDate
+        }))
+      });
+    }
 
     return weeks;
   }, [selectedYear, filteredBranches, visits]);

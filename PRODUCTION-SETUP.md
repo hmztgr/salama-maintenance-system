@@ -134,6 +134,18 @@ NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=your_current_measurement_id
 - **Data Isolation**: Production and development use different Firebase projects
 - **Environment Variables**: Different Firebase configs for each environment
 - **Domain Security**: Each Firebase project has its own authorized domains
+- **Quick Login**: Removed from production for security (credentials preserved in documentation)
+
+### 🔐 Development Credentials (For Development Branches Only)
+
+**Quick Login Credentials:**
+```typescript
+Email: admin@salamasaudi.com
+Password: admin123456
+Role: مدير النظام (Admin)
+```
+
+**Note**: These credentials are available in development branches (feature/weekly-planner-drag-drop, main) but have been removed from the production branch (SSCO-planner-prod) for security.
 
 ### 🔄 Migration Strategy
 

@@ -5,6 +5,29 @@ All notable changes to the Salama Maintenance Scheduler project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Version 61] - 2025-01-24
+### 🔒 **PRODUCTION SECURITY: REMOVE QUICK LOGIN FOR PRODUCTION**
+- 🔧 **QUICK LOGIN REMOVED** - Removed Firebase quick login buttons from production branch (SSCO-planner-prod)
+- 🛡️ **SECURITY ENHANCEMENT** - Production site now requires proper authentication without test credentials
+- 📝 **DEVELOPMENT PRESERVED** - Quick login remains available in development branches for testing
+- 🔐 **ADMIN CREDENTIALS SAFEGUARDED** - Test credentials documented in CHANGELOG.md and PRODUCTION-SETUP.md
+
+### Quick Login Credentials (For Development Only)
+```typescript
+// REMOVED FROM PRODUCTION - Available in development branches
+Email: admin@salamasaudi.com
+Password: admin123456
+Role: مدير النظام (Admin)
+```
+
+### Technical Implementation
+- **Production Branch**: SSCO-planner-prod - Quick login section completely removed
+- **Development Branches**: feature/weekly-planner-drag-drop, main - Quick login preserved
+- **Security**: Production users must use proper authentication workflow
+- **Documentation**: Credentials safely stored in project documentation
+
+---
+
 ## [Version 60] - 2025-01-20
 ### 📊 CONTRACT EXPORT ENHANCEMENT: Company Names & Branch Information
 **STATUS: ✅ CONTRACT EXPORT NOW INCLUDES COMPANY NAMES AND BRANCH DETAILS**

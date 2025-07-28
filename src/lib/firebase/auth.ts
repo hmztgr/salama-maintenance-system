@@ -102,13 +102,35 @@ export async function resetUserPassword(email: string): Promise<void> {
  * Get user profile from Firestore
  */
 export async function getUserProfile(uid: string): Promise<FirebaseUserProfile> {
-  const userDoc = await getDoc(doc(db, 'users', uid));
-
-  if (!userDoc.exists()) {
-    throw new Error('User profile not found');
+  // Add retry mechanism for newly created users
+  let attempts = 0;
+  const maxAttempts = 3;
+  
+  while (attempts < maxAttempts) {
+    try {
+      const userDoc = await getDoc(doc(db, 'users', uid));
+      
+      if (userDoc.exists()) {
+        return userDoc.data() as FirebaseUserProfile;
+      }
+      
+      // If document doesn't exist, wait a bit and retry (for newly created users)
+      if (attempts < maxAttempts - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * (attempts + 1))); // 1s, 2s, 3s delays
+      }
+      
+      attempts++;
+    } catch (error) {
+      console.error(`Attempt ${attempts + 1} failed to get user profile:`, error);
+      attempts++;
+      
+      if (attempts >= maxAttempts) {
+        throw error;
+      }
+    }
   }
-
-  return userDoc.data() as FirebaseUserProfile;
+  
+  throw new Error('User profile not found after retry attempts');
 }
 
 /**

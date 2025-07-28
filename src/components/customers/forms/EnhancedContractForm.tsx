@@ -234,12 +234,21 @@ export function EnhancedContractForm({
   };
 
   const handleBranchToggle = (branchId: string) => {
-    setCurrentBatch(prev => ({
-      ...prev,
-      branchIds: prev.branchIds?.includes(branchId)
+    console.log('🔍 Branch toggle called for:', branchId);
+    console.log('🔍 Current batch before toggle:', currentBatch);
+    
+    setCurrentBatch(prev => {
+      const newBranchIds = prev.branchIds?.includes(branchId)
         ? prev.branchIds.filter(id => id !== branchId)
-        : [...(prev.branchIds || []), branchId]
-    }));
+        : [...(prev.branchIds || []), branchId];
+      
+      console.log('🔍 New branch IDs after toggle:', newBranchIds);
+      
+      return {
+        ...prev,
+        branchIds: newBranchIds
+      };
+    });
   };
 
   const handleServiceToggle = (serviceName: keyof ContractServiceBatch['services']) => {
@@ -608,18 +617,23 @@ export function EnhancedContractForm({
                             جميع الفروع مخصصة بالفعل لمجموعات خدمات أخرى
                           </p>
                         ) : (
-                          unassignedBranches.map((branch) => (
-                            <div key={branch.branchId} className="flex items-center space-x-2 space-x-reverse">
-                              <Checkbox
-                                id={`branch-${branch.branchId}`}
-                                checked={currentBatch.branchIds?.includes(branch.branchId) || false}
-                                onCheckedChange={() => handleBranchToggle(branch.branchId)}
-                              />
-                              <Label htmlFor={`branch-${branch.branchId}`} className="text-sm">
-                                {branch.branchName} ({branch.city})
-                              </Label>
-                            </div>
-                          ))
+                          unassignedBranches.map((branch) => {
+                            const isChecked = currentBatch.branchIds?.includes(branch.branchId) || false;
+                            console.log(`🔍 Rendering branch ${branch.branchId} (${branch.branchName}): checked=${isChecked}`);
+                            
+                            return (
+                              <div key={branch.branchId} className="flex items-center space-x-2 space-x-reverse">
+                                <Checkbox
+                                  id={`branch-${branch.branchId}`}
+                                  checked={isChecked}
+                                  onCheckedChange={() => handleBranchToggle(branch.branchId)}
+                                />
+                                <Label htmlFor={`branch-${branch.branchId}`} className="text-sm">
+                                  {branch.branchName} ({branch.city})
+                                </Label>
+                              </div>
+                            );
+                          })
                         )}
                       </div>
                     </div>

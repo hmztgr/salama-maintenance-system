@@ -36,6 +36,9 @@ if (typeof window === 'undefined' && process.env.FIREBASE_ADMIN_PRIVATE_KEY && p
   }
 }
 
+// Export the admin objects
+export { adminAuth, adminDb };
+
 /**
  * Delete a user from Firebase Auth
  */

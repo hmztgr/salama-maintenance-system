@@ -194,11 +194,12 @@ export function generateBranchId(
     locationNumber = (uniqueLocations.size + 1).toString().padStart(3, '0');
   }
 
-  // Generate branch number for this specific location
-  const locationBranches = existingBranches.filter(b =>
-    b.city === city && b.location === location
+  // Generate branch number for this specific company, city, and location combination
+  // This ensures unique IDs even for same company in same city/location
+  const companyLocationBranches = existingBranches.filter(b =>
+    b.branchId.startsWith(`${companyId}-${cityValidation.cityCode}-${locationNumber}`)
   );
-  const branchNumber = (locationBranches.length + 1).toString().padStart(4, '0');
+  const branchNumber = (companyLocationBranches.length + 1).toString().padStart(4, '0');
 
   return {
     branchId: `${companyId}-${cityValidation.cityCode}-${locationNumber}-${branchNumber}`,

@@ -33,8 +33,8 @@ interface CleanupStats {
   contracts: number;
   branches: number;
   visits: number;
-  emergencyTickets: number;
-  bugReports: number;
+  issues: number;
+  invitations: number;
   users: number;
   totalDeleted: number;
 }
@@ -48,8 +48,8 @@ export default function FirebaseDataCleanup() {
     contracts: 0,
     branches: 0,
     visits: 0,
-    emergencyTickets: 0,
-    bugReports: 0,
+    issues: 0,
+    invitations: 0,
     users: 0,
     totalDeleted: 0
   });
@@ -146,14 +146,14 @@ export default function FirebaseDataCleanup() {
       await cleanupCollection('visits');
       setProgress(20);
       
-      // Clean up emergency tickets
-      addLog('Cleaning up emergency tickets...');
-      await cleanupCollection('emergencyTickets');
+      // Clean up issues
+      addLog('Cleaning up issues...');
+      await cleanupCollection('issues');
       setProgress(30);
       
-      // Clean up bug reports
-      addLog('Cleaning up bug reports...');
-      await cleanupCollection('bugReports');
+      // Clean up invitations
+      addLog('Cleaning up invitations...');
+      await cleanupCollection('invitations');
       setProgress(40);
       
       // Clean up branches
@@ -247,13 +247,13 @@ export default function FirebaseDataCleanup() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center p-3 border rounded-lg">
               <AlertTriangle className="h-6 w-6 mx-auto mb-2 text-red-500" />
-              <div className="text-2xl font-bold">{stats.emergencyTickets}</div>
-              <div className="text-sm text-muted-foreground">Emergency Tickets</div>
+              <div className="text-2xl font-bold">{stats.issues}</div>
+              <div className="text-sm text-muted-foreground">Issues</div>
             </div>
             <div className="text-center p-3 border rounded-lg">
               <AlertTriangle className="h-6 w-6 mx-auto mb-2 text-yellow-500" />
-              <div className="text-2xl font-bold">{stats.bugReports}</div>
-              <div className="text-sm text-muted-foreground">Bug Reports</div>
+              <div className="text-2xl font-bold">{stats.invitations}</div>
+              <div className="text-sm text-muted-foreground">Invitations</div>
             </div>
             <div className="text-center p-3 border rounded-lg">
               <Users className="h-6 w-6 mx-auto mb-2 text-indigo-500" />

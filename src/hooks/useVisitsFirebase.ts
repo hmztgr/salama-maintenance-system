@@ -142,11 +142,16 @@ export function useVisitsFirebase() {
           updatedAt: serverTimestamp(),
         };
 
+        // Filter out undefined values that Firebase doesn't accept
+        const filteredVisitData = Object.fromEntries(
+          Object.entries(newVisitData).filter(([_, value]) => value !== undefined)
+        );
+
         console.log(
           `💾 Adding visit with VisitID: ${newVisitData.visitId}, Branch: ${newVisitData.branchId}`
         );
 
-        const docRef = await addDoc(collection(db, 'visits'), newVisitData);
+        const docRef = await addDoc(collection(db, 'visits'), filteredVisitData);
         console.log('✅ Visit added to Firebase with ID:', docRef.id);
 
         // Create the visit object with the generated ID
@@ -193,10 +198,15 @@ export function useVisitsFirebase() {
           updatedAt: serverTimestamp(),
         };
 
-        console.log('📝 Updating visit with payload:', updatePayload);
+        // Filter out undefined values that Firebase doesn't accept
+        const filteredUpdatePayload = Object.fromEntries(
+          Object.entries(updatePayload).filter(([_, value]) => value !== undefined)
+        );
+
+        console.log('📝 Updating visit with payload:', filteredUpdatePayload);
 
         const visitRef = doc(db, 'visits', visitId);
-        await updateDoc(visitRef, updatePayload);
+        await updateDoc(visitRef, filteredUpdatePayload);
 
         console.log('✅ Visit updated successfully in Firebase');
         setError(null);

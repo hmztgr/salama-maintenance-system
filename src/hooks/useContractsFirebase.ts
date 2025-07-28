@@ -294,7 +294,12 @@ export function useContractsFirebase() {
           lastModifiedBy: userId,
         };
 
-        await updateDoc(doc(db, 'contracts', contract.id), updateData);
+        // Filter out undefined values that Firebase doesn't accept
+        const filteredUpdateData = Object.fromEntries(
+          Object.entries(updateData).filter(([_, value]) => value !== undefined)
+        );
+
+        await updateDoc(doc(db, 'contracts', contract.id), filteredUpdateData);
         console.log('✅ Contract updated in Firebase');
 
         return { success: true };

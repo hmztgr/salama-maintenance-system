@@ -294,7 +294,12 @@ export function useBranchesFirebase() {
           lastModifiedBy: userId,
         };
 
-        await updateDoc(doc(db, 'branches', branch.id), updateData);
+        // Filter out undefined values that Firebase doesn't accept
+        const filteredUpdateData = Object.fromEntries(
+          Object.entries(updateData).filter(([_, value]) => value !== undefined)
+        );
+
+        await updateDoc(doc(db, 'branches', branch.id), filteredUpdateData);
         console.log('✅ Branch updated in Firebase');
 
         return { success: true };

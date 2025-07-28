@@ -238,7 +238,7 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
   // Field validation configurations
   const validationConfigs = useMemo(() => ({
     companies: {
-      required: ['companyName', 'phone', 'address', 'city'],
+      required: ['companyName'],
       validations: {
         companyName: { maxLength: 100, pattern: /^.{1,100}$/ },
         email: { pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },

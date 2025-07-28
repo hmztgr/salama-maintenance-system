@@ -130,6 +130,46 @@ export function BranchIdFixer() {
           </Alert>
         )}
 
+        {/* Diagnostic Section */}
+        <div className="space-y-2">
+          <h4 className="font-medium">🔍 تشخيص معرفات الفروع:</h4>
+          <div className="text-sm text-gray-600">
+            إجمالي الفروع: {branches.length}
+          </div>
+          
+          {/* Show all branch IDs and their counts */}
+          {(() => {
+            const branchIdCounts = new Map<string, { count: number; branches: Branch[] }>();
+            branches.forEach(branch => {
+              const existing = branchIdCounts.get(branch.branchId) || { count: 0, branches: [] };
+              existing.count++;
+              existing.branches.push(branch);
+              branchIdCounts.set(branch.branchId, existing);
+            });
+
+            const duplicates = Array.from(branchIdCounts.entries())
+              .filter(([_, data]) => data.count > 1)
+              .sort(([a], [b]) => a.localeCompare(b));
+
+            return (
+              <div className="space-y-2">
+                <div className="text-sm">
+                  معرفات مكررة: {duplicates.length}
+                </div>
+                {duplicates.map(([branchId, data]) => (
+                  <div key={branchId} className="p-2 bg-red-50 rounded border text-sm">
+                    <div className="font-medium text-red-800">المعرف: {branchId}</div>
+                    <div className="text-red-700">عدد الفروع: {data.count}</div>
+                    <div className="text-red-600">
+                      الفروع: {data.branches.map(b => `${b.branchName} (${b.city})`).join(', ')}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+        </div>
+
         <div className="space-y-2">
           <p className="text-sm text-gray-600">
             تم العثور على {duplicateGroups.length} مجموعة من الفروع المكررة المعرفات

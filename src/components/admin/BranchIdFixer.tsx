@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContextFirebase';
 import { useBranchesFirebase } from '@/hooks/useBranchesFirebase';
 import { generateBranchId } from '@/lib/id-generator';
 import { Branch } from '@/types/customer';

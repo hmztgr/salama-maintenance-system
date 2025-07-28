@@ -15,7 +15,7 @@ import {
   CheckCircle,
   XCircle
 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContextFirebase';
 import { 
   collection, 
   getDocs, 
@@ -40,7 +40,7 @@ interface CleanupStats {
 }
 
 export default function FirebaseDataCleanup() {
-  const { user, hasPermission } = useAuth();
+  const { authState, hasPermission } = useAuth();
   const [isCleaning, setIsCleaning] = useState(false);
   const [progress, setProgress] = useState(0);
   const [stats, setStats] = useState<CleanupStats>({
@@ -92,7 +92,7 @@ export default function FirebaseDataCleanup() {
     try {
       addLog(`Starting cleanup of ${collectionName}...`);
       
-      let q = collection(db, collectionName);
+      let q: any = collection(db, collectionName);
       if (condition) {
         q = query(q, where(condition.field, condition.operator, condition.value));
       }
@@ -104,7 +104,7 @@ export default function FirebaseDataCleanup() {
       snapshot.docs.forEach((docSnapshot) => {
         // Skip admin users
         if (collectionName === 'users') {
-          const userData = docSnapshot.data();
+          const userData = docSnapshot.data() as any;
           if (userData.role === 'admin') {
             addLog(`Skipping admin user: ${userData.email}`);
             return;

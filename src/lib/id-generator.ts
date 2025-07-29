@@ -176,29 +176,30 @@ export function generateBranchId(
     return { branchId: '', warnings };
   }
 
-  // Find existing locations for this city across all companies
-  const cityBranches = existingBranches.filter(b =>
+  // Find existing branches for this specific company
+  const companyBranches = existingBranches.filter(b => 
+    b.branchId.startsWith(`${companyId}-`)
+  );
+
+  // Find existing branches for this company in this specific city and location
+  const companyLocationBranches = companyBranches.filter(b => 
     b.city === city && b.location === location
   );
 
   let locationNumber: string;
-  if (cityBranches.length > 0) {
-    // Extract location number from existing branch
-    const existingBranch = cityBranches[0];
+  if (companyLocationBranches.length > 0) {
+    // Extract location number from existing branch for this company
+    const existingBranch = companyLocationBranches[0];
     const parts = existingBranch.branchId.split('-');
     locationNumber = parts[2] || '001';
   } else {
-    // Generate new location number for this city
-    const allCityLocations = existingBranches.filter(b => b.city === city);
-    const uniqueLocations = new Set(allCityLocations.map(b => b.location));
+    // Generate new location number for this company in this city
+    const companyCityBranches = companyBranches.filter(b => b.city === city);
+    const uniqueLocations = new Set(companyCityBranches.map(b => b.location));
     locationNumber = (uniqueLocations.size + 1).toString().padStart(3, '0');
   }
 
   // Generate branch number for this specific company, city, and location combination
-  // This ensures unique IDs even for same company in same city/location
-  const companyLocationBranches = existingBranches.filter(b =>
-    b.branchId.startsWith(`${companyId}-${cityValidation.cityCode}-${locationNumber}`)
-  );
   const branchNumber = (companyLocationBranches.length + 1).toString().padStart(4, '0');
 
   return {

@@ -21,9 +21,18 @@ import {
 } from 'lucide-react';
 
 import { useAuth } from '@/contexts/AuthContextFirebase';
-import { collection, getDocs, deleteDoc, doc, query, where } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, doc, query, where, writeBatch } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase/config';
 import { deleteUser } from 'firebase/auth';
+
+interface Branch {
+  id: string;
+  companyId: string;
+  city: string;
+  location: string;
+  branchId: string;
+  [key: string]: any;
+}
 
 interface CleanupStats {
   companies: number;
@@ -56,6 +65,14 @@ export default function FirebaseDataCleanup() {
   const [currentOperation, setCurrentOperation] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
+
+  // Add state for branch ID fix
+  const [isFixingBranchIds, setIsFixingBranchIds] = useState(false);
+  const [branchIdFixStats, setBranchIdFixStats] = useState({
+    totalBranches: 0,
+    fixedBranches: 0,
+    errors: 0
+  });
 
   // Check if user has admin permissions
   if (!hasPermission('admin')) {
@@ -224,6 +241,126 @@ export default function FirebaseDataCleanup() {
     }
   };
 
+  // Fix duplicate branch IDs
+  const fixDuplicateBranchIds = async () => {
+    if (!confirm('هل أنت متأكد من إصلاح معرفات الفروع المكررة؟ سيتم إعادة إنشاء معرفات فريدة لجميع الفروع.')) {
+      return;
+    }
+
+    try {
+      setIsFixingBranchIds(true);
+      setError('');
+      setSuccess('جاري إصلاح معرفات الفروع المكررة...');
+
+      // Get all branches
+      const branchesSnapshot = await getDocs(collection(db, 'branches'));
+      const branches = branchesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Branch[];
+
+      setBranchIdFixStats(prev => ({ ...prev, totalBranches: branches.length }));
+
+      // Group branches by company
+      const branchesByCompany = branches.reduce((acc, branch) => {
+        const companyId = branch.companyId;
+        if (!acc[companyId]) {
+          acc[companyId] = [];
+        }
+        acc[companyId].push(branch);
+        return acc;
+      }, {} as Record<string, Branch[]>);
+
+      const batch = writeBatch(db);
+      let fixedCount = 0;
+      let errorCount = 0;
+
+      // Process each company's branches
+      for (const [companyId, companyBranches] of Object.entries(branchesByCompany)) {
+        // Group by city and location to ensure proper numbering
+        const branchesByLocation = companyBranches.reduce((acc, branch) => {
+          const key = `${branch.city}-${branch.location}`;
+          if (!acc[key]) {
+            acc[key] = [];
+          }
+          acc[key].push(branch);
+          return acc;
+        }, {} as Record<string, Branch[]>);
+
+        let locationCounter = 1;
+        
+        for (const [locationKey, locationBranches] of Object.entries(branchesByLocation)) {
+          const [city, location] = locationKey.split('-');
+          
+          locationBranches.forEach((branch: Branch, index: number) => {
+            try {
+              // Generate new unique branch ID
+              const newBranchId = `${companyId}-${getCityCode(city)}-${locationCounter.toString().padStart(3, '0')}-${(index + 1).toString().padStart(4, '0')}`;
+              
+              // Update branch document
+              const branchRef = doc(db, 'branches', branch.id);
+              batch.update(branchRef, { branchId: newBranchId });
+              
+              fixedCount++;
+            } catch (error) {
+              console.error(`Error fixing branch ${branch.id}:`, error);
+              errorCount++;
+            }
+          });
+          
+          locationCounter++;
+        }
+      }
+
+      // Commit all updates
+      await batch.commit();
+
+      setBranchIdFixStats({
+        totalBranches: branches.length,
+        fixedBranches: fixedCount,
+        errors: errorCount
+      });
+
+      setSuccess(`تم إصلاح ${fixedCount} فرع بنجاح. الأخطاء: ${errorCount}`);
+    } catch (error) {
+      console.error('Error fixing branch IDs:', error);
+      setError(`خطأ في إصلاح معرفات الفروع: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
+    } finally {
+      setIsFixingBranchIds(false);
+    }
+  };
+
+  // Helper function to get city code
+  const getCityCode = (city: string): string => {
+    const cityCodes: Record<string, string> = {
+      'الرياض': 'RYD',
+      'جدة': 'JED',
+      'الدمام': 'DAM',
+      'مكة': 'MKA',
+      'مكة المكرمة': 'MKA',
+      'المدينة': 'MDN',
+      'المدينة المنورة': 'MDN',
+      'تبوك': 'TBK',
+      'أبها': 'ABH',
+      'الطائف': 'TAF',
+      'الجبيل': 'JUB',
+      'ينبع': 'YAN',
+      'الخبر': 'KHO',
+      'القطيف': 'QAT',
+      'الأحساء': 'AHS',
+      'خميس مشيط': 'KHM',
+      'بريدة': 'BUR',
+      'حائل': 'HAI',
+      'الظهران': 'DHA',
+      'عرعر': 'ARA',
+      'سكاكا': 'SAK',
+      'جازان': 'JAZ',
+      'جيزان': 'JAZ',
+      'نجران': 'NAJ',
+      'الباحة': 'BAH',
+      'القريات': 'QUR'
+    };
+    
+    return cityCodes[city] || 'UNK';
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -241,7 +378,7 @@ export default function FirebaseDataCleanup() {
           </AlertDescription>
         </Alert>
 
-        <div className="flex gap-4">
+        <div className="flex gap-4 flex-wrap">
           <Button
             onClick={cleanupCollections}
             disabled={isCleaning}
@@ -257,6 +394,25 @@ export default function FirebaseDataCleanup() {
               <>
                 <Trash2 className="w-4 h-4" />
                 بدء التنظيف
+              </>
+            )}
+          </Button>
+
+          <Button
+            onClick={fixDuplicateBranchIds}
+            disabled={isFixingBranchIds}
+            variant="outline"
+            className="flex items-center gap-2 border-orange-500 text-orange-600 hover:bg-orange-50"
+          >
+            {isFixingBranchIds ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-600"></div>
+                جاري الإصلاح...
+              </>
+            ) : (
+              <>
+                <MapPin className="w-4 h-4" />
+                إصلاح معرفات الفروع
               </>
             )}
           </Button>
@@ -364,6 +520,37 @@ export default function FirebaseDataCleanup() {
               <p className="text-lg font-semibold text-green-800">
                 إجمالي العناصر المحذوفة: {stats.totalDeleted}
               </p>
+            </div>
+          </div>
+        )}
+
+        {branchIdFixStats.totalBranches > 0 && (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">إحصائيات إصلاح معرفات الفروع:</h3>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
+                <MapPin className="w-4 h-4 text-blue-600" />
+                <div>
+                  <p className="text-sm text-gray-600">إجمالي الفروع</p>
+                  <p className="font-semibold">{branchIdFixStats.totalBranches}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
+                <CheckCircle className="w-4 h-4 text-green-600" />
+                <div>
+                  <p className="text-sm text-gray-600">تم الإصلاح</p>
+                  <p className="font-semibold">{branchIdFixStats.fixedBranches}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2 p-3 bg-red-50 rounded-lg">
+                <XCircle className="w-4 h-4 text-red-600" />
+                <div>
+                  <p className="text-sm text-gray-600">الأخطاء</p>
+                  <p className="font-semibold">{branchIdFixStats.errors}</p>
+                </div>
+              </div>
             </div>
           </div>
         )}

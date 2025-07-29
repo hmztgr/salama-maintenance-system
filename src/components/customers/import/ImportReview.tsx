@@ -288,14 +288,13 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
       }
     },
     branches: {
-      required: ['companyId', 'branchName', 'address', 'city'],
+      required: ['companyId', 'branchName', 'location', 'city'],
       validations: {
         companyId: { pattern: /^\d{4}$/ },
         companyName: { maxLength: 100 },
         city: { enum: SAUDI_CITIES },
         location: { maxLength: 100 },
         branchName: { maxLength: 100 },
-        address: { maxLength: 200 },
         contactPerson: { maxLength: 100 },
         contactPhone: { pattern: /^[\d\s\-\+\(\)]{7,15}$/ },
         teamMember: { maxLength: 100 },

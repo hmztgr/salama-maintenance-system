@@ -263,7 +263,21 @@ export function generateBranchId(
   }
 
   // Generate branch number for this specific company, city, and location combination
-  const branchNumber = (companyLocationBranches.length + 1).toString().padStart(4, '0');
+  // Use the total count of branches for this company to ensure uniqueness
+  const totalCompanyBranches = companyBranches.length;
+  const branchNumber = (totalCompanyBranches + 1).toString().padStart(4, '0');
+
+  // Debug logging
+  console.log(`🔧 generateBranchId debug:`, {
+    companyId,
+    city,
+    location,
+    totalCompanyBranches,
+    companyLocationBranches: companyLocationBranches.length,
+    locationNumber,
+    branchNumber,
+    generatedId: `${companyId}-${cityValidation.cityCode}-${locationNumber}-${branchNumber}`
+  });
 
   return {
     branchId: `${companyId}-${cityValidation.cityCode}-${locationNumber}-${branchNumber}`,

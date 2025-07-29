@@ -19,6 +19,8 @@ import {
   generateImportGuide,
   ImportFieldConfig 
 } from '@/lib/import-utils';
+import { validateSaudiCity, addSaudiCity } from '@/lib/id-generator';
+import { CityManagementModal } from './CityManagementModal';
 
 interface ImportReviewProps {
   file: File;
@@ -398,30 +400,21 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
     
     if (!cityName || cityName.trim() === '') return errors;
     
-    const suggestions = findCitySuggestions(cityName);
+    const cityValidation = validateSaudiCity(cityName);
     
-    if (suggestions.length === 0) {
+    if (!cityValidation.isValid) {
       errors.push({
         row: rowNumber,
         field: fieldName,
         value: cityName,
-        error: 'اسم المدينة غير معروف',
-        suggestion: 'انقر لإضافة المدينة الجديدة أو اختيار مدينة موجودة',
+        error: `مدينة غير معترف بها: ${cityName}`,
+        suggestion: `اقتراحات: ${cityValidation.suggestions?.join(', ')}`,
         severity: 'error'
-      });
-    } else if (suggestions[0] !== cityName) {
-      errors.push({
-        row: rowNumber,
-        field: fieldName,
-        value: cityName,
-        error: 'اسم المدينة غير دقيق',
-        suggestion: `اقتراحات: ${suggestions.join('، ')}`,
-        severity: 'warning'
       });
     }
     
     return errors;
-  }, [findCitySuggestions]);
+  }, []);
 
   const openCityManagementModal = useCallback((suggestions: CitySuggestion[]) => {
     setCityManagementModal({
@@ -1216,21 +1209,31 @@ ${suggestions}
                     row.errors.filter(error => error.field === 'city')
                   );
                   if (cityErrors.length > 0) {
-                    const citySuggestions: CitySuggestion[] = cityErrors.map(error => ({
-                      originalCity: error.value,
-                      suggestedCity: error.value,
-                      rowNumber: error.row,
-                      fieldName: error.field
-                    }));
+                    // Get unique unrecognized cities
+                    const uniqueCities = [...new Set(cityErrors.map(error => error.value))];
                     
                     return (
                       <Button
                         variant="outline"
-                        onClick={() => openCityManagementModal(citySuggestions)}
+                        onClick={() => {
+                          // For now, handle one city at a time
+                          const firstCity = uniqueCities[0];
+                          const cityValidation = validateSaudiCity(firstCity);
+                          const citySuggestions: CitySuggestion[] = cityErrors
+                            .filter(error => error.value === firstCity)
+                            .map(error => ({
+                              originalCity: error.value,
+                              suggestedCity: cityValidation.suggestions?.[0] || error.value,
+                              rowNumber: error.row,
+                              fieldName: error.field
+                            }));
+                          
+                          openCityManagementModal(citySuggestions);
+                        }}
                         className="gap-2"
                       >
                         <MapPin className="w-4 h-4" />
-                        إدارة المدن ({cityErrors.length})
+                        إدارة المدن ({uniqueCities.length})
                       </Button>
                     );
                   }
@@ -1252,64 +1255,30 @@ ${suggestions}
       </Card>
 
       {/* City Management Modal */}
-      {cityManagementModal.isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold mb-4 text-right">إدارة أسماء المدن</h3>
-            <p className="text-sm text-gray-600 mb-4 text-right">
-              تم العثور على أسماء مدن غير معروفة. يمكنك إضافة مدن جديدة أو اختيار مدن موجودة.
-            </p>
-            
-            <div className="space-y-4">
-              {cityManagementModal.suggestions.map((suggestion, index) => (
-                <div key={index} className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700">الصف {suggestion.rowNumber}</span>
-                    <span className="text-sm text-gray-500">المدينة الأصلية: {suggestion.originalCity}</span>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={suggestion.suggestedCity}
-                      onChange={(e) => {
-                        const updatedSuggestions = [...cityManagementModal.suggestions];
-                        updatedSuggestions[index].suggestedCity = e.target.value;
-                        setCityManagementModal(prev => ({ ...prev, suggestions: updatedSuggestions }));
-                      }}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-right"
-                      placeholder="أدخل اسم المدينة"
-                    />
-                    
-                    <select
-                      onChange={(e) => {
-                        const updatedSuggestions = [...cityManagementModal.suggestions];
-                        updatedSuggestions[index].suggestedCity = e.target.value;
-                        setCityManagementModal(prev => ({ ...prev, suggestions: updatedSuggestions }));
-                      }}
-                      className="px-3 py-2 border border-gray-300 rounded-md"
-                    >
-                      <option value="">اختر مدينة موجودة</option>
-                      {availableCities.map(city => (
-                        <option key={city} value={city}>{city}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            <div className="flex gap-3 justify-end mt-6">
-              <Button variant="outline" onClick={cityManagementModal.onCancel}>
-                إلغاء
-              </Button>
-              <Button onClick={() => cityManagementModal.onConfirm(cityManagementModal.suggestions)}>
-                تأكيد التغييرات
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <CityManagementModal
+        isOpen={cityManagementModal.isOpen}
+        unrecognizedCity={cityManagementModal.suggestions[0]?.originalCity || ''}
+        suggestions={cityManagementModal.suggestions.map(s => s.suggestedCity)}
+        onCityResolved={(originalCity, resolvedCity) => {
+          // Update the import rows with corrected city names
+          setImportRows(prev => prev.map(row => {
+            const updatedRow = { ...row };
+            cityManagementModal.suggestions.forEach(suggestion => {
+              if (suggestion.originalCity === originalCity && 
+                  suggestion.rowNumber === row.rowNumber && 
+                  suggestion.fieldName in updatedRow.data) {
+                updatedRow.data[suggestion.fieldName] = resolvedCity;
+              }
+            });
+            return updatedRow;
+          }));
+          
+          setCityManagementModal(prev => ({ ...prev, isOpen: false }));
+        }}
+        onCancel={() => {
+          setCityManagementModal(prev => ({ ...prev, isOpen: false }));
+        }}
+      />
     </div>
   );
 }

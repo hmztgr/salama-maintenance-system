@@ -908,8 +908,11 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                             // Find the branch by branchId to get the Firebase document id
                             const branch = branches.find(b => b.branchId === branchId);
                             if (branch) {
+                              console.log('🏪 Deleting branch from Firebase:', branch.id);
                               const success = await deleteBranch(branch.id);
                               if (success) successCount++;
+                            } else {
+                              console.error('❌ Branch not found:', branchId);
                             }
                           }
                           setSelectedBranches(new Set());

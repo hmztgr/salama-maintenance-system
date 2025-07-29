@@ -2,7 +2,7 @@
 import { Customer, Location } from '@/types/customer';
 
 // Saudi Arabia cities database for validation
-const SAUDI_CITIES: Record<string, string> = {
+let SAUDI_CITIES: Record<string, string> = {
   'الرياض': 'RYD',
   'جدة': 'JED',
   'الدمام': 'DAM',
@@ -186,16 +186,20 @@ export function generateBranchId(
     b.city === city && b.location === location
   );
 
+  // Find existing branches for this company in this city (for location number generation)
+  const companyCityBranches = companyBranches.filter(b => b.city === city);
+  
+  // Generate location number based on unique locations for this company in this city
+  const uniqueLocations = new Set(companyCityBranches.map(b => b.location));
   let locationNumber: string;
+  
   if (companyLocationBranches.length > 0) {
-    // Extract location number from existing branch for this company
+    // This location already exists for this company, use existing location number
     const existingBranch = companyLocationBranches[0];
     const parts = existingBranch.branchId.split('-');
     locationNumber = parts[2] || '001';
   } else {
-    // Generate new location number for this company in this city
-    const companyCityBranches = companyBranches.filter(b => b.city === city);
-    const uniqueLocations = new Set(companyCityBranches.map(b => b.location));
+    // This is a new location for this company in this city
     locationNumber = (uniqueLocations.size + 1).toString().padStart(3, '0');
   }
 
@@ -211,4 +215,19 @@ export function generateBranchId(
 // Get all Saudi cities for dropdowns
 export function getSaudiCities(): Array<{ name: string; code: string }> {
   return Object.entries(SAUDI_CITIES).map(([name, code]) => ({ name, code }));
+}
+
+// Add a new city to the database
+export function addSaudiCity(cityName: string, cityCode: string): boolean {
+  // Check if city code already exists
+  const existingCity = Object.entries(SAUDI_CITIES).find(([_, code]) => code === cityCode.toUpperCase());
+  if (existingCity) {
+    console.error(`City code ${cityCode.toUpperCase()} already exists for city: ${existingCity[0]}`);
+    return false;
+  }
+
+  // Add the new city
+  SAUDI_CITIES[cityName] = cityCode.toUpperCase();
+  console.log(`Added new city: ${cityName} (${cityCode.toUpperCase()})`);
+  return true;
 }

@@ -55,8 +55,15 @@ export function validateSaudiCity(cityName: string): {
   }
 
   const normalizedCityName = cityName.trim();
+  
+  // Debug logging
+  console.log(`🔍 validateSaudiCity called with: "${normalizedCityName}"`);
+  console.log(`🔍 Available cities:`, Object.keys(SAUDI_CITIES));
+  
+  // Check for exact match first
   const cityCode = SAUDI_CITIES[normalizedCityName];
   if (cityCode) {
+    console.log(`🔍 Exact match found for "${normalizedCityName}" with code: ${cityCode}`);
     return { isValid: true, cityCode };
   }
 
@@ -66,20 +73,51 @@ export function validateSaudiCity(cityName: string): {
     const normalizedInput = normalizedCityName.toLowerCase();
     
     // Exact match (case insensitive)
-    if (normalizedCity === normalizedInput) return true;
+    if (normalizedCity === normalizedInput) {
+      console.log(`🔍 Case-insensitive match found: "${city}"`);
+      return true;
+    }
     
     // Contains match
-    if (normalizedCity.includes(normalizedInput) || normalizedInput.includes(normalizedCity)) return true;
+    if (normalizedCity.includes(normalizedInput) || normalizedInput.includes(normalizedCity)) {
+      console.log(`🔍 Contains match found: "${city}"`);
+      return true;
+    }
     
     // Similar characters (for Arabic text)
     const cityWithoutDiacritics = normalizedCity.replace(/[أإآ]/g, 'ا').replace(/[يى]/g, 'ي');
     const inputWithoutDiacritics = normalizedInput.replace(/[أإآ]/g, 'ا').replace(/[يى]/g, 'ي');
     
-    if (cityWithoutDiacritics.includes(inputWithoutDiacritics) || inputWithoutDiacritics.includes(cityWithoutDiacritics)) return true;
+    if (cityWithoutDiacritics.includes(inputWithoutDiacritics) || inputWithoutDiacritics.includes(cityWithoutDiacritics)) {
+      console.log(`🔍 Diacritics match found: "${city}"`);
+      return true;
+    }
+    
+    // Additional fuzzy matching for Arabic cities
+    // Check if cities share common patterns (e.g., جازان vs جيزان)
+    if (cityWithoutDiacritics.length >= 3 && inputWithoutDiacritics.length >= 3) {
+      // Check if at least 70% of characters match
+      let matchCount = 0;
+      const minLength = Math.min(cityWithoutDiacritics.length, inputWithoutDiacritics.length);
+      
+      for (let i = 0; i < minLength; i++) {
+        if (cityWithoutDiacritics[i] === inputWithoutDiacritics[i]) {
+          matchCount++;
+        }
+      }
+      
+      const similarity = matchCount / minLength;
+      if (similarity >= 0.7) {
+        console.log(`🔍 Fuzzy match found: "${city}" (similarity: ${similarity.toFixed(2)})`);
+        return true;
+      }
+    }
     
     return false;
   });
 
+  console.log(`🔍 Suggestions found for "${normalizedCityName}":`, suggestions);
+  
   return {
     isValid: false,
     suggestions: suggestions

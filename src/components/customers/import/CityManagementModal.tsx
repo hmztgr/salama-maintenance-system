@@ -39,10 +39,18 @@ export function CityManagementModal({
       // If there are suggestions, select the first one
       if (suggestions.length > 0) {
         setSelectedCity(suggestions[0]);
+        setSelectedOption('existing');
       } else {
         // If no suggestions, default to "add new city" option
         setSelectedOption('new');
         setSelectedCity('');
+        
+        // Generate a city code based on the unrecognized city name
+        if (unrecognizedCity && unrecognizedCity.length >= 3) {
+          // Take first 3 characters and convert to uppercase
+          const suggestedCode = unrecognizedCity.substring(0, 3).toUpperCase();
+          setNewCityCode(suggestedCode);
+        }
       }
     }
   }, [isOpen, suggestions, unrecognizedCity]);
@@ -139,8 +147,42 @@ export function CityManagementModal({
                       ))}
                     </select>
                   ) : (
-                    <div className="text-gray-500 text-sm mt-1">
-                      لا توجد مدن مشابهة. يرجى إضافة مدينة جديدة.
+                    <div className="space-y-2">
+                      <div className="text-gray-500 text-sm mt-1">
+                        لا توجد مدن مشابهة. يمكنك اختيار مدينة من المدن الشائعة:
+                      </div>
+                      <select
+                        id="citySelect"
+                        value={selectedCity}
+                        onChange={(e) => setSelectedCity(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        dir="rtl"
+                      >
+                        <option value="">اختر مدينة شائعة</option>
+                        <option value="الرياض">الرياض</option>
+                        <option value="جدة">جدة</option>
+                        <option value="الدمام">الدمام</option>
+                        <option value="مكة المكرمة">مكة المكرمة</option>
+                        <option value="المدينة المنورة">المدينة المنورة</option>
+                        <option value="الطائف">الطائف</option>
+                        <option value="تبوك">تبوك</option>
+                        <option value="أبها">أبها</option>
+                        <option value="الخبر">الخبر</option>
+                        <option value="الظهران">الظهران</option>
+                        <option value="الجبيل">الجبيل</option>
+                        <option value="ينبع">ينبع</option>
+                        <option value="خميس مشيط">خميس مشيط</option>
+                        <option value="بريدة">بريدة</option>
+                        <option value="حائل">حائل</option>
+                        <option value="نجران">نجران</option>
+                        <option value="جازان">جازان</option>
+                        <option value="الباحة">الباحة</option>
+                        <option value="عرعر">عرعر</option>
+                        <option value="سكاكا">سكاكا</option>
+                        <option value="القطيف">القطيف</option>
+                        <option value="الأحساء">الأحساء</option>
+                        <option value="رابغ">رابغ</option>
+                      </select>
                     </div>
                   )}
                 </div>

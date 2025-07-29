@@ -122,7 +122,7 @@ export function VisitImportReview({ file, onClose, onImportComplete }: VisitImpo
     required: ['branchId', 'contractId', 'companyId', 'visitType', 'status', 'scheduledDate'],
     validations: {
       branchId: { type: 'id', pattern: /^[0-9]{4}-[A-Z]{3}-[0-9]{3}-[0-9]{4}$/ },
-      contractId: { type: 'id', pattern: /^CON-[0-9]{4}-[0-9]{3}$/ },
+      contractId: { type: 'id', pattern: /^[0-9]{4}-[0-9]{3}$/ },
       companyId: { type: 'id', pattern: /^[0-9]{4}$/ },
       visitType: { type: 'text', enum: ['regular', 'emergency', 'followup'] },
       status: { type: 'text', enum: ['scheduled', 'completed', 'cancelled', 'in_progress', 'rescheduled'] },

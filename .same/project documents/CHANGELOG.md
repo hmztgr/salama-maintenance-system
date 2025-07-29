@@ -5,6 +5,63 @@ All notable changes to the Salama Maintenance Scheduler project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Version 61] - 2025-01-24
+### 🐛 **VISIT IMPORT VALIDATION FIX - CONTRACT ID FORMAT ALIGNMENT**
+- 🔧 **FIXED CONTRACT ID VALIDATION** - Updated visit import validation to accept actual system format `0001-001` instead of `CON-0001-001`
+- 📋 **UPDATED TEMPLATE SAMPLE DATA** - Corrected VisitImportTemplate sample data to match actual system format
+- ✅ **VALIDATION PATTERN CORRECTION** - Changed regex pattern from `/^CON-[0-9]{4}-[0-9]{3}$/` to `/^[0-9]{4}-[0-9]{3}$/`
+- 🎯 **SYSTEM ALIGNMENT** - Import validation now matches actual contract IDs in the system
+- 📊 **CSV IMPORT READY** - `visits_actual_system_format.csv` should now import successfully without contract ID errors
+
+### Technical Implementation
+```typescript
+// FIXED: Contract ID validation pattern
+// Before: /^CON-[0-9]{4}-[0-9]{3}$/ (expected CON-0001-001)
+// After:  /^[0-9]{4}-[0-9]{3}$/ (accepts 0001-001)
+
+// FIXED: Template sample data
+// Before: 'CON-0001-001'
+// After:  '0001-001'
+```
+
+### Root Cause Analysis
+The visit import function was validating contract IDs against a hardcoded pattern that expected the `CON-` prefix, but the actual system uses contract IDs without this prefix. This caused all 289 visits to fail validation with "معرف العقد لا يتطابق مع التنسيق المطلوب" errors.
+
+### Resolution
+- **Updated validation pattern** in VisitImportReview.tsx to accept actual contract ID format
+- **Corrected template sample data** in VisitImportTemplate.tsx to show correct format
+- **Updated validation rules** to document the correct format
+- **Maintained all other validation logic** for data integrity
+
+### Expected Results After Fix
+- ✅ **Contract ID Validation**: Should now accept `0001-001` format without errors
+- ✅ **Date Format Validation**: Should accept `24-Feb-25` format without errors  
+- ✅ **Successful Import**: `visits_actual_system_format.csv` should import successfully
+- ✅ **Remaining Issues**: Only branch ID not found errors (data existence issue, not format issue)
+
+## [Version 60] - 2025-01-24
+### 🐛 **BRANCH EXPORT ENHANCEMENT: Company Names Added to Branch Export Options**
+- 📋 **ADDED COMPANY NAME FIELD** - Added checkbox for company name in branch export options
+- 🔧 **IMPLEMENTED LOOKUP LOGIC** - Added company name lookup in ExportTemplate.tsx for branches
+- 📊 **ENHANCED EXPORT FUNCTIONALITY** - Users can now include company names when exporting branch data
+- ✅ **BACKWARD COMPATIBLE** - Existing export functionality remains unchanged
+
+### Technical Implementation
+```typescript
+// NEW: Company name field added to branch export options
+{ key: 'companyName', label: 'اسم الشركة', required: false }
+
+// NEW: Company name lookup logic in formatFieldValue
+if (fieldKey === 'companyName') {
+  const branch = item as Branch;
+  if (companies) {
+    const company = companies.find(c => c.companyId === branch.companyId);
+    return company?.companyName || '';
+  }
+  return '';
+}
+```
+
 ## [Version 59] - 2025-01-24
 ### 🐛 **BRANCH ID GENERATION FIX - FIREBASE STALE STATE RESOLUTION**
 - 🔧 **FIXED DUPLICATE BRANCH IDS** - Resolved issue where multiple branches for same company received identical IDs during batch imports

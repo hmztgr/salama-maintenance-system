@@ -83,7 +83,7 @@ export function VisitImportTemplate({ onClose }: VisitImportTemplateProps) {
     ],
     sampleData: [
       '0001-RIY-001-0001',
-      'CON-0001-001',
+      '0001-001',
       '0001',
       'regular',
       'completed',
@@ -108,7 +108,7 @@ export function VisitImportTemplate({ onClose }: VisitImportTemplateProps) {
     ],
     validationRules: [
       'معرف الفرع: مطلوب، يجب أن يكون موجود في النظام (تنسيق: 0001-RIY-001-0001)',
-      'معرف العقد: مطلوب، يجب أن يكون مرتبط بالفرع والشركة',
+      'معرف العقد: مطلوب، يجب أن يكون مرتبط بالفرع والشركة (تنسيق: 0001-001)',
       'معرف الشركة: مطلوب، يجب أن يكون موجود في النظام (تنسيق: 0001)',
       'نوع الزيارة: مطلوب، regular/emergency/followup',
       'حالة الزيارة: مطلوب، scheduled/completed/cancelled/in_progress/rescheduled',

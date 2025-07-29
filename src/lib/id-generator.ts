@@ -267,6 +267,26 @@ export function generateBranchId(
   const totalCompanyBranches = companyBranches.length;
   const branchNumber = (totalCompanyBranches + 1).toString().padStart(4, '0');
 
+  // Additional check: if this exact combination already exists, increment the branch number
+  const existingBranchWithSameId = companyBranches.find(b => {
+    const parts = b.branchId.split('-');
+    return parts[0] === companyId && 
+           parts[1] === cityValidation.cityCode && 
+           parts[2] === locationNumber && 
+           parts[3] === branchNumber;
+  });
+
+  let finalBranchNumber = branchNumber;
+  if (existingBranchWithSameId) {
+    // Find the highest branch number for this company and increment
+    const branchNumbers = companyBranches.map(b => {
+      const parts = b.branchId.split('-');
+      return parseInt(parts[3] || '0', 10);
+    });
+    const maxBranchNumber = Math.max(...branchNumbers, 0);
+    finalBranchNumber = (maxBranchNumber + 1).toString().padStart(4, '0');
+  }
+
   // Debug logging
   console.log(`🔧 generateBranchId debug:`, {
     companyId,
@@ -276,11 +296,13 @@ export function generateBranchId(
     companyLocationBranches: companyLocationBranches.length,
     locationNumber,
     branchNumber,
-    generatedId: `${companyId}-${cityValidation.cityCode}-${locationNumber}-${branchNumber}`
+    finalBranchNumber,
+    existingBranchWithSameId: !!existingBranchWithSameId,
+    generatedId: `${companyId}-${cityValidation.cityCode}-${locationNumber}-${finalBranchNumber}`
   });
 
   return {
-    branchId: `${companyId}-${cityValidation.cityCode}-${locationNumber}-${branchNumber}`,
+    branchId: `${companyId}-${cityValidation.cityCode}-${locationNumber}-${finalBranchNumber}`,
     warnings
   };
 }

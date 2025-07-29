@@ -126,9 +126,9 @@ export function VisitImportReview({ file, onClose, onImportComplete }: VisitImpo
       companyId: { type: 'id', pattern: /^[0-9]{4}$/ },
       visitType: { type: 'text', enum: ['regular', 'emergency', 'followup'] },
       status: { type: 'text', enum: ['scheduled', 'completed', 'cancelled', 'in_progress', 'rescheduled'] },
-      scheduledDate: { type: 'date', pattern: /^\d{1,2}-[A-Za-z]{3}-\d{2,4}$/ },
+      scheduledDate: { type: 'date', pattern: /^\d{2}-\d{2}-\d{4}$/ },
       scheduledTime: { type: 'text', pattern: /^\d{2}:\d{2}$/ },
-      completedDate: { type: 'date', pattern: /^\d{1,2}-[A-Za-z]{3}-\d{2,4}$/ },
+      completedDate: { type: 'date', pattern: /^\d{2}-\d{2}-\d{4}$/ },
       completedTime: { type: 'text', pattern: /^\d{2}:\d{2}$/ },
       duration: { type: 'number', min: 15, max: 480 },
       assignedTeam: { type: 'text', maxLength: 100 },
@@ -141,7 +141,7 @@ export function VisitImportReview({ file, onClose, onImportComplete }: VisitImpo
       overallStatus: { type: 'text', enum: ['passed', 'failed', 'partial'] },
       issues: { type: 'text', maxLength: 1000 },
       recommendations: { type: 'text', maxLength: 1000 },
-      nextVisitDate: { type: 'date', pattern: /^\d{1,2}-[A-Za-z]{3}-\d{2,4}$/ },
+      nextVisitDate: { type: 'date', pattern: /^\d{2}-\d{2}-\d{4}$/ },
       notes: { type: 'text', maxLength: 500 },
       createdBy: { type: 'text', maxLength: 100 }
     }

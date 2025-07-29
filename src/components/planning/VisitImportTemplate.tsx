@@ -112,7 +112,7 @@ export function VisitImportTemplate({ onClose }: VisitImportTemplateProps) {
       'معرف الشركة: مطلوب، يجب أن يكون موجود في النظام (تنسيق: 0001)',
       'نوع الزيارة: مطلوب، regular/emergency/followup',
       'حالة الزيارة: مطلوب، scheduled/completed/cancelled/in_progress/rescheduled',
-      'تاريخ الجدولة: مطلوب، تنسيق d-mmm-yyyy أو dd-mmm-yyyy أو d-mmm-yy أو dd-mmm-yy',
+      'تاريخ الجدولة: مطلوب، تنسيق dd-mm-yyyy (مثل 24-02-2025)',
       'وقت الجدولة: اختياري، تنسيق HH:mm',
       'تاريخ التنفيذ: اختياري، للزيارات المكتملة',
       'وقت التنفيذ: اختياري، تنسيق HH:mm',

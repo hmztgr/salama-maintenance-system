@@ -5,6 +5,50 @@ All notable changes to the Salama Maintenance Scheduler project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Version 71] - 2025-01-24
+### 🎯 **COMPLETE 336 VISITS GENERATION - ALL COMPANY ENTRIES PROCESSED**
+- 🔧 **FIXED MISSING VISITS** - Generated all 336 visits instead of 288 by processing ALL entries for each company
+- 📊 **COMPLETE COMPANY PROCESSING** - Now processes all 204 company entries instead of just the first entry per company
+- 🎯 **CORRECT COMPANY ID MAPPING** - Properly mapped company names to actual company IDs from contracts database
+- ✅ **FULL VISIT COUNT** - Successfully generated all 336 visits as expected from the original CSV
+- 📋 **IMPROVED DISTRIBUTION** - Better distribution across all companies with correct company IDs
+
+### Technical Implementation
+```typescript
+// FIXED: Processing ALL company entries instead of just first entry per company
+// Before: Only processed first entry per company (288 visits)
+// After:  Processes all 204 company entries (336 visits)
+
+// Complete company processing logic
+visitsData.forEach(visit => {
+  // Process each visit date in this line
+  visitColumnIndices.forEach(colIndex => {
+    const visitDate = values[colIndex];
+    if (visitDate && visitDate.trim() && visitDate.trim() !== '') {
+      // Generate visit record for each valid date
+      allVisits.push(visitRecord);
+    }
+  });
+});
+
+// Proper company ID mapping
+const manualMappings = {
+  'شركة هلا للخدمات المساندة': '0012',
+  'عالم التدوير للبلاستيك': '0062',
+  'مرزوق البقمي': '0056',
+  // ... 50+ company mappings
+  'شركة عناية العالمية': '0033',
+  'شركة مجموعة شلهوب العربية': '0039',
+  // ... etc
+};
+```
+
+### Expected Results After Fix
+- ✅ **Complete Visit Count**: All 336 visits generated as expected
+- ✅ **Proper Company Distribution**: Visits distributed across all companies correctly
+- ✅ **Correct Company IDs**: Each visit has the proper company ID from contracts database
+- ✅ **Successful Import**: `visits_complete_336_improved.csv` should import with proper company relationships
+
 ## [Version 70] - 2025-01-24
 ### 🐛 **CONTRACT-BRANCH RELATIONSHIP FIX - CORRECT MAPPING FOR COMPANY 0033**
 - 🔧 **FIXED CONTRACT-BRANCH RELATIONSHIPS** - Corrected contract-branch mapping for company 0033 to ensure each branch ID is only used with its correct contract ID

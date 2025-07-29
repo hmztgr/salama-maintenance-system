@@ -1006,6 +1006,11 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                                   const success = await deleteBranch(branch.id);
                                   if (success) {
                                     setSuccessMessage('تم حذف الفرع بنجاح');
+                                    // If we're in detail view and the deleted branch is the selected one, go back to list
+                                    if (selectedBranch && selectedBranch.id === branch.id) {
+                                      setSelectedBranch(null);
+                                      setEditingFromDetailView(null);
+                                    }
                                   } else {
                                     setSuccessMessage('فشل في حذف الفرع');
                                   }

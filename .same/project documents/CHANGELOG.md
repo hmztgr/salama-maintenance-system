@@ -5,6 +5,39 @@ All notable changes to the Salama Maintenance Scheduler project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Version 70] - 2025-01-24
+### 🐛 **CONTRACT-BRANCH RELATIONSHIP FIX - CORRECT MAPPING FOR COMPANY 0033**
+- 🔧 **FIXED CONTRACT-BRANCH RELATIONSHIPS** - Corrected contract-branch mapping for company 0033 to ensure each branch ID is only used with its correct contract ID
+- 📊 **CORRECT MAPPING LOGIC** - Each contract now uses its specific branch ID instead of distributing across all branches
+- ✅ **COMPANY 0033 FIXED** - Contract 0033-001 uses branch 0033-JED-001-0001, contract 0033-007 uses branch 0033-JED-007-0007, etc.
+- 🎯 **SPECIFIC CONTRACT-BRANCH PAIRS** - Each contract ID is now correctly paired with its corresponding branch ID
+- 📋 **REDUCED ERRORS** - Should reduce the remaining 19 errors related to contract-branch relationships
+
+### Technical Implementation
+```typescript
+// FIXED: Contract-branch relationships for company 0033
+// Before: Contract 0033-001 was using branch 0033-JED-007-0007 (incorrect)
+// After:  Contract 0033-001 uses branch 0033-JED-001-0001 (correct)
+
+// Correct contract-branch mapping
+const company0033Mapping = {
+  '0033-001': { branchId: '0033-JED-001-0001', visitCount: 4 }, // الفيحاء - رجال
+  '0033-002': { branchId: '0033-JED-002-0002', visitCount: 3 }, // الخالدية - رجال
+  '0033-003': { branchId: '0033-JED-003-0003', visitCount: 3 }, // الخالدية - نساء
+  '0033-004': { branchId: '0033-JED-004-0004', visitCount: 3 }, // الروضة - رجال
+  '0033-005': { branchId: '0033-JED-005-0005', visitCount: 4 }, // الروضة - نساء
+  '0033-006': { branchId: '0033-JED-006-0006', visitCount: 5 }, // المنار - رجال
+  '0033-007': { branchId: '0033-JED-007-0007', visitCount: 4 }, // الفيحاء - نساء
+  // ... 15 contracts total
+};
+```
+
+### Expected Results After Fix
+- ✅ **Correct Contract-Branch Pairs**: Each contract uses its correct branch ID
+- ✅ **Reduced Import Errors**: Should eliminate the 19 contract-branch relationship errors
+- ✅ **Proper Distribution**: Company 0033 visits distributed correctly across contracts
+- ✅ **Successful Import**: `visits_contract_branch_fixed.csv` should import with fewer errors
+
 ## [Version 69] - 2025-01-24
 ### 🐛 **BOTH COMPANIES 0033 & 0039 VISIT DISTRIBUTION FIX - COMPREHENSIVE BRANCH MAPPING**
 - 🔧 **FIXED BOTH COMPANIES DISTRIBUTION** - Corrected visit distribution for both company 0033 (شركة عناية العالمية) and company 0039 (شركة مجموعة شلهوب العربية)

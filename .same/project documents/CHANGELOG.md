@@ -5,6 +5,37 @@ All notable changes to the Salama Maintenance Scheduler project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Version 68] - 2025-01-24
+### 🐛 **COMPANY 0039 VISIT DISTRIBUTION FIX - PROPER BRANCH MAPPING**
+- 🔧 **FIXED COMPANY 0039 VISIT DISTRIBUTION** - Corrected visit distribution for company 0039 (شركة مجموعة شلهوب العربية) across 50 different branches
+- 📊 **PROPER BRANCH MAPPING** - Each visit now correctly maps to its specific branch ID based on branch names from contracts database
+- ✅ **DISTRIBUTED VISITS** - Company 0039 visits now distributed across multiple branch IDs instead of all assigned to single branch
+- 🎯 **BRANCH NAME MAPPING** - Created specific mapping for company 0039 branches (Tory Burch, Faces, Sephora, GUESS, etc.)
+- 📋 **COMPREHENSIVE DISTRIBUTION** - All 59 visits for company 0039 now properly distributed across 50 different branch IDs
+
+### Technical Implementation
+```typescript
+// FIXED: Company 0039 visit distribution
+// Before: All 59 visits assigned to 0039-JED-009-0040 (single branch)
+// After:  Visits distributed across 50 different branch IDs
+
+// Branch mapping for company 0039
+const company0039Mapping = {
+  'Tory Burch': '0039-JED-009-0040',
+  'Faces': '0039-JED-009-0030',
+  'Sephora': '0039-JED-011-0045',
+  'GUESS': '0039-JED-002-0004',
+  'Carolina Herrera (CH)': '0039-JED-002-0003',
+  // ... 50 different branches total
+};
+```
+
+### Expected Results After Fix
+- ✅ **Proper Distribution**: Company 0039 visits now distributed across 50 different branch IDs
+- ✅ **No Single Branch Overload**: No longer 59 visits assigned to single branch ID
+- ✅ **Valid Branch IDs**: All branch IDs exist in the system database
+- ✅ **Successful Import**: `visits_final_proper_distribution.csv` should import successfully
+
 ## [Version 67] - 2025-01-24
 ### 🐛 **FINAL BRANCH ID VALIDATION FIX - ALL INVALID CITY CODES CORRECTED**
 - 🔧 **FIXED ALL INVALID BRANCH IDS** - Corrected all branch IDs with invalid city codes (MKK, MED, ABT, YNB, TIF) to valid ones from contracts database

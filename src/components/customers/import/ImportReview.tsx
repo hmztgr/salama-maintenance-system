@@ -19,7 +19,7 @@ import {
   generateImportGuide,
   ImportFieldConfig 
 } from '@/lib/import-utils';
-import { validateSaudiCity, addSaudiCity } from '@/lib/id-generator';
+import { validateSaudiCity, addSaudiCity, getSaudiCities } from '@/lib/id-generator';
 import { CityManagementModal } from './CityManagementModal';
 
 interface ImportReviewProps {
@@ -56,6 +56,7 @@ interface ImportResults {
 }
 
 // Enhanced Saudi Arabia cities database with both Arabic and English names
+// Using centralized validation from id-generator.ts
 const SAUDI_CITIES = [
   'الرياض', 'Riyadh',
   'جدة', 'Jeddah', 'JED',
@@ -75,7 +76,7 @@ const SAUDI_CITIES = [
   'أبها', 'Abha',
   'عرعر', 'Arar',
   'سكاكا', 'Sakaka',
-  'جيزان', 'Jazan', 'Jizan', 'JAZ',
+  'جازان', 'جيزان', 'Jazan', 'Jizan', 'JAZ', // Added جازان to match id-generator.ts
   'القطيف', 'Qatif', 'Al-Qatif',
   'الأحساء', 'Al-Ahsa', 'Hofuf',
   'الباحة', 'Al-Baha',
@@ -254,7 +255,11 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
     onConfirm: () => {},
     onCancel: () => {}
   });
-  const [availableCities, setAvailableCities] = useState<string[]>([...SAUDI_CITIES]);
+  const [availableCities, setAvailableCities] = useState<string[]>(() => {
+    // Use centralized Saudi cities from id-generator.ts
+    const saudiCities = getSaudiCities();
+    return saudiCities.map(city => city.name);
+  });
 
   // Debug: Log available cities on component mount
   useEffect(() => {
@@ -409,15 +414,11 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
               console.log(`🔍 handleCityValidation called with: "${cityName}"`);
               console.log(`🔍 Available cities in handleCityValidation:`, availableCities);
               
-              // First check if the city is in our available cities list
-              const isInAvailableCities = availableCities.includes(cityName.trim());
-              console.log(`🔍 Is "${cityName}" in available cities:`, isInAvailableCities);
+              // Use centralized validation from id-generator.ts
+              const cityValidation = validateSaudiCity(cityName.trim());
+              console.log(`🔍 validateSaudiCity result for "${cityName}":`, cityValidation);
               
-              if (!isInAvailableCities) {
-                // Use the validateSaudiCity function for additional validation
-                const cityValidation = validateSaudiCity(cityName);
-                console.log(`🔍 validateSaudiCity result for "${cityName}":`, cityValidation);
-                
+              if (!cityValidation.isValid) {
                 const suggestionText = cityValidation.suggestions && cityValidation.suggestions.length > 0 
                   ? `اقتراحات: ${cityValidation.suggestions.join(', ')}`
                   : 'يمكن إضافة المدينة الجديدة في صفحة المراجعة';

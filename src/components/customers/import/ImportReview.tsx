@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, AlertTriangle, XCircle, FileText, Download, Upload } from 'lucide-react';
+import { CheckCircle, AlertTriangle, XCircle, FileText, Download, Upload, MapPin } from 'lucide-react';
 import { standardizeDate } from '@/lib/date-handler';
 import { useCompaniesFirebase } from '@/hooks/useCompaniesFirebase';
 import { useContractsFirebase } from '@/hooks/useContractsFirebase';
@@ -92,6 +92,21 @@ const SAUDI_CITIES = [
   'هروب', 'فيفا', 'العيدابي', 'الحرث', 'بيش', 'تربة', 'رنية', 'الخرمة', 
   'الموية', 'ميسان', 'أضم', 'الكامل'
 ];
+
+// City management state
+interface CitySuggestion {
+  originalCity: string;
+  suggestedCity: string;
+  rowNumber: number;
+  fieldName: string;
+}
+
+interface CityManagementModal {
+  isOpen: boolean;
+  suggestions: CitySuggestion[];
+  onConfirm: (suggestions: CitySuggestion[]) => void;
+  onCancel: () => void;
+}
 
 // Enhanced Column mapping for different languages and variations with better Arabic support
 const COLUMN_MAPPINGS = {
@@ -230,6 +245,15 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
   }>({ type: null, field: null });
   const [skippedRowsCount, setSkippedRowsCount] = useState<number>(0);
 
+  // City management state
+  const [cityManagementModal, setCityManagementModal] = useState<CityManagementModal>({
+    isOpen: false,
+    suggestions: [],
+    onConfirm: () => {},
+    onCancel: () => {}
+  });
+  const [availableCities, setAvailableCities] = useState<string[]>([...SAUDI_CITIES]);
+
   // Get data for validation
   const { companies } = useCompaniesFirebase();
   const { contracts } = useContractsFirebase();
@@ -244,7 +268,7 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
         email: { pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
         phone: { pattern: /^[\d\s\-\+\(\)]{7,15}$/ },
         address: { maxLength: 200 },
-        city: { enum: SAUDI_CITIES },
+        city: { enum: availableCities },
         contactPerson: { maxLength: 100 },
         notes: { maxLength: 500 }
       }
@@ -292,7 +316,7 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
       validations: {
         companyId: { pattern: /^\d{4}$/ },
         companyName: { maxLength: 100 },
-        city: { enum: SAUDI_CITIES },
+        city: { enum: availableCities },
         location: { maxLength: 100 },
         branchName: { maxLength: 100 },
         contactPerson: { maxLength: 100 },
@@ -304,6 +328,134 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
   }), []);
 
   const currentConfig = useMemo(() => validationConfigs[entityType], [validationConfigs, entityType]);
+
+  // City management functions
+  const findCitySuggestions = useCallback((cityName: string): string[] => {
+    if (!cityName || cityName.trim() === '') return [];
+    
+    const normalizedCity = cityName.trim().toLowerCase();
+    const suggestions: string[] = [];
+    
+    // Exact match
+    const exactMatch = availableCities.find(city => 
+      city.toLowerCase() === normalizedCity
+    );
+    if (exactMatch) return [exactMatch];
+    
+    // Partial matches
+    availableCities.forEach(city => {
+      if (city.toLowerCase().includes(normalizedCity) || 
+          normalizedCity.includes(city.toLowerCase())) {
+        suggestions.push(city);
+      }
+    });
+    
+    // Fuzzy matching for similar names
+    if (suggestions.length === 0) {
+      availableCities.forEach(city => {
+        const similarity = calculateSimilarity(normalizedCity, city.toLowerCase());
+        if (similarity > 0.6) { // 60% similarity threshold
+          suggestions.push(city);
+        }
+      });
+    }
+    
+    return suggestions.slice(0, 5); // Limit to 5 suggestions
+  }, [availableCities]);
+
+  const calculateSimilarity = useCallback((str1: string, str2: string): number => {
+    const longer = str1.length > str2.length ? str1 : str2;
+    const shorter = str1.length > str2.length ? str2 : str1;
+    
+    if (longer.length === 0) return 1.0;
+    
+    const editDistance = levenshteinDistance(longer, shorter);
+    return (longer.length - editDistance) / longer.length;
+  }, []);
+
+  const levenshteinDistance = useCallback((str1: string, str2: string): number => {
+    const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
+    
+    for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
+    for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
+    
+    for (let j = 1; j <= str2.length; j++) {
+      for (let i = 1; i <= str1.length; i++) {
+        const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
+        matrix[j][i] = Math.min(
+          matrix[j][i - 1] + 1,
+          matrix[j - 1][i] + 1,
+          matrix[j - 1][i - 1] + indicator
+        );
+      }
+    }
+    
+    return matrix[str2.length][str1.length];
+  }, []);
+
+  const handleCityValidation = useCallback((cityName: string, rowNumber: number, fieldName: string): ValidationError[] => {
+    const errors: ValidationError[] = [];
+    
+    if (!cityName || cityName.trim() === '') return errors;
+    
+    const suggestions = findCitySuggestions(cityName);
+    
+    if (suggestions.length === 0) {
+      errors.push({
+        row: rowNumber,
+        field: fieldName,
+        value: cityName,
+        error: 'اسم المدينة غير معروف',
+        suggestion: 'انقر لإضافة المدينة الجديدة أو اختيار مدينة موجودة',
+        severity: 'error'
+      });
+    } else if (suggestions[0] !== cityName) {
+      errors.push({
+        row: rowNumber,
+        field: fieldName,
+        value: cityName,
+        error: 'اسم المدينة غير دقيق',
+        suggestion: `اقتراحات: ${suggestions.join('، ')}`,
+        severity: 'warning'
+      });
+    }
+    
+    return errors;
+  }, [findCitySuggestions]);
+
+  const openCityManagementModal = useCallback((suggestions: CitySuggestion[]) => {
+    setCityManagementModal({
+      isOpen: true,
+      suggestions,
+      onConfirm: (updatedSuggestions) => {
+        // Update the available cities with new cities
+        const newCities = updatedSuggestions
+          .map(s => s.suggestedCity)
+          .filter(city => !availableCities.includes(city));
+        
+        if (newCities.length > 0) {
+          setAvailableCities(prev => [...prev, ...newCities]);
+        }
+        
+        // Update the import rows with corrected city names
+        setImportRows(prev => prev.map(row => {
+          const updatedRow = { ...row };
+          updatedSuggestions.forEach(suggestion => {
+            if (suggestion.rowNumber === row.rowNumber && 
+                suggestion.fieldName in updatedRow.data) {
+              updatedRow.data[suggestion.fieldName] = suggestion.suggestedCity;
+            }
+          });
+          return updatedRow;
+        }));
+        
+        setCityManagementModal(prev => ({ ...prev, isOpen: false }));
+      },
+      onCancel: () => {
+        setCityManagementModal(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  }, [availableCities]);
 
   // Parse CSV content
   const parseCSV = (content: string): string[][] => {
@@ -546,8 +698,14 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
       }
     }
 
+    // Enhanced city validation with suggestions
+    if (fieldName === 'city' && value && value.trim() !== '') {
+      const cityErrors = handleCityValidation(value, rowNumber, fieldName);
+      errors.push(...cityErrors);
+    }
+
     return errors;
-  }, [companies, contracts, branches, entityType, fieldConfigs]);
+  }, [companies, contracts, branches, entityType, fieldConfigs, handleCityValidation]);
 
   // Process uploaded file
   const processFile = useCallback(async () => {
@@ -1051,6 +1209,34 @@ ${suggestions}
                 <Button variant="outline" onClick={onClose}>
                   إلغاء
                 </Button>
+                
+                {/* City Management Button */}
+                {(() => {
+                  const cityErrors = importRows.flatMap(row => 
+                    row.errors.filter(error => error.field === 'city')
+                  );
+                  if (cityErrors.length > 0) {
+                    const citySuggestions: CitySuggestion[] = cityErrors.map(error => ({
+                      originalCity: error.value,
+                      suggestedCity: error.value,
+                      rowNumber: error.row,
+                      fieldName: error.field
+                    }));
+                    
+                    return (
+                      <Button
+                        variant="outline"
+                        onClick={() => openCityManagementModal(citySuggestions)}
+                        className="gap-2"
+                      >
+                        <MapPin className="w-4 h-4" />
+                        إدارة المدن ({cityErrors.length})
+                      </Button>
+                    );
+                  }
+                  return null;
+                })()}
+                
                 <Button
                   onClick={processImport}
                   disabled={stats.approved === 0}
@@ -1064,6 +1250,66 @@ ${suggestions}
           )}
         </CardContent>
       </Card>
+
+      {/* City Management Modal */}
+      {cityManagementModal.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <h3 className="text-lg font-semibold mb-4 text-right">إدارة أسماء المدن</h3>
+            <p className="text-sm text-gray-600 mb-4 text-right">
+              تم العثور على أسماء مدن غير معروفة. يمكنك إضافة مدن جديدة أو اختيار مدن موجودة.
+            </p>
+            
+            <div className="space-y-4">
+              {cityManagementModal.suggestions.map((suggestion, index) => (
+                <div key={index} className="border rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-700">الصف {suggestion.rowNumber}</span>
+                    <span className="text-sm text-gray-500">المدينة الأصلية: {suggestion.originalCity}</span>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={suggestion.suggestedCity}
+                      onChange={(e) => {
+                        const updatedSuggestions = [...cityManagementModal.suggestions];
+                        updatedSuggestions[index].suggestedCity = e.target.value;
+                        setCityManagementModal(prev => ({ ...prev, suggestions: updatedSuggestions }));
+                      }}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-right"
+                      placeholder="أدخل اسم المدينة"
+                    />
+                    
+                    <select
+                      onChange={(e) => {
+                        const updatedSuggestions = [...cityManagementModal.suggestions];
+                        updatedSuggestions[index].suggestedCity = e.target.value;
+                        setCityManagementModal(prev => ({ ...prev, suggestions: updatedSuggestions }));
+                      }}
+                      className="px-3 py-2 border border-gray-300 rounded-md"
+                    >
+                      <option value="">اختر مدينة موجودة</option>
+                      {availableCities.map(city => (
+                        <option key={city} value={city}>{city}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="flex gap-3 justify-end mt-6">
+              <Button variant="outline" onClick={cityManagementModal.onCancel}>
+                إلغاء
+              </Button>
+              <Button onClick={() => cityManagementModal.onConfirm(cityManagementModal.suggestions)}>
+                تأكيد التغييرات
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

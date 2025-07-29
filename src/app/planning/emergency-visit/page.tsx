@@ -447,21 +447,32 @@ function EmergencyVisitContent() {
                       console.log('🏪 Emergency Visit - Branch selected:', value);
                       setSelectedBranch(value);
                     }}
+                    disabled={!selectedCompany}
                     dir="rtl"
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="اختر الفرع" />
+                      <SelectValue placeholder={selectedCompany ? "اختر الفرع" : "اختر الشركة أولاً"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {branches
-                        .filter(branch => selectedCompany ? branch.companyId === selectedCompany : false)
-                        .map(branch => (
+                      {(() => {
+                        const filteredBranches = branches.filter(branch => selectedCompany ? branch.companyId === selectedCompany : false);
+                        console.log('🏪 Emergency Visit - Filtered branches:', {
+                          selectedCompany,
+                          totalBranches: branches.length,
+                          filteredBranches: filteredBranches.length,
+                          branches: filteredBranches.map(b => ({ id: b.branchId, name: b.branchName }))
+                        });
+                        return filteredBranches.map(branch => (
                           <SelectItem key={branch.branchId} value={branch.branchId}>
-                            {branch.branchName}
+                            {branch.branchName} ({branch.branchId})
                           </SelectItem>
-                        ))}
+                        ));
+                      })()}
                     </SelectContent>
                   </Select>
+                  {selectedCompany && branches.filter(branch => branch.companyId === selectedCompany).length === 0 && (
+                    <p className="text-sm text-red-500 mt-1">لا توجد فروع لهذه الشركة</p>
+                  )}
                 </div>
               </CardContent>
             </Card>

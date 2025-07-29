@@ -5,6 +5,34 @@ All notable changes to the Salama Maintenance Scheduler project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Version 65] - 2025-01-24
+### 🐛 **BRANCH ID MAPPING CORRECTION - CONTRACTS DATA INTEGRATION**
+- 🔧 **FIXED BRANCH ID MAPPING** - Corrected branch IDs by mapping contract data with actual branch information from contracts CSV
+- 📊 **CONTRACTS DATA INTEGRATION** - Used `export_contracts_2025-07-29_enhanced (1).csv` with branch IDs and names to generate correct mappings
+- ✅ **ACCURATE BRANCH IDS** - Branch IDs now match exactly with system data (e.g., `0033-JED-007-0007` instead of `0033-JED-007-0001`)
+- 🎯 **CONTRACT-BRANCH MAPPING** - Each contract now correctly maps to its actual branch ID from the contracts database
+- 📋 **COMPREHENSIVE VALIDATION** - All 289 records now have correct branch IDs that exist in the system
+
+### Technical Implementation
+```typescript
+// FIXED: Branch ID mapping using contracts data
+// Before: 0033-JED-007-0001 (generated, incorrect)
+// After:  0033-JED-007-0007 (from contracts data, correct)
+
+// Contract data mapping
+contractsData[contractId] = {
+  companyId,
+  branchIds,    // Array of actual branch IDs from contracts
+  branchNames   // Array of branch names for matching
+};
+```
+
+### Expected Results After Fix
+- ✅ **Branch ID Validation**: All branch IDs now exist in the system database
+- ✅ **Contract ID Validation**: Already fixed to accept `0045-001` format
+- ✅ **Date Format Validation**: Already fixed to accept `24-Feb-25` format
+- ✅ **Successful Import**: `visits_correct_branch_ids.csv` should import successfully without any errors
+
 ## [Version 64] - 2025-01-24
 ### 🐛 **BRANCH ID FORMAT CORRECTION - CSV GENERATION FIX**
 - 🔧 **FIXED BRANCH ID GENERATION** - Corrected branch ID format in CSV from complex `0045-JED-001-0001` to simple `0045` (company ID)

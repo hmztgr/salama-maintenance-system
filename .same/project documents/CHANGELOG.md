@@ -5,6 +5,44 @@ All notable changes to the Salama Maintenance Scheduler project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Version 69] - 2025-01-24
+### 🐛 **BOTH COMPANIES 0033 & 0039 VISIT DISTRIBUTION FIX - COMPREHENSIVE BRANCH MAPPING**
+- 🔧 **FIXED BOTH COMPANIES DISTRIBUTION** - Corrected visit distribution for both company 0033 (شركة عناية العالمية) and company 0039 (شركة مجموعة شلهوب العربية)
+- 📊 **COMPREHENSIVE BRANCH MAPPING** - Each company now uses its specific branch mapping logic with proper visit counts
+- ✅ **COMPANY 0033 FIXED** - 47 visits now properly distributed across 15 branches with correct visit counts per branch
+- ✅ **COMPANY 0039 FIXED** - 59 visits now properly distributed across 50 branches with balanced distribution
+- 🎯 **SPECIFIC MAPPING LOGIC** - Company 0033 uses visit count-based distribution, company 0039 uses modulo distribution
+- 📋 **DEFAULT LOGIC FOR OTHERS** - All other companies use contract-based branch distribution from contracts database
+
+### Technical Implementation
+```typescript
+// FIXED: Both companies now use specific mapping logic
+// Company 0033: Visit count-based distribution (4 visits to 0033-JED-007-0007, 3 visits to 0033-JED-002-0002, etc.)
+// Company 0039: Modulo distribution across 50 branches (Tory Burch, Faces, Sephora, etc.)
+// Other companies: Contract-based distribution from contracts database
+
+// Company 0033 specific mapping with visit counts
+const company0033Mapping = {
+  'الفيحاء - نساء': { branchId: '0033-JED-007-0007', visitCount: 4 },
+  'الخالدية - رجال': { branchId: '0033-JED-002-0002', visitCount: 3 },
+  // ... 15 branches total
+};
+
+// Company 0039 specific mapping with 50 branches
+const company0039Mapping = {
+  'Tory Burch': '0039-JED-009-0040',
+  'Faces': '0039-JED-009-0030',
+  // ... 50 branches total
+};
+```
+
+### Expected Results After Fix
+- ✅ **Company 0033**: 47 visits distributed across 15 branches with correct visit counts
+- ✅ **Company 0039**: 59 visits distributed across 50 branches with balanced distribution
+- ✅ **Other Companies**: Proper distribution using contract branch data
+- ✅ **No More Single Branch Overload**: Both companies now have proper distribution
+- ✅ **Successful Import**: `visits_both_companies_fixed.csv` should import successfully
+
 ## [Version 68] - 2025-01-24
 ### 🐛 **COMPANY 0039 VISIT DISTRIBUTION FIX - PROPER BRANCH MAPPING**
 - 🔧 **FIXED COMPANY 0039 VISIT DISTRIBUTION** - Corrected visit distribution for company 0039 (شركة مجموعة شلهوب العربية) across 50 different branches

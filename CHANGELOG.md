@@ -5,6 +5,51 @@ All notable changes to the Salama Maintenance Scheduler project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Version 61] - 2025-01-20
+### 📊 BRANCH EXPORT ENHANCEMENT: Company Names Added to Branch Export Options
+**STATUS: ✅ BRANCH EXPORT NOW INCLUDES COMPANY NAMES**
+
+#### 🏢 Enhanced Branch Export Features
+- ✅ **Company Names Added** - Branch exports now include company names alongside company IDs
+- ✅ **Optional Field** - Company name is available as a checkbox option in branch export settings
+- ✅ **User-Friendly Export** - More informative exports with human-readable company names
+- ✅ **Data Relationship Mapping** - Clear linking between branches and their parent companies
+
+#### 📋 New Export Field for Branches
+```typescript
+// NEW: Company name field added to branch export options
+{ key: 'companyName', label: 'اسم الشركة', required: false }
+```
+
+#### 🔧 Technical Implementation
+- **Enhanced Branch Export Configuration** - Added company name field to available fields list
+- **Smart Field Processing** - Automatic lookup of company names using companyId relationship
+- **Data Relationship Mapping** - Links branches to their parent companies for display
+- **Optional Field Selection** - Users can choose to include company names in exports
+
+#### 📊 Export Data Structure
+- **Company Information**: `companyId` + `companyName` for complete company identification
+- **Branch Information**: All existing branch fields plus optional company name
+- **Relationship Processing**: Automatically resolves company names from company IDs
+- **Fallback Handling**: Graceful handling when company data is not available
+
+#### 🎯 User Experience Improvements
+✅ **Complete Information** - No more need to cross-reference company IDs manually
+✅ **Optional Inclusion** - Users can choose whether to include company names
+✅ **Data Relationships** - Clear understanding of branch-company relationships
+✅ **Export Flexibility** - Enhanced export options with company context
+✅ **Arabic Support** - Company name field properly labeled in Arabic
+
+#### Files Modified
+- `src/components/customers/export/ExportTemplate.tsx` - Added company name field to branch export configuration and processing logic
+
+#### Export Example
+```csv
+معرف الفرع,معرف الشركة,اسم الشركة,المدينة,الموقع,اسم الفرع
+0001-JED-001-0001,0001,شركة سالمة للصيانة,جدة,المنطقة الصناعية,فرع جدة الرئيسي
+0002-RUH-001-0001,0002,شركة الأمان للخدمات,الرياض,المنطقة التجارية,فرع الرياض
+```
+
 ## [Version 60] - 2025-01-20
 ### 📊 CONTRACT EXPORT ENHANCEMENT: Company Names & Branch Information
 **STATUS: ✅ CONTRACT EXPORT NOW INCLUDES COMPANY NAMES AND BRANCH DETAILS**

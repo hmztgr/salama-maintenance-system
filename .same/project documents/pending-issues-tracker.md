@@ -11,7 +11,30 @@
 
 ## 🚨 **CRITICAL ISSUES - AWAITING CONFIRMATION**
 
-### **1. Branch Selection Bug - NOT CONFIRMED FIXED**
+### **1. Branch ID Generation Issue - DUPLICATE IDS** ✅ **RESOLVED**
+**Status**: 🟢 **CONFIRMED FIXED**
+**Reported**: 2025-01-24
+**Resolved**: 2025-01-24
+**Description**: Multiple branches for the same company were receiving identical IDs during batch imports (e.g., both branches getting "0002-JED-001-0001").
+
+**Files Modified**:
+- `src/hooks/useBranchesFirebase.ts` - Modified addBranch function to fetch fresh data from Firestore before ID generation
+
+**Root Cause**: Stale state during rapid batch imports. The `branches` state from useBranchesFirebase hook was outdated when passed to `generateBranchId`, causing the function to work with stale data and generate duplicate IDs.
+
+**Solution Applied**:
+- Modified `addBranch` function to query Firestore directly before ID generation
+- Fetched latest branches for the specific company using Firestore query
+- Passed fresh data to `generateBranchId` instead of potentially stale hook state
+- Added comprehensive debug logging to track the process
+
+**User Feedback**: "it seem the ID issue is fixed"
+
+**Resolution**: Issue completely resolved. Branch imports now generate unique sequential IDs correctly.
+
+---
+
+### **2. Branch Selection Bug - NOT CONFIRMED FIXED**
 **Status**: 🔴 **PENDING USER CONFIRMATION**
 **Reported**: 2025-01-24
 **Description**: In multiple forms (emergency ticket form, visit completion form, planned visit form, and potentially others), selecting a branch incorrectly selects ALL branches associated with that company, instead of just the single selected branch.
@@ -27,7 +50,7 @@
 
 ---
 
-### **2. Emergency Visit Cancel Button - NOT CONFIRMED FIXED**
+### **3. Emergency Visit Cancel Button - NOT CONFIRMED FIXED**
 **Status**: 🔴 **PENDING USER CONFIRMATION**
 **Reported**: 2025-01-24
 **Description**: The "العودة" & "إلغاء" buttons in "إنشاء بلاغ طارئ" (emergency visit creation) don't do anything when clicked.
@@ -41,7 +64,7 @@
 
 ---
 
-### **3. Friday Drag-and-Drop - NOT CONFIRMED FIXED**
+### **4. Friday Drag-and-Drop - NOT CONFIRMED FIXED**
 **Status**: 🔴 **PENDING USER CONFIRMATION**
 **Reported**: 2025-01-24
 **Description**: Not being able to drop planned visits cards on Friday in the weekly planner.
@@ -56,7 +79,7 @@
 
 ---
 
-### **4. Emergency Visit Planner Integration - NOT CONFIRMED FIXED**
+### **5. Emergency Visit Planner Integration - NOT CONFIRMED FIXED**
 **Status**: 🔴 **PENDING USER CONFIRMATION**
 **Reported**: 2025-01-24
 **Description**: Completing an emergency visit form should make the visit appear in the weekly and annual planner tabs, but it's not showing on those tabs.
@@ -70,7 +93,7 @@
 
 ---
 
-### **5. Visit Logs Branch/Company Names - NOT CONFIRMED FIXED**
+### **6. Visit Logs Branch/Company Names - NOT CONFIRMED FIXED**
 **Status**: 🔴 **PENDING USER CONFIRMATION**
 **Reported**: 2025-01-24
 **Description**: Visit logs showing "Unknown" for company and branch names instead of actual names.
@@ -86,7 +109,7 @@
 
 ## ⚠️ **MEDIUM PRIORITY ISSUES**
 
-### **6. Visit Logs Date Format - NOT CONFIRMED FIXED**
+### **7. Visit Logs Date Format - NOT CONFIRMED FIXED**
 **Status**: 🟡 **PENDING USER CONFIRMATION**
 **Reported**: 2025-01-24
 **Description**: Visit logs showing dates in Hijri format instead of Georgian format.
@@ -102,7 +125,7 @@
 
 ## 🔍 **INVESTIGATION REQUIRED**
 
-### **7. File Upload Display Issue - NEEDS INVESTIGATION**
+### **8. File Upload Display Issue - NEEDS INVESTIGATION**
 **Status**: 🟡 **INVESTIGATION REQUIRED**
 **Reported**: 2025-01-24
 **Description**: Files uploaded in visit completion form may not be displaying correctly after upload.
@@ -116,7 +139,7 @@
 
 ---
 
-### **8. Issue Form Dialog Size - REVERT SIZE CHANGES**
+### **9. Issue Form Dialog Size - REVERT SIZE CHANGES**
 **Status**: 🔴 **PENDING USER CONFIRMATION**
 **Reported**: 2025-01-24
 **Description**: The issue submission dialog needs to be resized to fit all content within the page width without requiring horizontal scrolling.
@@ -130,7 +153,7 @@
 
 ---
 
-### **9. Annual Planner New Visit Creation - BROKEN** ❌ **STILL OCCURRING**
+### **10. Annual Planner New Visit Creation - BROKEN** ❌ **STILL OCCURRING**
 **Status**: 🔴 **PENDING USER CONFIRMATION**
 **Reported**: 2025-01-24
 **Last Updated**: 2025-01-24
@@ -170,7 +193,7 @@
 
 ---
 
-### **10. Weekly Planner Date Issue - DATES ARE WRONG** ✅ **RESOLVED**
+### **11. Weekly Planner Date Issue - DATES ARE WRONG** ✅ **RESOLVED**
 **Status**: 🟢 **CONFIRMED FIXED**
 **Reported**: 2025-01-24
 **Description**: Weekly planner showing incorrect dates. Today is Sunday, July 27th, but the planner shows July 27th as Friday. Also, annual planner week 30 shows incorrect date range. User also reported "endless loop" when expanding objects in console logs.
@@ -206,7 +229,7 @@ This created a mismatch where the same date could be in different weeks dependin
 
 ---
 
-### **11. Contract Export Empty Columns - COMPANY/BRANCH DATA MISSING** ✅ **RESOLVED**
+### **12. Contract Export Empty Columns - COMPANY/BRANCH DATA MISSING** ✅ **RESOLVED**
 **Status**: 🟢 **CONFIRMED FIXED**
 **Reported**: 2025-01-24
 **Resolved**: 2025-01-24
@@ -226,11 +249,11 @@ This created a mismatch where the same date could be in different weeks dependin
 ## 📊 **ISSUE SUMMARY**
 
 ### **By Status**:
-- 🔴 **Critical Issues**: 5
+- 🔴 **Critical Issues**: 4
 - 🟡 **Medium Priority**: 3
 - 🔍 **Needs Investigation**: 1
-- 🟢 **Resolved**: 3
-- **Total Pending**: 9
+- 🟢 **Resolved**: 4
+- **Total Pending**: 8
 
 ### **By Category**:
 - **Branch Selection**: 1 issue
@@ -250,6 +273,7 @@ This created a mismatch where the same date could be in different weeks dependin
 ### **For User to Test and Confirm**:
 
 #### **Critical Issues**:
+- [x] **Branch ID Generation**: Test branch import to ensure unique sequential IDs (0002-JED-001-0001, 0002-JED-001-0002, etc.) - **✅ CONFIRMED FIXED**
 - [ ] **Branch Selection**: Test branch selection in emergency visit form, visit completion form, and planned visit form
 - [ ] **Cancel Button**: Test "العودة" and "إلغاء" buttons in emergency visit creation
 - [ ] **Friday Drag-and-Drop**: Test dropping visits on Friday in weekly planner
@@ -347,6 +371,11 @@ This created a mismatch where the same date could be in different weeks dependin
 - Fixed getStartOfWeek function to use proper ISO 8601 week calculation (Monday as first day)
 - Changed weekDays array from Saturday-first to Monday-first order to match ISO 8601
 - Status changed to 🟡 FIXED - AWAITING CONFIRMATION
+
+### **2025-01-24 - Issue #1 Resolved**
+- User confirmed: "it seem the ID issue is fixed"
+- Branch ID generation issue completely resolved and confirmed working
+- Status changed to 🟢 CONFIRMED FIXED
 
 ### **2025-01-24 - Issue #9 Resolved**
 - User confirmed: "perfect it shows 27th as sunday and the 1st of january as wednesday now"

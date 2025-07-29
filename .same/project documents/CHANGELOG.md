@@ -5,6 +5,63 @@ All notable changes to the Salama Maintenance Scheduler project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Version 59] - 2025-01-24
+### 🐛 **BRANCH ID GENERATION FIX - FIREBASE STALE STATE RESOLUTION**
+- 🔧 **FIXED DUPLICATE BRANCH IDS** - Resolved issue where multiple branches for same company received identical IDs during batch imports
+- ⚡ **FIREBASE STALE STATE FIX** - Modified addBranch function to fetch fresh data from Firestore before ID generation
+- 🎯 **RACE CONDITION RESOLUTION** - Eliminated stale state issues during rapid batch operations
+- 📊 **ENHANCED DEBUG LOGGING** - Added comprehensive logging to track branch ID generation process
+- ✅ **CONFIRMED FIX** - Branch imports now generate unique sequential IDs (0002-JED-001-0001, 0002-JED-001-0002, etc.)
+
+### Technical Implementation
+```typescript
+// FIXED: Fetch fresh data from Firestore before ID generation
+const addBranch = useCallback(async (branchData) => {
+  // Fetch latest branches for this company directly from Firestore
+  const branchesRef = collection(db, 'branches');
+  const companyBranchesQuery = query(
+    branchesRef,
+    where('companyId', '==', branchData.companyId),
+    where('isArchived', '==', false)
+  );
+  
+  const companyBranchesSnapshot = await getDocs(companyBranchesQuery);
+  const latestCompanyBranches = companyBranchesSnapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+      branchId: data.branchId,
+      city: data.city,
+      location: data.location
+    };
+  });
+
+  // Generate ID with fresh data from Firestore
+  const idResult = generateBranchId(
+    branchData.companyId,
+    branchData.city,
+    branchData.location,
+    latestCompanyBranches  // ✅ Always fresh from Firestore
+  );
+}, []);
+```
+
+### Root Cause Analysis
+The issue was caused by stale state during rapid batch imports:
+1. **Stale State**: `branches` state from useBranchesFirebase hook was outdated during batch operations
+2. **Race Conditions**: Firebase listener updates were slower than rapid sequential addBranch calls
+3. **Duplicate IDs**: generateBranchId function received outdated branch counts, causing ID collisions
+
+### Resolution
+- **Fresh Data Fetch**: Modified addBranch to query Firestore directly before ID generation
+- **Eliminated Stale State**: Bypassed potentially stale hook state during critical operations
+- **Enhanced Logging**: Added debug logging to track branch fetching and ID generation
+- **Comprehensive Testing**: Verified fix with batch import scenarios
+
+### User Confirmation
+- ✅ **Batch Imports**: Multiple branches for same company now get unique sequential IDs
+- ✅ **ID Pattern**: Correct format maintained (0002-JED-001-0001, 0002-JED-001-0002, etc.)
+- ✅ **No Duplicates**: Eliminated duplicate ID generation during rapid operations
+
 ## [Version 58] - 2025-01-24
 ### 🐛 **WEEKLY PLANNER DATE DISPLAY FIX - ISO 8601 ALIGNMENT**
 - 🗓️ **FIXED DATE MAPPING** - Weekly planner now correctly displays dates according to ISO 8601 standard

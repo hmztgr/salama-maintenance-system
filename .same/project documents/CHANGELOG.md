@@ -5,6 +5,35 @@ All notable changes to the Salama Maintenance Scheduler project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Version 66] - 2025-01-24
+### 🐛 **VISIT DISTRIBUTION CORRECTION - COMPANY 0033 BRANCH MAPPING**
+- 🔧 **FIXED VISIT DISTRIBUTION** - Corrected visit distribution for company 0033 (شركة عناية العالمية) across 15 different branches
+- 📊 **ACCURATE BRANCH MAPPING** - Each branch now has the correct number of visits as specified in the original visits CSV
+- ✅ **PROPER BRANCH IDS** - All visits now use correct branch IDs from contracts database (e.g., 0033-JED-007-0007 instead of 0033-JED-007-0001)
+- 🎯 **VISIT COUNT VALIDATION** - 0033-JED-007-0007 now has exactly 4 visits instead of 48 incorrect visits
+- 📋 **COMPREHENSIVE DISTRIBUTION** - 48 total visits for company 0033 distributed across 15 branches with correct visit counts
+
+### Technical Implementation
+```typescript
+// FIXED: Visit distribution for company 0033
+// Before: 0033-JED-007-0007 had 48 visits (incorrect)
+// After:  0033-JED-007-0007 has 4 visits (correct)
+
+// Branch mapping with correct visit counts
+const company0033Mapping = {
+  'الفيحاء - نساء': { contractId: '0033-007', branchId: '0033-JED-007-0007', visitCount: 4 },
+  'الخالدية - رجال': { contractId: '0033-002', branchId: '0033-JED-002-0002', visitCount: 3 },
+  // ... 15 branches total
+};
+```
+
+### Expected Results After Fix
+- ✅ **0033-JED-007-0007**: 4 visits (was 48)
+- ✅ **0033-JED-001-0001**: 4 visits (الفيحاء - رجال)
+- ✅ **0033-JED-002-0002**: 3 visits (الخالدية - رجال)
+- ✅ **All 15 branches**: Correct visit counts as per original CSV
+- ✅ **Successful Import**: `visits_correct_distribution.csv` should import successfully
+
 ## [Version 65] - 2025-01-24
 ### 🐛 **BRANCH ID MAPPING CORRECTION - CONTRACTS DATA INTEGRATION**
 - 🔧 **FIXED BRANCH ID MAPPING** - Corrected branch IDs by mapping contract data with actual branch information from contracts CSV

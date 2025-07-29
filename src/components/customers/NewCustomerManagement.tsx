@@ -905,8 +905,12 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                         if (confirm(`هل أنت متأكد من حذف ${selectedBranches.size} فرع؟`)) {
                           let successCount = 0;
                           for (const branchId of selectedBranches) {
-                            const success = await deleteBranch(branchId);
-                            if (success) successCount++;
+                            // Find the branch by branchId to get the Firebase document id
+                            const branch = branches.find(b => b.branchId === branchId);
+                            if (branch) {
+                              const success = await deleteBranch(branch.id);
+                              if (success) successCount++;
+                            }
                           }
                           setSelectedBranches(new Set());
                           setSuccessMessage(`تم حذف ${successCount} فرع بنجاح`);
@@ -983,7 +987,8 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2 space-x-reverse">
                           <button
                             className="text-blue-600 hover:text-blue-900"
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent row click
                               setEditingBranch(branch);
                               setShowBranchForm(true);
                             }}
@@ -992,7 +997,8 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                           </button>
                           {hasPermission('admin') && (
                             <button
-                              onClick={async () => {
+                              onClick={async (e) => {
+                                e.stopPropagation(); // Prevent row click
                                 if (confirm(`هل أنت متأكد من حذف الفرع "${branch.branchName}"؟`)) {
                                   const success = await deleteBranch(branch.id);
                                   if (success) {

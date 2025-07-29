@@ -84,9 +84,10 @@ const SAUDI_CITIES = [
   'الخرج', 'Al-Kharj',
   'القصيم', 'Qassim', 'Al-Qassim',
   'الهفوف', 'Hofuf', 'Al-Hofuf',
+  'رابغ', 'Rabigh', // Added Rabigh
   // Additional cities (keeping existing Arabic names)
   'المجمعة', 'رفحاء', 'الزلفي', 'وادي الدواسر',
-  'الافلاج', 'صبيا', 'محايل عسير', 'القنفذة', 'الليث', 'رابغ', 'الحوية',
+  'الافلاج', 'صبيا', 'محايل عسير', 'القنفذة', 'الليث', 'الحوية',
   'تيماء', 'العلا', 'بدر', 'المهد', 'خيبر', 'العيص', 'املج', 'الوجه',
   'ضباء', 'حقل', 'البدع', 'الطوال', 'بيشة', 'النماص', 'تنومة', 'ظهران الجنوب',
   'سراة عبيدة', 'المندق', 'العقيق', 'قلوة', 'المخواة', 'بلجرشي',
@@ -256,6 +257,12 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
   });
   const [availableCities, setAvailableCities] = useState<string[]>([...SAUDI_CITIES]);
 
+  // Debug: Log available cities on component mount
+  useEffect(() => {
+    console.log(`🔍 Available cities initialized:`, availableCities);
+    console.log(`🔍 SAUDI_CITIES length:`, SAUDI_CITIES.length);
+  }, [availableCities]);
+
   // Get data for validation
   const { companies } = useCompaniesFirebase();
   const { contracts } = useContractsFirebase();
@@ -395,30 +402,44 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
     return matrix[str2.length][str1.length];
   }, []);
 
-              const handleCityValidation = useCallback((cityName: string, rowNumber: number, fieldName: string): ValidationError[] => {
+            const handleCityValidation = useCallback((cityName: string, rowNumber: number, fieldName: string): ValidationError[] => {
               const errors: ValidationError[] = [];
               
               if (!cityName || cityName.trim() === '') return errors;
               
-              const cityValidation = validateSaudiCity(cityName);
+              console.log(`🔍 handleCityValidation called with: "${cityName}"`);
+              console.log(`🔍 Available cities in handleCityValidation:`, availableCities);
               
-              if (!cityValidation.isValid) {
+              // First check if the city is in our available cities list
+              const isInAvailableCities = availableCities.includes(cityName.trim());
+              console.log(`🔍 Is "${cityName}" in available cities:`, isInAvailableCities);
+              
+              if (!isInAvailableCities) {
+                // Use the validateSaudiCity function for additional validation
+                const cityValidation = validateSaudiCity(cityName);
+                console.log(`🔍 validateSaudiCity result for "${cityName}":`, cityValidation);
+                
                 const suggestionText = cityValidation.suggestions && cityValidation.suggestions.length > 0 
                   ? `اقتراحات: ${cityValidation.suggestions.join(', ')}`
                   : 'يمكن إضافة المدينة الجديدة في صفحة المراجعة';
                 
-                errors.push({
+                const error: ValidationError = {
                   row: rowNumber,
                   field: fieldName,
                   value: cityName,
                   error: `مدينة غير معترف بها: ${cityName}`,
                   suggestion: suggestionText,
                   severity: 'error'
-                });
+                };
+                
+                console.log(`🔍 Adding city validation error:`, error);
+                errors.push(error);
+              } else {
+                console.log(`🔍 City "${cityName}" is valid, no errors added`);
               }
               
               return errors;
-            }, []);
+            }, [availableCities]);
 
   const openCityManagementModal = useCallback((suggestions: CitySuggestion[]) => {
     setCityManagementModal({
@@ -698,9 +719,14 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
     // Enhanced city validation with suggestions
     if (fieldName === 'city' && value && value.trim() !== '') {
       console.log(`🔍 Validating city: "${value}"`);
+      console.log(`🔍 Available cities:`, availableCities);
+      console.log(`🔍 Is city in available cities:`, availableCities.includes(value.trim()));
+      
       const cityErrors = handleCityValidation(value, rowNumber, fieldName);
       console.log(`🔍 City validation result:`, cityErrors);
       errors.push(...cityErrors);
+      
+      console.log(`🔍 Total errors after city validation:`, errors.length);
     }
 
     return errors;
@@ -1211,22 +1237,36 @@ ${suggestions}
                 
                 {/* City Management Button */}
                 {(() => {
+                  console.log(`🔍 Checking for city management button visibility...`);
+                  console.log(`🔍 Total import rows:`, importRows.length);
+                  
                   const cityErrors = importRows.flatMap(row => 
                     row.errors.filter(error => error.field === 'city')
                   );
                   console.log(`🔍 City errors found:`, cityErrors);
+                  console.log(`🔍 Total import rows:`, importRows.length);
+                  console.log(`🔍 Import rows with errors:`, importRows.filter(row => row.errors.length > 0).length);
+                  
+                  // Debug: Log all errors to see what's happening
+                  const allErrors = importRows.flatMap(row => row.errors);
+                  console.log(`🔍 All errors in import rows:`, allErrors);
+                  
                   if (cityErrors.length > 0) {
                     // Get unique unrecognized cities
                     const uniqueCities = [...new Set(cityErrors.map(error => error.value))];
                     console.log(`🔍 Unique cities with errors:`, uniqueCities);
+                    console.log(`🔍 City management button should be visible with ${uniqueCities.length} cities`);
                     
                     return (
                       <Button
                         variant="outline"
                         onClick={() => {
+                          console.log(`🔍 Opening city management modal for cities:`, uniqueCities);
                           // Handle one city at a time
                           const firstCity = uniqueCities[0];
                           const cityValidation = validateSaudiCity(firstCity);
+                          console.log(`🔍 City validation for ${firstCity}:`, cityValidation);
+                          
                           const citySuggestions: CitySuggestion[] = cityErrors
                             .filter(error => error.value === firstCity)
                             .map(error => ({
@@ -1236,6 +1276,7 @@ ${suggestions}
                               fieldName: error.field
                             }));
                           
+                          console.log(`🔍 City suggestions created:`, citySuggestions);
                           openCityManagementModal(citySuggestions);
                         }}
                         className="gap-2"
@@ -1245,6 +1286,7 @@ ${suggestions}
                       </Button>
                     );
                   }
+                  console.log(`🔍 No city errors found, city management button not shown`);
                   return null;
                 })()}
                 

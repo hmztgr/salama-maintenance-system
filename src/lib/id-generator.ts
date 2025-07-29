@@ -28,7 +28,8 @@ let SAUDI_CITIES: Record<string, string> = {
   'جيزان': 'JAZ', // Alternative spelling
   'نجران': 'NAJ',
   'الباحة': 'BAH',
-  'القريات': 'QUR'
+  'القريات': 'QUR',
+  'رابغ': 'RAB' // Added Rabigh
 };
 
 interface CustomerData {
@@ -49,19 +50,39 @@ export function validateSaudiCity(cityName: string): {
   cityCode?: string;
   suggestions?: string[]
 } {
-  const cityCode = SAUDI_CITIES[cityName];
+  if (!cityName || cityName.trim() === '') {
+    return { isValid: false, suggestions: [] };
+  }
+
+  const normalizedCityName = cityName.trim();
+  const cityCode = SAUDI_CITIES[normalizedCityName];
   if (cityCode) {
     return { isValid: true, cityCode };
   }
 
-  // Provide suggestions for similar city names (but don't default to the same 3 cities)
-  const suggestions = Object.keys(SAUDI_CITIES).filter(city =>
-    city.includes(cityName) || cityName.includes(city)
-  );
+  // Provide suggestions for similar city names
+  const suggestions = Object.keys(SAUDI_CITIES).filter(city => {
+    const normalizedCity = city.toLowerCase();
+    const normalizedInput = normalizedCityName.toLowerCase();
+    
+    // Exact match (case insensitive)
+    if (normalizedCity === normalizedInput) return true;
+    
+    // Contains match
+    if (normalizedCity.includes(normalizedInput) || normalizedInput.includes(normalizedCity)) return true;
+    
+    // Similar characters (for Arabic text)
+    const cityWithoutDiacritics = normalizedCity.replace(/[أإآ]/g, 'ا').replace(/[يى]/g, 'ي');
+    const inputWithoutDiacritics = normalizedInput.replace(/[أإآ]/g, 'ا').replace(/[يى]/g, 'ي');
+    
+    if (cityWithoutDiacritics.includes(inputWithoutDiacritics) || inputWithoutDiacritics.includes(cityWithoutDiacritics)) return true;
+    
+    return false;
+  });
 
   return {
     isValid: false,
-    suggestions: suggestions // Return actual suggestions or empty array, not default cities
+    suggestions: suggestions
   };
 }
 

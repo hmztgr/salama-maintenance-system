@@ -697,7 +697,9 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
 
     // Enhanced city validation with suggestions
     if (fieldName === 'city' && value && value.trim() !== '') {
+      console.log(`🔍 Validating city: "${value}"`);
       const cityErrors = handleCityValidation(value, rowNumber, fieldName);
+      console.log(`🔍 City validation result:`, cityErrors);
       errors.push(...cityErrors);
     }
 
@@ -1212,9 +1214,11 @@ ${suggestions}
                   const cityErrors = importRows.flatMap(row => 
                     row.errors.filter(error => error.field === 'city')
                   );
+                  console.log(`🔍 City errors found:`, cityErrors);
                   if (cityErrors.length > 0) {
                     // Get unique unrecognized cities
                     const uniqueCities = [...new Set(cityErrors.map(error => error.value))];
+                    console.log(`🔍 Unique cities with errors:`, uniqueCities);
                     
                     return (
                       <Button

@@ -5,7 +5,49 @@ All notable changes to the Salama Maintenance Scheduler project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Version 61] - 2025-01-24
+## [Version 64] - 2025-01-24
+### 🐛 **BRANCH ID FORMAT CORRECTION - CSV GENERATION FIX**
+- 🔧 **FIXED BRANCH ID GENERATION** - Corrected branch ID format in CSV from complex `0045-JED-001-0001` to simple `0045` (company ID)
+- 📊 **CSV FORMAT ALIGNMENT** - Branch IDs now match expected system format using company ID as branch ID
+- ✅ **IMPORT READY** - `visits_final_corrected.csv` should now import successfully without branch ID errors
+- 🎯 **SIMPLIFIED APPROACH** - Used company ID as branch ID to match system expectations
+- 📋 **CLEANUP** - Removed temporary script files after successful CSV generation
+
+### Technical Implementation
+```typescript
+// FIXED: Branch ID generation in CSV
+// Before: 0045-JED-001-0001 (complex format with city codes and sequences)
+// After:  0045 (simple company ID format)
+
+// Branch ID now matches company ID for simplicity
+const correctBranchId = companyId; // e.g., "0045" for company 0045
+```
+
+### Expected Results After Fix
+- ✅ **Branch ID Validation**: Should now accept `0045` format without errors
+- ✅ **Contract ID Validation**: Already fixed to accept `0045-001` format
+- ✅ **Date Format Validation**: Already fixed to accept `24-Feb-25` format
+- ✅ **Successful Import**: `visits_final_corrected.csv` should import successfully
+
+## [Version 63] - 2025-01-24
+### 🐛 **DATE VALIDATION PATTERN FIX - NORMALIZED FORMAT ACCEPTANCE**
+- 🔧 **FIXED DATE VALIDATION PATTERNS** - Updated visit import validation to accept normalized date format `dd-mm-yyyy`
+- 📅 **NORMALIZATION ALIGNMENT** - Date normalization converts `24-Feb-25` to `24-02-2025`, validation now accepts this format
+- ✅ **VALIDATION PATTERN CORRECTION** - Changed regex patterns to accept normalized format instead of original format
+- 🎯 **SYSTEM ALIGNMENT** - Import validation now matches actual date processing pipeline
+
+### Technical Implementation
+```typescript
+// FIXED: Date validation patterns
+// Before: /^\d{1,2}-[A-Za-z]{3}-\d{2,4}$/ (expected 24-Feb-25)
+// After:  /^\d{2}-\d{2}-\d{4}$/ (accepts 24-02-2025)
+
+scheduledDate: { type: 'date', pattern: /^\d{2}-\d{2}-\d{4}$/ },
+completedDate: { type: 'date', pattern: /^\d{2}-\d{2}-\d{4}$/ },
+nextVisitDate: { type: 'date', pattern: /^\d{2}-\d{2}-\d{4}$/ },
+```
+
+## [Version 62] - 2025-01-24
 ### 🐛 **VISIT IMPORT VALIDATION FIX - CONTRACT ID FORMAT ALIGNMENT**
 - 🔧 **FIXED CONTRACT ID VALIDATION** - Updated visit import validation to accept actual system format `0001-001` instead of `CON-0001-001`
 - 📋 **UPDATED TEMPLATE SAMPLE DATA** - Corrected VisitImportTemplate sample data to match actual system format

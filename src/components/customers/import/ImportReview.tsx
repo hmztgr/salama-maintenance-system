@@ -395,26 +395,30 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
     return matrix[str2.length][str1.length];
   }, []);
 
-  const handleCityValidation = useCallback((cityName: string, rowNumber: number, fieldName: string): ValidationError[] => {
-    const errors: ValidationError[] = [];
-    
-    if (!cityName || cityName.trim() === '') return errors;
-    
-    const cityValidation = validateSaudiCity(cityName);
-    
-    if (!cityValidation.isValid) {
-      errors.push({
-        row: rowNumber,
-        field: fieldName,
-        value: cityName,
-        error: `مدينة غير معترف بها: ${cityName}`,
-        suggestion: `اقتراحات: ${cityValidation.suggestions?.join(', ')}`,
-        severity: 'error'
-      });
-    }
-    
-    return errors;
-  }, []);
+              const handleCityValidation = useCallback((cityName: string, rowNumber: number, fieldName: string): ValidationError[] => {
+              const errors: ValidationError[] = [];
+              
+              if (!cityName || cityName.trim() === '') return errors;
+              
+              const cityValidation = validateSaudiCity(cityName);
+              
+              if (!cityValidation.isValid) {
+                const suggestionText = cityValidation.suggestions && cityValidation.suggestions.length > 0 
+                  ? `اقتراحات: ${cityValidation.suggestions.join(', ')}`
+                  : 'يمكن إضافة المدينة الجديدة في صفحة المراجعة';
+                
+                errors.push({
+                  row: rowNumber,
+                  field: fieldName,
+                  value: cityName,
+                  error: `مدينة غير معترف بها: ${cityName}`,
+                  suggestion: suggestionText,
+                  severity: 'error'
+                });
+              }
+              
+              return errors;
+            }, []);
 
   const openCityManagementModal = useCallback((suggestions: CitySuggestion[]) => {
     setCityManagementModal({
@@ -1216,14 +1220,14 @@ ${suggestions}
                       <Button
                         variant="outline"
                         onClick={() => {
-                          // For now, handle one city at a time
+                          // Handle one city at a time
                           const firstCity = uniqueCities[0];
                           const cityValidation = validateSaudiCity(firstCity);
                           const citySuggestions: CitySuggestion[] = cityErrors
                             .filter(error => error.value === firstCity)
                             .map(error => ({
                               originalCity: error.value,
-                              suggestedCity: cityValidation.suggestions?.[0] || error.value,
+                              suggestedCity: cityValidation.suggestions?.[0] || '', // Empty if no suggestions
                               rowNumber: error.row,
                               fieldName: error.field
                             }));

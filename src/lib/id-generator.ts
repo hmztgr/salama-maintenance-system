@@ -54,14 +54,14 @@ export function validateSaudiCity(cityName: string): {
     return { isValid: true, cityCode };
   }
 
-  // Provide suggestions for similar city names
+  // Provide suggestions for similar city names (but don't default to the same 3 cities)
   const suggestions = Object.keys(SAUDI_CITIES).filter(city =>
     city.includes(cityName) || cityName.includes(city)
   );
 
   return {
     isValid: false,
-    suggestions: suggestions.length > 0 ? suggestions : ['الرياض', 'جدة', 'الدمام']
+    suggestions: suggestions // Return actual suggestions or empty array, not default cities
   };
 }
 

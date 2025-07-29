@@ -32,10 +32,20 @@ export function CityManagementModal({
   const saudiCities = getSaudiCities();
 
   useEffect(() => {
-    if (isOpen && suggestions.length > 0) {
-      setSelectedCity(suggestions[0]);
+    if (isOpen) {
+      // Pre-fill the new city name with the unrecognized city
+      setNewCityName(unrecognizedCity);
+      
+      // If there are suggestions, select the first one
+      if (suggestions.length > 0) {
+        setSelectedCity(suggestions[0]);
+      } else {
+        // If no suggestions, default to "add new city" option
+        setSelectedOption('new');
+        setSelectedCity('');
+      }
     }
-  }, [isOpen, suggestions]);
+  }, [isOpen, suggestions, unrecognizedCity]);
 
   const handleResolve = () => {
     setError('');
@@ -113,20 +123,26 @@ export function CityManagementModal({
               {selectedOption === 'existing' && (
                 <div className="mr-6">
                   <Label htmlFor="citySelect">اختر المدينة:</Label>
-                  <select
-                    id="citySelect"
-                    value={selectedCity}
-                    onChange={(e) => setSelectedCity(e.target.value)}
-                    className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md"
-                    dir="rtl"
-                  >
-                    <option value="">اختر مدينة</option>
-                    {suggestions.map(city => (
-                      <option key={city} value={city}>
-                        {city}
-                      </option>
-                    ))}
-                  </select>
+                  {suggestions.length > 0 ? (
+                    <select
+                      id="citySelect"
+                      value={selectedCity}
+                      onChange={(e) => setSelectedCity(e.target.value)}
+                      className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md"
+                      dir="rtl"
+                    >
+                      <option value="">اختر مدينة</option>
+                      {suggestions.map(city => (
+                        <option key={city} value={city}>
+                          {city}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="text-gray-500 text-sm mt-1">
+                      لا توجد مدن مشابهة. يرجى إضافة مدينة جديدة.
+                    </div>
+                  )}
                 </div>
               )}
             </div>

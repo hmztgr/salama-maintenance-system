@@ -288,7 +288,7 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
       }
     },
     branches: {
-      required: ['city', 'location', 'branchName'],
+      required: ['companyId', 'branchName', 'address', 'city'],
       validations: {
         companyId: { pattern: /^\d{4}$/ },
         companyName: { maxLength: 100 },

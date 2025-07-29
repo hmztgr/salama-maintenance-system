@@ -237,8 +237,8 @@ export function VisitImportReview({ file, onClose, onImportComplete }: VisitImpo
           field: fieldName,
           value: normalized.originalValue,
           error: 'معرف الفرع غير موجود في النظام',
-          suggestion: 'سيتم إنشاء الفرع تلقائياً عند الاستيراد',
-          severity: 'warning'
+          suggestion: 'تأكد من إضافة الفرع أولاً في إدارة العملاء',
+          severity: 'error'
         });
       }
     }

@@ -377,76 +377,74 @@ export function VisitLogsViewer() {
       </div>
 
       {/* Logs List */}
-      <div className="space-y-4">
+      <div className="space-y-2">
         {filteredLogs.map((log) => (
           <Card key={log.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-3">
-                  <Badge variant={getActionBadgeVariant(log.action)}>
+            <CardContent className="p-3">
+              <div className="flex justify-between items-start mb-2">
+                <div className="flex items-center gap-2">
+                  <Badge variant={getActionBadgeVariant(log.action)} className="text-xs">
                     {getActionLabel(log.action)}
                   </Badge>
-                  <span className="font-mono text-sm text-gray-600">{log.visitId}</span>
+                  <span className="font-mono text-xs text-gray-600">{log.visitId}</span>
                 </div>
-                <div className="text-sm text-gray-500">
+                <div className="text-xs text-gray-500">
                   {formatDate(log.completedAt || log.cancelledAt || log.originalDate || '')}
                   {log.completionTime && ` - ${formatTime(log.completionTime)}`}
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
                 <div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                    <Building className="h-4 w-4" />
+                  <div className="flex items-center gap-1 text-xs text-gray-600 mb-1">
+                    <Building className="h-3 w-3" />
                     <span>الفرع:</span>
                   </div>
-                  <p className="font-medium">{log.branchName || 'غير محدد'}</p>
+                  <p className="text-sm font-medium">{log.branchName || 'غير محدد'}</p>
                 </div>
                 <div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                    <Building className="h-4 w-4" />
+                  <div className="flex items-center gap-1 text-xs text-gray-600 mb-1">
+                    <Building className="h-3 w-3" />
                     <span>الشركة:</span>
                   </div>
-                  <p className="font-medium">{log.companyName || 'غير محددة'}</p>
+                  <p className="text-sm font-medium">{log.companyName || 'غير محددة'}</p>
+                </div>
+                <div>
+                  <div className="flex items-center gap-1 text-xs text-gray-600 mb-1">
+                    <User className="h-3 w-3" />
+                    <span>بواسطة:</span>
+                  </div>
+                  <p className="text-sm font-medium">{log.completedBy || log.cancelledBy || 'غير محدد'}</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                <User className="h-4 w-4" />
-                <span>بواسطة:</span>
-                <span className="font-medium">{log.completedBy || log.cancelledBy || 'غير محدد'}</span>
+              <div className="flex flex-wrap gap-2 text-xs text-gray-600 mb-2">
+                {log.duration && (
+                  <span>المدة: {log.duration}</span>
+                )}
+                {log.overallStatus && (
+                  <span>الحالة: {log.overallStatus === 'passed' ? 'نجح' : log.overallStatus === 'failed' ? 'فشل' : 'جزئي'}</span>
+                )}
               </div>
-
-              {log.duration && (
-                <div className="text-sm text-gray-600 mb-2">
-                  المدة: {log.duration}
-                </div>
-              )}
-
-              {log.overallStatus && (
-                <div className="text-sm text-gray-600 mb-2">
-                  الحالة العامة: {log.overallStatus === 'passed' ? 'نجح' : log.overallStatus === 'failed' ? 'فشل' : 'جزئي'}
-                </div>
-              )}
 
               {log.notes && (
                 <div className="mb-2">
-                  <div className="text-sm font-medium text-gray-700 mb-1">الملاحظات:</div>
-                  <p className="text-sm text-gray-600">{log.notes}</p>
+                  <div className="text-xs font-medium text-gray-700 mb-1">الملاحظات:</div>
+                  <p className="text-xs text-gray-600">{log.notes}</p>
                 </div>
               )}
 
               {log.justification && (
                 <div className="mb-2">
-                  <div className="text-sm font-medium text-gray-700 mb-1">سبب الإلغاء:</div>
-                  <p className="text-sm text-gray-600">{log.justification}</p>
+                  <div className="text-xs font-medium text-gray-700 mb-1">سبب الإلغاء:</div>
+                  <p className="text-xs text-gray-600">{log.justification}</p>
                 </div>
               )}
 
               {log.systemIssues && log.systemIssues.length > 0 && (
                 <div className="mb-2">
-                  <div className="text-sm font-medium text-gray-700 mb-1">مشاكل النظام:</div>
-                  <ul className="text-sm text-gray-600 list-disc list-inside">
+                  <div className="text-xs font-medium text-gray-700 mb-1">مشاكل النظام:</div>
+                  <ul className="text-xs text-gray-600 list-disc list-inside">
                     {log.systemIssues.map((issue, index) => (
                       <li key={index}>{issue}</li>
                     ))}
@@ -456,8 +454,8 @@ export function VisitLogsViewer() {
 
               {log.recommendations && log.recommendations.length > 0 && (
                 <div className="mb-2">
-                  <div className="text-sm font-medium text-gray-700 mb-1">التوصيات:</div>
-                  <ul className="text-sm text-gray-600 list-disc list-inside">
+                  <div className="text-xs font-medium text-gray-700 mb-1">التوصيات:</div>
+                  <ul className="text-xs text-gray-600 list-disc list-inside">
                     {log.recommendations.map((rec, index) => (
                       <li key={index}>{rec}</li>
                     ))}
@@ -467,13 +465,13 @@ export function VisitLogsViewer() {
 
               {log.internalNotes && (
                 <div className="mb-2">
-                  <div className="text-sm font-medium text-gray-700 mb-1">ملاحظات داخلية:</div>
-                  <p className="text-sm text-gray-600">{log.internalNotes}</p>
+                  <div className="text-xs font-medium text-gray-700 mb-1">ملاحظات داخلية:</div>
+                  <p className="text-xs text-gray-600">{log.internalNotes}</p>
                 </div>
               )}
 
               {log.suggestedDate && (
-                <div className="text-sm text-gray-600">
+                <div className="text-xs text-gray-600">
                   التاريخ المقترح: {formatDate(log.suggestedDate)}
                 </div>
               )}

@@ -6,7 +6,7 @@ import { PlanningGrid } from './PlanningGrid';
 import { WeeklyPlanner } from './WeeklyPlanner';
 import { VisitImportTemplate } from './VisitImportTemplate';
 import { VisitExportTemplate } from './VisitExportTemplate';
-import { VisitLogsViewer } from './VisitLogsViewer';
+import VisitLogsViewer from './VisitLogsViewer';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContextFirebase';
 import { useVisitsFirebase } from '@/hooks/useVisitsFirebase';

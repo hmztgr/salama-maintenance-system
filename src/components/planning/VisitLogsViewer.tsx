@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, Download, Calendar, User, Building } from 'lucide-react';
+import { Search, Filter, Download, Calendar, User, Building, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Visit } from '@/types/customer';
 
 interface VisitLog {
@@ -17,201 +17,141 @@ interface VisitLog {
   action: 'completed' | 'cancelled' | 'scheduled' | 'in_progress' | 'rescheduled';
   completedAt?: string;
   cancelledAt?: string;
-  completedBy?: string;
-  cancelledBy?: string;
-  completionDate?: string;
-  completionTime?: string;
-  duration?: string;
-  notes?: string;
-  systemIssues?: string[];
-  recommendations?: string[];
-  internalNotes?: string;
-  justification?: string;
-  suggestedDate?: string;
   originalDate?: string;
-  branchId?: string;
-  companyId?: string;
   branchName?: string;
   companyName?: string;
+  contractId?: string;
+  status?: string;
   overallStatus?: string;
 }
 
-export function VisitLogsViewer() {
-  const [logs, setLogs] = useState<VisitLog[]>([]);
+export default function VisitLogsViewer() {
+  const [visits, setVisits] = useState<Visit[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [actionFilter, setActionFilter] = useState<'all' | 'completed' | 'cancelled' | 'scheduled' | 'in_progress' | 'rescheduled'>('all');
-  const [dateFilter, setDateFilter] = useState('');
-  const [userFilter, setUserFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(20);
 
-  // Load visit logs from visits collection
   useEffect(() => {
-    const loadLogs = async () => {
+    const fetchVisits = async () => {
       try {
         setLoading(true);
-        setError(null);
-
-        // Query visits collection instead of visitLogs
-        const visitsQuery = query(
-          collection(db, 'visits'),
-          orderBy('createdAt', 'desc')
-        );
-
-        const querySnapshot = await getDocs(visitsQuery);
-        const logsData: VisitLog[] = [];
-
-        for (const docSnapshot of querySnapshot.docs) {
-          const visitData = docSnapshot.data() as Visit;
-          
-          // Convert visit data to log format
-          const log: VisitLog = {
-            id: docSnapshot.id,
-            visitId: visitData.visitId,
-            action: visitData.status,
-            completedAt: visitData.completedDate,
-            cancelledAt: visitData.status === 'cancelled' ? visitData.updatedAt : undefined,
-            completedBy: visitData.createdBy,
-            cancelledBy: visitData.status === 'cancelled' ? visitData.updatedBy : undefined,
-            completionDate: visitData.completedDate,
-            completionTime: visitData.completedTime,
-            duration: visitData.duration ? `${visitData.duration} دقيقة` : undefined,
-            notes: visitData.notes,
-            systemIssues: visitData.results?.issues,
-            recommendations: visitData.results?.recommendations,
-            internalNotes: visitData.notes,
-            justification: visitData.status === 'cancelled' ? visitData.notes : undefined,
-            suggestedDate: visitData.results?.nextVisitDate,
-            originalDate: visitData.scheduledDate,
-            branchId: visitData.branchId,
-            companyId: visitData.companyId,
-            overallStatus: visitData.results?.overallStatus
-          };
-
-          // Load branch and company names
-          if (visitData.branchId) {
-            try {
-              const branchDocRef = doc(db, 'branches', visitData.branchId);
-              const branchDoc = await getDoc(branchDocRef);
-              if (branchDoc.exists()) {
-                const branchData = branchDoc.data() as { branchName?: string };
-                log.branchName = branchData?.branchName;
-              }
-            } catch (error) {
-              console.error('Error loading branch name:', error);
-            }
-          }
-
-          if (visitData.companyId) {
-            try {
-              const companyDocRef = doc(db, 'companies', visitData.companyId);
-              const companyDoc = await getDoc(companyDocRef);
-              if (companyDoc.exists()) {
-                const companyData = companyDoc.data() as { companyName?: string };
-                log.companyName = companyData?.companyName;
-              }
-            } catch (error) {
-              console.error('Error loading company name:', error);
-            }
-          }
-
-          logsData.push(log);
-        }
-
-        setLogs(logsData);
-        console.log('Loaded visit logs:', logsData.length);
-      } catch (err) {
-        console.error('Error loading visit logs:', err);
-        setError('فشل في تحميل سجلات الزيارات');
+        const visitsRef = collection(db, 'visits');
+        const q = query(visitsRef, orderBy('createdAt', 'desc'));
+        const snapshot = await getDocs(q);
+        
+        const visitsData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Visit[];
+        
+        setVisits(visitsData);
+      } catch (error) {
+        console.error('Error fetching visits:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    loadLogs();
+    fetchVisits();
   }, []);
 
-  // Filter logs based on search criteria
-  const filteredLogs = useMemo(() => {
-    return logs.filter(log => {
-      // Action filter
-      if (actionFilter !== 'all' && log.action !== actionFilter) {
-        return false;
-      }
-
-      // Search term filter
-      if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
-        const matchesSearch = 
-          (log.visitId?.toLowerCase().includes(searchLower) || false) ||
-          (log.branchName?.toLowerCase().includes(searchLower) || false) ||
-          (log.companyName?.toLowerCase().includes(searchLower) || false) ||
-          (log.completedBy?.toLowerCase().includes(searchLower) || false) ||
-          (log.cancelledBy?.toLowerCase().includes(searchLower) || false) ||
-          (log.notes?.toLowerCase().includes(searchLower) || false) ||
-          (log.justification?.toLowerCase().includes(searchLower) || false);
-        
-        if (!matchesSearch) return false;
-      }
-
-      // Date filter
-      if (dateFilter) {
-        const logDate = log.completedAt || log.cancelledAt || log.originalDate;
-        if (logDate) {
-          const logDateStr = new Date(logDate).toISOString().split('T')[0];
-          if (logDateStr !== dateFilter) return false;
-        }
-      }
-
-      // User filter
-      if (userFilter) {
-        const user = log.completedBy || log.cancelledBy;
-        if (!user?.toLowerCase().includes(userFilter.toLowerCase())) {
-          return false;
-        }
-      }
-
-      return true;
+  // Convert visits to logs format
+  const visitLogs = useMemo(() => {
+    return visits.map(visit => {
+      const log: VisitLog = {
+        id: visit.id,
+        visitId: visit.visitId || visit.id,
+        action: visit.status,
+        completedAt: visit.completedAt,
+        cancelledAt: visit.cancelledAt,
+        originalDate: visit.scheduledDate,
+        branchName: visit.branchName,
+        companyName: visit.companyName,
+        contractId: visit.contractId,
+        status: visit.status,
+        overallStatus: visit.results?.overallStatus
+      };
+      return log;
     });
-  }, [logs, searchTerm, actionFilter, dateFilter, userFilter]);
+  }, [visits]);
 
-  // Export logs to CSV
+  // Filter logs based on search and status
+  const filteredLogs = useMemo(() => {
+    let filtered = visitLogs;
+
+    if (searchTerm) {
+      filtered = filtered.filter(log => 
+        log.visitId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        log.branchName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        log.companyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        log.contractId?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(log => log.action === statusFilter);
+    }
+
+    return filtered;
+  }, [visitLogs, searchTerm, statusFilter]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentLogs = filteredLogs.slice(startIndex, endIndex);
+
+  const getActionLabel = (action: string) => {
+    const labels: Record<string, string> = {
+      'completed': 'مكتملة',
+      'cancelled': 'ملغية',
+      'scheduled': 'مجدولة',
+      'in_progress': 'قيد التنفيذ',
+      'rescheduled': 'إعادة جدولة'
+    };
+    return labels[action] || action;
+  };
+
+  const getActionBadgeVariant = (action: string) => {
+    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+      'completed': 'default',
+      'cancelled': 'destructive',
+      'scheduled': 'secondary',
+      'in_progress': 'outline',
+      'rescheduled': 'outline'
+    };
+    return variants[action] || 'default';
+  };
+
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('ar-SA', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
   const exportToCSV = () => {
-    const headers = [
-      'Visit ID',
-      'Action',
-      'Date',
-      'Time',
-      'User',
-      'Branch',
-      'Company',
-      'Duration',
-      'Notes',
-      'System Issues',
-      'Recommendations',
-      'Internal Notes',
-      'Justification',
-      'Suggested Date',
-      'Overall Status'
-    ];
-
+    const headers = ['Visit ID', 'Action', 'Date', 'Branch', 'Company', 'Contract', 'Status'];
     const csvContent = [
       headers.join(','),
       ...filteredLogs.map(log => [
-        log.visitId || '',
-        log.action || '',
-        log.completionDate || log.cancelledAt?.split('T')[0] || log.originalDate || '',
-        log.completionTime || '',
-        log.completedBy || log.cancelledBy || '',
+        log.visitId,
+        getActionLabel(log.action),
+        formatDate(log.completedAt || log.cancelledAt || log.originalDate),
         log.branchName || '',
         log.companyName || '',
-        log.duration || '',
-        log.notes || '',
-        log.systemIssues?.join('; ') || '',
-        log.recommendations?.join('; ') || '',
-        log.internalNotes || '',
-        log.justification || '',
-        log.suggestedDate || '',
+        log.contractId || '',
         log.overallStatus || ''
       ].join(','))
     ].join('\n');
@@ -220,271 +160,157 @@ export function VisitLogsViewer() {
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `visit-logs-${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `visit_logs_${new Date().toISOString().split('T')[0]}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-GB');
-  };
-
-  const formatTime = (timeString: string) => {
-    return timeString;
-  };
-
-  const getActionLabel = (action: string) => {
-    switch (action) {
-      case 'completed': return '✅ مكتملة';
-      case 'cancelled': return '❌ ملغية';
-      case 'scheduled': return '📅 مجدولة';
-      case 'in_progress': return '🔄 قيد التنفيذ';
-      case 'rescheduled': return '🔄 معاد جدولتها';
-      default: return action;
-    }
-  };
-
-  const getActionBadgeVariant = (action: string) => {
-    switch (action) {
-      case 'completed': return 'default';
-      case 'cancelled': return 'destructive';
-      case 'scheduled': return 'secondary';
-      case 'in_progress': return 'outline';
-      case 'rescheduled': return 'outline';
-      default: return 'secondary';
-    }
-  };
-
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-lg">جاري تحميل سجلات الزيارات...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-center text-red-600 p-4">
-        {error}
-      </div>
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            سجلات الزيارات
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <span className="ml-2">جاري تحميل السجلات...</span>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">سجلات الزيارات</h2>
-        <Button onClick={exportToCSV} variant="outline">
-          <Download className="h-4 w-4 mr-2" />
-          تصدير CSV
-        </Button>
-      </div>
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Calendar className="h-5 w-5" />
+          سجلات الزيارات ({filteredLogs.length})
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder="البحث في السجلات..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full sm:w-48">
+              <SelectValue placeholder="تصفية حسب الحالة" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">جميع الحالات</SelectItem>
+              <SelectItem value="completed">مكتملة</SelectItem>
+              <SelectItem value="cancelled">ملغية</SelectItem>
+              <SelectItem value="scheduled">مجدولة</SelectItem>
+              <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
+              <SelectItem value="rescheduled">إعادة جدولة</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button onClick={exportToCSV} variant="outline" className="flex items-center gap-2">
+            <Download className="h-4 w-4" />
+            تصدير CSV
+          </Button>
+        </div>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            فلاتر البحث
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Search */}
-            <div>
-              <label className="text-sm font-medium">بحث</label>
-              <div className="relative mt-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="بحث في المعرف، الفرع، الشركة..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+        {/* Logs List */}
+        <div className="space-y-1">
+          {currentLogs.map((log) => (
+            <Card key={log.id} className="hover:shadow-sm transition-shadow">
+              <CardContent className="p-2">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <Badge variant={getActionBadgeVariant(log.action)} className="text-xs whitespace-nowrap">
+                      {getActionLabel(log.action)}
+                    </Badge>
+                    <span className="font-mono text-xs text-gray-600 truncate">{log.visitId}</span>
+                    <span className="text-xs text-gray-500 truncate">|</span>
+                    <span className="text-xs text-gray-700 truncate">{log.branchName}</span>
+                    <span className="text-xs text-gray-500 truncate">|</span>
+                    <span className="text-xs text-gray-700 truncate">{log.companyName}</span>
+                  </div>
+                  <div className="text-xs text-gray-500 whitespace-nowrap ml-2">
+                    {formatDate(log.completedAt || log.cancelledAt || log.originalDate)}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between pt-4 border-t">
+            <div className="text-sm text-gray-600">
+              عرض {startIndex + 1}-{Math.min(endIndex, filteredLogs.length)} من {filteredLogs.length} سجل
             </div>
-
-            {/* Action Filter */}
-            <div>
-              <label className="text-sm font-medium">نوع الإجراء</label>
-              <Select value={actionFilter} onValueChange={(value: any) => setActionFilter(value)}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">جميع الإجراءات</SelectItem>
-                  <SelectItem value="completed">مكتملة</SelectItem>
-                  <SelectItem value="cancelled">ملغية</SelectItem>
-                  <SelectItem value="scheduled">مجدولة</SelectItem>
-                  <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
-                  <SelectItem value="rescheduled">معاد جدولتها</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Date Filter */}
-            <div>
-              <label className="text-sm font-medium">التاريخ</label>
-              <div className="relative mt-1">
-                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  type="date"
-                  value={dateFilter}
-                  onChange={(e) => setDateFilter(e.target.value)}
-                  className="pl-10"
-                />
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                السابق
+              </Button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={currentPage === pageNum ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(pageNum)}
+                      className="w-8 h-8 p-0"
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
               </div>
-            </div>
-
-            {/* User Filter */}
-            <div>
-              <label className="text-sm font-medium">المستخدم</label>
-              <div className="relative mt-1">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="اسم المستخدم..."
-                  value={userFilter}
-                  onChange={(e) => setUserFilter(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+              >
+                التالي
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        )}
 
-      {/* Results Count */}
-      <div className="flex justify-between items-center">
-        <p className="text-sm text-gray-600">
-          تم العثور على {filteredLogs.length} سجل من أصل {logs.length}
-        </p>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            setSearchTerm('');
-            setActionFilter('all');
-            setDateFilter('');
-            setUserFilter('');
-          }}
-        >
-          مسح الفلاتر
-        </Button>
-      </div>
-
-      {/* Logs List */}
-      <div className="space-y-2">
-        {filteredLogs.map((log) => (
-          <Card key={log.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-3">
-              <div className="flex justify-between items-start mb-2">
-                <div className="flex items-center gap-2">
-                  <Badge variant={getActionBadgeVariant(log.action)} className="text-xs">
-                    {getActionLabel(log.action)}
-                  </Badge>
-                  <span className="font-mono text-xs text-gray-600">{log.visitId}</span>
-                </div>
-                <div className="text-xs text-gray-500">
-                  {formatDate(log.completedAt || log.cancelledAt || log.originalDate || '')}
-                  {log.completionTime && ` - ${formatTime(log.completionTime)}`}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
-                <div>
-                  <div className="flex items-center gap-1 text-xs text-gray-600 mb-1">
-                    <Building className="h-3 w-3" />
-                    <span>الفرع:</span>
-                  </div>
-                  <p className="text-sm font-medium">{log.branchName || 'غير محدد'}</p>
-                </div>
-                <div>
-                  <div className="flex items-center gap-1 text-xs text-gray-600 mb-1">
-                    <Building className="h-3 w-3" />
-                    <span>الشركة:</span>
-                  </div>
-                  <p className="text-sm font-medium">{log.companyName || 'غير محددة'}</p>
-                </div>
-                <div>
-                  <div className="flex items-center gap-1 text-xs text-gray-600 mb-1">
-                    <User className="h-3 w-3" />
-                    <span>بواسطة:</span>
-                  </div>
-                  <p className="text-sm font-medium">{log.completedBy || log.cancelledBy || 'غير محدد'}</p>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-2 text-xs text-gray-600 mb-2">
-                {log.duration && (
-                  <span>المدة: {log.duration}</span>
-                )}
-                {log.overallStatus && (
-                  <span>الحالة: {log.overallStatus === 'passed' ? 'نجح' : log.overallStatus === 'failed' ? 'فشل' : 'جزئي'}</span>
-                )}
-              </div>
-
-              {log.notes && (
-                <div className="mb-2">
-                  <div className="text-xs font-medium text-gray-700 mb-1">الملاحظات:</div>
-                  <p className="text-xs text-gray-600">{log.notes}</p>
-                </div>
-              )}
-
-              {log.justification && (
-                <div className="mb-2">
-                  <div className="text-xs font-medium text-gray-700 mb-1">سبب الإلغاء:</div>
-                  <p className="text-xs text-gray-600">{log.justification}</p>
-                </div>
-              )}
-
-              {log.systemIssues && log.systemIssues.length > 0 && (
-                <div className="mb-2">
-                  <div className="text-xs font-medium text-gray-700 mb-1">مشاكل النظام:</div>
-                  <ul className="text-xs text-gray-600 list-disc list-inside">
-                    {log.systemIssues.map((issue, index) => (
-                      <li key={index}>{issue}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {log.recommendations && log.recommendations.length > 0 && (
-                <div className="mb-2">
-                  <div className="text-xs font-medium text-gray-700 mb-1">التوصيات:</div>
-                  <ul className="text-xs text-gray-600 list-disc list-inside">
-                    {log.recommendations.map((rec, index) => (
-                      <li key={index}>{rec}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {log.internalNotes && (
-                <div className="mb-2">
-                  <div className="text-xs font-medium text-gray-700 mb-1">ملاحظات داخلية:</div>
-                  <p className="text-xs text-gray-600">{log.internalNotes}</p>
-                </div>
-              )}
-
-              {log.suggestedDate && (
-                <div className="text-xs text-gray-600">
-                  التاريخ المقترح: {formatDate(log.suggestedDate)}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {filteredLogs.length === 0 && (
-        <div className="text-center text-gray-500 py-8">
-          لا توجد سجلات تطابق معايير البحث
-        </div>
-      )}
-    </div>
+        {currentLogs.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            لا توجد سجلات مطابقة للبحث
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 } 

@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Search, Filter, Download, Calendar, User, Building, ChevronLeft, ChevronRight, MapPin, Clock } from 'lucide-react';
 import { Visit } from '@/types/customer';
 import { VisitForm } from './VisitForm';
+import { VisitDetailsView } from './VisitDetailsView';
 
 interface VisitLog {
   id: string;
@@ -215,7 +216,12 @@ export default function VisitLogsViewer() {
 
   const handleVisitClick = (visit: Visit) => {
     setSelectedVisit(visit);
-    setShowVisitForm(true);
+    // Show read-only view for completed visits, edit form for others
+    if (visit.status === 'completed') {
+      setShowVisitForm(false);
+    } else {
+      setShowVisitForm(true);
+    }
   };
 
   const handleVisitFormClose = () => {
@@ -403,11 +409,19 @@ export default function VisitLogsViewer() {
     </Card>
 
     {/* Visit Details Modal */}
-    {showVisitForm && (
+    {showVisitForm && selectedVisit && (
       <VisitForm
-        visit={selectedVisit || undefined}
+        visit={selectedVisit}
         onSuccess={handleVisitFormClose}
         onCancel={handleVisitFormClose}
+      />
+    )}
+
+    {/* Visit Details View for completed visits */}
+    {!showVisitForm && selectedVisit && selectedVisit.status === 'completed' && (
+      <VisitDetailsView
+        visit={selectedVisit}
+        onClose={handleVisitFormClose}
       />
     )}
   </>

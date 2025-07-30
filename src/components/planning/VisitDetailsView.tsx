@@ -56,7 +56,7 @@ export function VisitDetailsView({ visit, onClose }: VisitDetailsViewProps) {
     if (!dateStr) return '';
     try {
       const date = new Date(dateStr);
-      return date.toLocaleDateString('ar-SA', {
+      return date.toLocaleDateString('en-GB', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',

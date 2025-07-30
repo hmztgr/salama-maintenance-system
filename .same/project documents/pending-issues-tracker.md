@@ -107,6 +107,21 @@
 
 ---
 
+### **13. Visit Details View Layout - NEEDS REDESIGN**
+**Status**: 🟡 **PENDING REDESIGN**
+**Reported**: 2025-01-24
+**Description**: The new read-only visit details view doesn't match the previous design/layout that the user was expecting. User wants to keep current implementation for now but fix the layout later.
+
+**Files Modified**:
+- `src/components/planning/VisitDetailsView.tsx` - Created new read-only view component
+- `src/components/planning/VisitLogsViewer.tsx` - Added logic to show read-only view for completed visits
+
+**User Feedback**: "this is not how the completed visit view mode looked like it had before but lets keep it as it is for now add it to the @pending-issues-tracker.md to be fixed later"
+
+**Action Required**: Redesign the visit details view to match the previous layout/design that the user was expecting.
+
+---
+
 ## ⚠️ **MEDIUM PRIORITY ISSUES**
 
 ### **7. Visit Logs Date Format - NOT CONFIRMED FIXED**
@@ -250,10 +265,10 @@ This created a mismatch where the same date could be in different weeks dependin
 
 ### **By Status**:
 - 🔴 **Critical Issues**: 4
-- 🟡 **Medium Priority**: 3
+- 🟡 **Medium Priority**: 4
 - 🔍 **Needs Investigation**: 1
 - 🟢 **Resolved**: 4
-- **Total Pending**: 8
+- **Total Pending**: 9
 
 ### **By Category**:
 - **Branch Selection**: 1 issue
@@ -263,7 +278,7 @@ This created a mismatch where the same date could be in different weeks dependin
 - **Data Display**: 3 issues
 - **File Upload**: 1 issue
 - **Date Format**: 1 issue
-- **UI/UX**: 1 issue
+- **UI/UX**: 2 issues
 - **Data Export**: 1 issue
 
 ---

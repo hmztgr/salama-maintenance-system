@@ -67,8 +67,8 @@ export default function VisitLogsViewer() {
         completedAt: visit.completedDate,
         cancelledAt: visit.status === 'cancelled' ? visit.updatedAt : undefined,
         originalDate: visit.scheduledDate,
-        branchName: visit.branchName,
-        companyName: visit.companyName,
+        branchName: visit.branchId,
+        companyName: visit.companyId,
         contractId: visit.contractId,
         status: visit.status,
         overallStatus: visit.results?.overallStatus

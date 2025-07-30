@@ -124,17 +124,19 @@
 
 ## ⚠️ **MEDIUM PRIORITY ISSUES**
 
-### **7. Visit Logs Date Format - NOT CONFIRMED FIXED**
-**Status**: 🟡 **PENDING USER CONFIRMATION**
+### **7. Visit Logs Date Format - PARTIALLY FIXED, NEEDS IMPROVEMENT**
+**Status**: 🟡 **PENDING IMPROVEMENT**
 **Reported**: 2025-01-24
-**Description**: Visit logs showing dates in Hijri format instead of Georgian format.
+**Description**: Visit logs showing dates in Hijri format instead of Georgian format. After initial fix, dates are partially working but not displaying correctly, and time is showing as 00:00.
 
 **Files Modified**:
 - `src/components/planning/VisitLogsViewer.tsx` - Changed locale from 'ar-SA' to 'en-GB'
 
-**User Feedback**: "i noticed that in planner tab > visits log tab dates are in hijry it should be georgian"
+**User Feedback**: 
+- Initial: "i noticed that in planner tab > visits log tab dates are in hijry it should be georgian"
+- After fix: "it seem date got partially fixed but its not shown as it should be and for some reason time is now showing 00:00"
 
-**Action Required**: User needs to check visit logs and confirm dates now display in Georgian format.
+**Action Required**: Improve date formatting to display correctly and fix time display issue (currently showing 00:00).
 
 ---
 
@@ -298,7 +300,7 @@ This created a mismatch where the same date could be in different weeks dependin
 - [x] **Weekly Planner Dates**: Check if weekly planner shows correct dates (Sunday should be Sunday, not Friday) - **✅ CONFIRMED FIXED**
 
 #### **Medium Priority**:
-- [ ] **Visit Logs Dates**: Check if visit logs show Georgian dates instead of Hijri
+- [ ] **Visit Logs Dates**: Improve date formatting and fix time display (currently showing 00:00)
 - [ ] **File Upload**: Test file upload in visit completion form
 
 #### **Investigation**:

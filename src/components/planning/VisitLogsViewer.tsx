@@ -8,8 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, Download, Calendar, User, Building, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Filter, Download, Calendar, User, Building, ChevronLeft, ChevronRight, MapPin, Clock } from 'lucide-react';
 import { Visit } from '@/types/customer';
+import { VisitForm } from './VisitForm';
 
 interface VisitLog {
   id: string;
@@ -34,6 +35,8 @@ export default function VisitLogsViewer() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(20);
+  const [selectedVisit, setSelectedVisit] = useState<Visit | null>(null);
+  const [showVisitForm, setShowVisitForm] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -210,6 +213,16 @@ export default function VisitLogsViewer() {
     document.body.removeChild(link);
   };
 
+  const handleVisitClick = (visit: Visit) => {
+    setSelectedVisit(visit);
+    setShowVisitForm(true);
+  };
+
+  const handleVisitFormClose = () => {
+    setShowVisitForm(false);
+    setSelectedVisit(null);
+  };
+
   if (loading) {
     return (
       <Card className="w-full">
@@ -230,7 +243,8 @@ export default function VisitLogsViewer() {
   }
 
   return (
-    <Card className="w-full">
+    <>
+      <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calendar className="h-5 w-5" />
@@ -269,28 +283,60 @@ export default function VisitLogsViewer() {
         </div>
 
         {/* Logs List */}
-        <div className="space-y-1">
-          {currentLogs.map((log) => (
-            <Card key={log.id} className="hover:shadow-sm transition-shadow">
-              <CardContent className="p-2">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <Badge variant={getActionBadgeVariant(log.action)} className="text-xs whitespace-nowrap">
+        <div className="space-y-2">
+          {currentLogs.map((log) => {
+            const visit = visits.find(v => v.id === log.id);
+            return (
+              <Card 
+                key={log.id} 
+                className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-blue-500"
+                onClick={() => visit && handleVisitClick(visit)}
+              >
+                <CardContent className="p-3">
+                  {/* Line 1: Date/Time and Status */}
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-3 w-3 text-gray-500" />
+                      <span className="text-xs text-gray-600">
+                        {formatDate(log.completedAt || log.cancelledAt || log.originalDate)}
+                      </span>
+                    </div>
+                    <Badge variant={getActionBadgeVariant(log.action)} className="text-xs">
                       {getActionLabel(log.action)}
                     </Badge>
-                    <span className="font-mono text-xs text-gray-600 truncate">{log.visitId}</span>
-                    <span className="text-xs text-gray-500 truncate">|</span>
-                    <span className="text-xs text-gray-700 truncate">{log.branchName}</span>
-                    <span className="text-xs text-gray-500 truncate">|</span>
-                    <span className="text-xs text-gray-700 truncate">{log.companyName}</span>
                   </div>
-                  <div className="text-xs text-gray-500 whitespace-nowrap ml-2">
-                    {formatDate(log.completedAt || log.cancelledAt || log.originalDate)}
+
+                  {/* Line 2: Visit ID and Company */}
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-mono text-sm font-medium text-gray-800">{log.visitId}</span>
+                    <div className="flex items-center gap-1">
+                      <Building className="h-3 w-3 text-gray-500" />
+                      <span className="text-xs text-gray-700">{log.companyName}</span>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+
+                  {/* Line 3: Branch and Contract */}
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center gap-1">
+                      <MapPin className="h-3 w-3 text-gray-500" />
+                      <span className="text-xs text-gray-700">{log.branchName}</span>
+                    </div>
+                    <span className="text-xs text-gray-600">العقد: {log.contractId}</span>
+                  </div>
+
+                  {/* Line 4: Additional Info */}
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-500">
+                      {visit?.assignedTechnician ? `بواسطة: ${visit.assignedTechnician}` : 'بواسطة: system-import'}
+                    </span>
+                    {log.overallStatus && (
+                      <span className="text-xs text-gray-600">النتيجة: {log.overallStatus}</span>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         {/* Pagination */}
@@ -355,5 +401,15 @@ export default function VisitLogsViewer() {
         )}
       </CardContent>
     </Card>
+
+    {/* Visit Details Modal */}
+    {showVisitForm && (
+      <VisitForm
+        visit={selectedVisit || undefined}
+        onSuccess={handleVisitFormClose}
+        onCancel={handleVisitFormClose}
+      />
+    )}
+  </>
   );
 } 

@@ -176,7 +176,7 @@ export default function VisitLogsViewer() {
     if (!dateStr) return '';
     try {
       const date = new Date(dateStr);
-      return date.toLocaleDateString('ar-SA', {
+      return date.toLocaleDateString('en-GB', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',

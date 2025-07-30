@@ -27,6 +27,8 @@ interface VisitLog {
 
 export default function VisitLogsViewer() {
   const [visits, setVisits] = useState<Visit[]>([]);
+  const [branches, setBranches] = useState<Record<string, string>>({});
+  const [companies, setCompanies] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -34,27 +36,68 @@ export default function VisitLogsViewer() {
   const [itemsPerPage] = useState(20);
 
   useEffect(() => {
-    const fetchVisits = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const visitsRef = collection(db, 'visits');
-        const q = query(visitsRef, orderBy('createdAt', 'desc'));
-        const snapshot = await getDocs(q);
         
-        const visitsData = snapshot.docs.map(doc => ({
+        // Fetch visits
+        const visitsRef = collection(db, 'visits');
+        const visitsQuery = query(visitsRef, orderBy('createdAt', 'desc'));
+        const visitsSnapshot = await getDocs(visitsQuery);
+        
+        const visitsData = visitsSnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         })) as Visit[];
         
         setVisits(visitsData);
+        
+        // Extract unique branch and company IDs
+        const branchIds = [...new Set(visitsData.map(visit => visit.branchId))];
+        const companyIds = [...new Set(visitsData.map(visit => visit.companyId))];
+        
+        // Fetch branches
+        const branchesMap: Record<string, string> = {};
+        for (const branchId of branchIds) {
+          try {
+            const branchDoc = await getDoc(doc(db, 'branches', branchId));
+            if (branchDoc.exists()) {
+              branchesMap[branchId] = branchDoc.data().branchName || 'غير محدد';
+            } else {
+              branchesMap[branchId] = 'غير محدد';
+            }
+          } catch (error) {
+            console.error(`Error fetching branch ${branchId}:`, error);
+            branchesMap[branchId] = 'غير محدد';
+          }
+        }
+        setBranches(branchesMap);
+        
+        // Fetch companies
+        const companiesMap: Record<string, string> = {};
+        for (const companyId of companyIds) {
+          try {
+            const companyDoc = await getDoc(doc(db, 'companies', companyId));
+            if (companyDoc.exists()) {
+              companiesMap[companyId] = companyDoc.data().companyName || 'غير محدد';
+            } else {
+              companiesMap[companyId] = 'غير محدد';
+            }
+          } catch (error) {
+            console.error(`Error fetching company ${companyId}:`, error);
+            companiesMap[companyId] = 'غير محدد';
+          }
+        }
+        setCompanies(companiesMap);
+        
       } catch (error) {
-        console.error('Error fetching visits:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchVisits();
+    fetchData();
   }, []);
 
   // Convert visits to logs format
@@ -67,15 +110,15 @@ export default function VisitLogsViewer() {
         completedAt: visit.completedDate,
         cancelledAt: visit.status === 'cancelled' ? visit.updatedAt : undefined,
         originalDate: visit.scheduledDate,
-        branchName: visit.branchId,
-        companyName: visit.companyId,
+        branchName: branches[visit.branchId] || 'غير محدد',
+        companyName: companies[visit.companyId] || 'غير محدد',
         contractId: visit.contractId,
         status: visit.status,
         overallStatus: visit.results?.overallStatus
       };
       return log;
     });
-  }, [visits]);
+  }, [visits, branches, companies]);
 
   // Filter logs based on search and status
   const filteredLogs = useMemo(() => {

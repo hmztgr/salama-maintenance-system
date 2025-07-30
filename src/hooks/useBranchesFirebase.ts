@@ -192,12 +192,32 @@ export function useBranchesFirebase() {
 
         console.log('🏪 Adding branch to Firebase:', branchData.branchName);
 
-        // Generate branch ID with current state
+        // Fetch latest branches for this company directly from Firestore to ensure fresh data
+        const branchesRef = collection(db, 'branches');
+        const companyBranchesQuery = query(
+          branchesRef,
+          where('companyId', '==', branchData.companyId),
+          where('isArchived', '==', false)
+        );
+        
+        const companyBranchesSnapshot = await getDocs(companyBranchesQuery);
+        const latestCompanyBranches = companyBranchesSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            branchId: data.branchId,
+            city: data.city,
+            location: data.location
+          };
+        });
+
+        console.log(`🔧 Fetched ${latestCompanyBranches.length} existing branches for company ${branchData.companyId}`);
+
+        // Generate branch ID with fresh data from Firestore
         const idResult = generateBranchId(
           branchData.companyId,
           branchData.city,
           branchData.location,
-          branches
+          latestCompanyBranches
         );
 
         if (!idResult.branchId) {

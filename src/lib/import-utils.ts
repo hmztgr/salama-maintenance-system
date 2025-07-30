@@ -378,9 +378,9 @@ export const ENTITY_FIELD_CONFIGS: Record<string, ImportFieldConfig[]> = {
   companies: [
     { fieldName: 'companyName', type: 'text', required: true, maxLength: 100 },
     { fieldName: 'email', type: 'email', required: false },
-    { fieldName: 'phone', type: 'phone', required: true },
-    { fieldName: 'address', type: 'text', required: true, maxLength: 200 },
-    { fieldName: 'city', type: 'text', required: true },
+    { fieldName: 'phone', type: 'phone', required: false },
+    { fieldName: 'address', type: 'text', required: false, maxLength: 200 },
+    { fieldName: 'city', type: 'text', required: false },
     { fieldName: 'contactPerson', type: 'text', required: false, maxLength: 100 },
     { fieldName: 'notes', type: 'text', required: false, maxLength: 500 }
   ],
@@ -414,12 +414,13 @@ export const ENTITY_FIELD_CONFIGS: Record<string, ImportFieldConfig[]> = {
   ],
   branches: [
     { fieldName: 'companyId', type: 'id', required: true, padZeros: 4, normalize: true },
-    { fieldName: 'branchName', type: 'text', required: true, maxLength: 100 },
-    { fieldName: 'address', type: 'text', required: true, maxLength: 200 },
+    { fieldName: 'companyName', type: 'text', required: false, maxLength: 100 },
     { fieldName: 'city', type: 'text', required: true },
+    { fieldName: 'location', type: 'text', required: true, maxLength: 100 },
+    { fieldName: 'branchName', type: 'text', required: true, maxLength: 100 },
     { fieldName: 'contactPerson', type: 'text', required: false, maxLength: 100 },
-    { fieldName: 'phone', type: 'phone', required: false },
-    { fieldName: 'email', type: 'email', required: false },
+    { fieldName: 'contactPhone', type: 'phone', required: false },
+    { fieldName: 'teamMember', type: 'text', required: false, maxLength: 100 },
     { fieldName: 'notes', type: 'text', required: false, maxLength: 500 }
   ]
 };

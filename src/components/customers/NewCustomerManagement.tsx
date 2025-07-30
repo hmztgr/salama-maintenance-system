@@ -905,8 +905,15 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                         if (confirm(`هل أنت متأكد من حذف ${selectedBranches.size} فرع؟`)) {
                           let successCount = 0;
                           for (const branchId of selectedBranches) {
-                            const success = await deleteBranch(branchId);
-                            if (success) successCount++;
+                            // Find the branch by branchId to get the Firebase document id
+                            const branch = branches.find(b => b.branchId === branchId);
+                            if (branch) {
+                              console.log('🏪 Deleting branch from Firebase:', branch.id);
+                              const success = await deleteBranch(branch.id);
+                              if (success) successCount++;
+                            } else {
+                              console.error('❌ Branch not found:', branchId);
+                            }
                           }
                           setSelectedBranches(new Set());
                           setSuccessMessage(`تم حذف ${successCount} فرع بنجاح`);
@@ -983,7 +990,8 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2 space-x-reverse">
                           <button
                             className="text-blue-600 hover:text-blue-900"
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent row click
                               setEditingBranch(branch);
                               setShowBranchForm(true);
                             }}
@@ -992,11 +1000,17 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                           </button>
                           {hasPermission('admin') && (
                             <button
-                              onClick={async () => {
+                              onClick={async (e) => {
+                                e.stopPropagation(); // Prevent row click
                                 if (confirm(`هل أنت متأكد من حذف الفرع "${branch.branchName}"؟`)) {
                                   const success = await deleteBranch(branch.id);
                                   if (success) {
                                     setSuccessMessage('تم حذف الفرع بنجاح');
+                                    // If we're in detail view and the deleted branch is the selected one, go back to list
+                                    if (selectedBranch && selectedBranch.id === branch.id) {
+                                      setSelectedBranch(null);
+                                      setEditingFromDetailView(null);
+                                    }
                                   } else {
                                     setSuccessMessage('فشل في حذف الفرع');
                                   }

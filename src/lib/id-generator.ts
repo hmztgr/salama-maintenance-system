@@ -2,7 +2,7 @@
 import { Customer, Location } from '@/types/customer';
 
 // Saudi Arabia cities database for validation
-const SAUDI_CITIES: Record<string, string> = {
+let SAUDI_CITIES: Record<string, string> = {
   'الرياض': 'RYD',
   'جدة': 'JED',
   'الدمام': 'DAM',
@@ -28,7 +28,8 @@ const SAUDI_CITIES: Record<string, string> = {
   'جيزان': 'JAZ', // Alternative spelling
   'نجران': 'NAJ',
   'الباحة': 'BAH',
-  'القريات': 'QUR'
+  'القريات': 'QUR',
+  'رابغ': 'RAB' // Added Rabigh
 };
 
 interface CustomerData {
@@ -49,19 +50,77 @@ export function validateSaudiCity(cityName: string): {
   cityCode?: string;
   suggestions?: string[]
 } {
-  const cityCode = SAUDI_CITIES[cityName];
+  if (!cityName || cityName.trim() === '') {
+    return { isValid: false, suggestions: [] };
+  }
+
+  const normalizedCityName = cityName.trim();
+  
+  // Debug logging
+  console.log(`🔍 validateSaudiCity called with: "${normalizedCityName}"`);
+  console.log(`🔍 Available cities:`, Object.keys(SAUDI_CITIES));
+  
+  // Check for exact match first
+  const cityCode = SAUDI_CITIES[normalizedCityName];
   if (cityCode) {
+    console.log(`🔍 Exact match found for "${normalizedCityName}" with code: ${cityCode}`);
     return { isValid: true, cityCode };
   }
 
   // Provide suggestions for similar city names
-  const suggestions = Object.keys(SAUDI_CITIES).filter(city =>
-    city.includes(cityName) || cityName.includes(city)
-  );
+  const suggestions = Object.keys(SAUDI_CITIES).filter(city => {
+    const normalizedCity = city.toLowerCase();
+    const normalizedInput = normalizedCityName.toLowerCase();
+    
+    // Exact match (case insensitive)
+    if (normalizedCity === normalizedInput) {
+      console.log(`🔍 Case-insensitive match found: "${city}"`);
+      return true;
+    }
+    
+    // Contains match
+    if (normalizedCity.includes(normalizedInput) || normalizedInput.includes(normalizedCity)) {
+      console.log(`🔍 Contains match found: "${city}"`);
+      return true;
+    }
+    
+    // Similar characters (for Arabic text)
+    const cityWithoutDiacritics = normalizedCity.replace(/[أإآ]/g, 'ا').replace(/[يى]/g, 'ي');
+    const inputWithoutDiacritics = normalizedInput.replace(/[أإآ]/g, 'ا').replace(/[يى]/g, 'ي');
+    
+    if (cityWithoutDiacritics.includes(inputWithoutDiacritics) || inputWithoutDiacritics.includes(cityWithoutDiacritics)) {
+      console.log(`🔍 Diacritics match found: "${city}"`);
+      return true;
+    }
+    
+    // Additional fuzzy matching for Arabic cities
+    // Check if cities share common patterns (e.g., جازان vs جيزان)
+    if (cityWithoutDiacritics.length >= 3 && inputWithoutDiacritics.length >= 3) {
+      // Check if at least 70% of characters match
+      let matchCount = 0;
+      const minLength = Math.min(cityWithoutDiacritics.length, inputWithoutDiacritics.length);
+      
+      for (let i = 0; i < minLength; i++) {
+        if (cityWithoutDiacritics[i] === inputWithoutDiacritics[i]) {
+          matchCount++;
+        }
+      }
+      
+      const similarity = matchCount / minLength;
+      if (similarity >= 0.7) {
+        console.log(`🔍 Fuzzy match found: "${city}" (similarity: ${similarity.toFixed(2)})`);
+        return true;
+      }
+    }
+    
+    return false;
+  });
 
+  console.log(`🔍 Suggestions found for "${normalizedCityName}":`, suggestions);
+  
   return {
     isValid: false,
-    suggestions: suggestions.length > 0 ? suggestions : ['الرياض', 'جدة', 'الدمام']
+    suggestions: suggestions
   };
 }
 
@@ -176,33 +235,74 @@ export function generateBranchId(
     return { branchId: '', warnings };
   }
 
-  // Find existing locations for this city across all companies
-  const cityBranches = existingBranches.filter(b =>
+  // Find existing branches for this specific company
+  const companyBranches = existingBranches.filter(b => 
+    b.branchId.startsWith(`${companyId}-`)
+  );
+
+  // Find existing branches for this company in this specific city and location
+  const companyLocationBranches = companyBranches.filter(b => 
     b.city === city && b.location === location
   );
 
+  // Find existing branches for this company in this city (for location number generation)
+  const companyCityBranches = companyBranches.filter(b => b.city === city);
+  
+  // Generate location number based on unique locations for this company in this city
+  const uniqueLocations = new Set(companyCityBranches.map(b => b.location));
   let locationNumber: string;
-  if (cityBranches.length > 0) {
-    // Extract location number from existing branch
-    const existingBranch = cityBranches[0];
+  
+  if (companyLocationBranches.length > 0) {
+    // This location already exists for this company, use existing location number
+    const existingBranch = companyLocationBranches[0];
     const parts = existingBranch.branchId.split('-');
     locationNumber = parts[2] || '001';
   } else {
-    // Generate new location number for this city
-    const allCityLocations = existingBranches.filter(b => b.city === city);
-    const uniqueLocations = new Set(allCityLocations.map(b => b.location));
+    // This is a new location for this company in this city
     locationNumber = (uniqueLocations.size + 1).toString().padStart(3, '0');
   }
 
   // Generate branch number for this specific company, city, and location combination
-  // This ensures unique IDs even for same company in same city/location
-  const companyLocationBranches = existingBranches.filter(b =>
-    b.branchId.startsWith(`${companyId}-${cityValidation.cityCode}-${locationNumber}`)
-  );
-  const branchNumber = (companyLocationBranches.length + 1).toString().padStart(4, '0');
+  // Use the total count of branches for this company to ensure uniqueness
+  const totalCompanyBranches = companyBranches.length;
+  const branchNumber = (totalCompanyBranches + 1).toString().padStart(4, '0');
+
+  // Additional check: if this exact combination already exists, increment the branch number
+  const existingBranchWithSameId = companyBranches.find(b => {
+    const parts = b.branchId.split('-');
+    return parts[0] === companyId && 
+           parts[1] === cityValidation.cityCode && 
+           parts[2] === locationNumber && 
+           parts[3] === branchNumber;
+  });
+
+  let finalBranchNumber = branchNumber;
+  if (existingBranchWithSameId) {
+    // Find the highest branch number for this company and increment
+    const branchNumbers = companyBranches.map(b => {
+      const parts = b.branchId.split('-');
+      return parseInt(parts[3] || '0', 10);
+    });
+    const maxBranchNumber = Math.max(...branchNumbers, 0);
+    finalBranchNumber = (maxBranchNumber + 1).toString().padStart(4, '0');
+  }
+
+  // Debug logging
+  console.log(`🔧 generateBranchId debug:`, {
+    companyId,
+    city,
+    location,
+    totalCompanyBranches,
+    companyLocationBranches: companyLocationBranches.length,
+    locationNumber,
+    branchNumber,
+    finalBranchNumber,
+    existingBranchWithSameId: !!existingBranchWithSameId,
+    generatedId: `${companyId}-${cityValidation.cityCode}-${locationNumber}-${finalBranchNumber}`
+  });
 
   return {
-    branchId: `${companyId}-${cityValidation.cityCode}-${locationNumber}-${branchNumber}`,
+    branchId: `${companyId}-${cityValidation.cityCode}-${locationNumber}-${finalBranchNumber}`,
     warnings
   };
 }
@@ -210,4 +310,19 @@ export function generateBranchId(
 // Get all Saudi cities for dropdowns
 export function getSaudiCities(): Array<{ name: string; code: string }> {
   return Object.entries(SAUDI_CITIES).map(([name, code]) => ({ name, code }));
+}
+
+// Add a new city to the database
+export function addSaudiCity(cityName: string, cityCode: string): boolean {
+  // Check if city code already exists
+  const existingCity = Object.entries(SAUDI_CITIES).find(([_, code]) => code === cityCode.toUpperCase());
+  if (existingCity) {
+    console.error(`City code ${cityCode.toUpperCase()} already exists for city: ${existingCity[0]}`);
+    return false;
+  }
+
+  // Add the new city
+  SAUDI_CITIES[cityName] = cityCode.toUpperCase();
+  console.log(`Added new city: ${cityName} (${cityCode.toUpperCase()})`);
+  return true;
 }

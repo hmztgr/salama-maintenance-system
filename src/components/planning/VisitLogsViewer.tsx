@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { collection, query, orderBy, getDocs, where, Timestamp, doc, getDoc } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, where, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,11 +9,12 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Search, Filter, Download, Calendar, User, Building } from 'lucide-react';
+import { Visit } from '@/types/customer';
 
 interface VisitLog {
   id: string;
-  visitId?: string;
-  action?: 'completed' | 'cancelled';
+  visitId: string;
+  action: 'completed' | 'cancelled' | 'scheduled' | 'in_progress' | 'rescheduled';
   completedAt?: string;
   cancelledAt?: string;
   completedBy?: string;
@@ -32,6 +33,7 @@ interface VisitLog {
   companyId?: string;
   branchName?: string;
   companyName?: string;
+  overallStatus?: string;
 }
 
 export function VisitLogsViewer() {
@@ -39,43 +41,57 @@ export function VisitLogsViewer() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [actionFilter, setActionFilter] = useState<'all' | 'completed' | 'cancelled'>('all');
+  const [actionFilter, setActionFilter] = useState<'all' | 'completed' | 'cancelled' | 'scheduled' | 'in_progress' | 'rescheduled'>('all');
   const [dateFilter, setDateFilter] = useState('');
   const [userFilter, setUserFilter] = useState('');
 
-  // Load visit logs
+  // Load visit logs from visits collection
   useEffect(() => {
     const loadLogs = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const logsQuery = query(
-          collection(db, 'visitLogs'),
-          orderBy('completedAt', 'desc')
+        // Query visits collection instead of visitLogs
+        const visitsQuery = query(
+          collection(db, 'visits'),
+          orderBy('createdAt', 'desc')
         );
 
-        const querySnapshot = await getDocs(logsQuery);
+        const querySnapshot = await getDocs(visitsQuery);
         const logsData: VisitLog[] = [];
 
         for (const docSnapshot of querySnapshot.docs) {
-          const data = docSnapshot.data();
+          const visitData = docSnapshot.data() as Visit;
           
-          // Validate that the log has required fields
-          if (!data.visitId || !data.action) {
-            console.warn('Skipping invalid log:', { id: docSnapshot.id, data });
-            continue;
-          }
-          
+          // Convert visit data to log format
           const log: VisitLog = {
             id: docSnapshot.id,
-            ...data
+            visitId: visitData.visitId,
+            action: visitData.status,
+            completedAt: visitData.completedDate,
+            cancelledAt: visitData.status === 'cancelled' ? visitData.updatedAt : undefined,
+            completedBy: visitData.createdBy,
+            cancelledBy: visitData.status === 'cancelled' ? visitData.updatedBy : undefined,
+            completionDate: visitData.completedDate,
+            completionTime: visitData.completedTime,
+            duration: visitData.duration ? `${visitData.duration} دقيقة` : undefined,
+            notes: visitData.notes,
+            systemIssues: visitData.results?.issues,
+            recommendations: visitData.results?.recommendations,
+            internalNotes: visitData.notes,
+            justification: visitData.status === 'cancelled' ? visitData.notes : undefined,
+            suggestedDate: visitData.results?.nextVisitDate,
+            originalDate: visitData.scheduledDate,
+            branchId: visitData.branchId,
+            companyId: visitData.companyId,
+            overallStatus: visitData.results?.overallStatus
           };
 
-          // Load branch and company names if not already present
-          if (data.branchId && !data.branchName) {
+          // Load branch and company names
+          if (visitData.branchId) {
             try {
-              const branchDocRef = doc(db, 'branches', data.branchId);
+              const branchDocRef = doc(db, 'branches', visitData.branchId);
               const branchDoc = await getDoc(branchDocRef);
               if (branchDoc.exists()) {
                 const branchData = branchDoc.data() as { branchName?: string };
@@ -86,9 +102,9 @@ export function VisitLogsViewer() {
             }
           }
 
-          if (data.companyId && !data.companyName) {
+          if (visitData.companyId) {
             try {
-              const companyDocRef = doc(db, 'companies', data.companyId);
+              const companyDocRef = doc(db, 'companies', visitData.companyId);
               const companyDoc = await getDoc(companyDocRef);
               if (companyDoc.exists()) {
                 const companyData = companyDoc.data() as { companyName?: string };
@@ -103,6 +119,7 @@ export function VisitLogsViewer() {
         }
 
         setLogs(logsData);
+        console.log('Loaded visit logs:', logsData.length);
       } catch (err) {
         console.error('Error loading visit logs:', err);
         setError('فشل في تحميل سجلات الزيارات');
@@ -139,7 +156,7 @@ export function VisitLogsViewer() {
 
       // Date filter
       if (dateFilter) {
-        const logDate = log.completedAt || log.cancelledAt;
+        const logDate = log.completedAt || log.cancelledAt || log.originalDate;
         if (logDate) {
           const logDateStr = new Date(logDate).toISOString().split('T')[0];
           if (logDateStr !== dateFilter) return false;
@@ -174,28 +191,30 @@ export function VisitLogsViewer() {
       'Recommendations',
       'Internal Notes',
       'Justification',
-      'Suggested Date'
+      'Suggested Date',
+      'Overall Status'
     ];
 
-          const csvContent = [
-        headers.join(','),
-        ...filteredLogs.map(log => [
-          log.visitId || '',
-          log.action || '',
-          log.completionDate || log.cancelledAt?.split('T')[0] || '',
-          log.completionTime || '',
-          log.completedBy || log.cancelledBy || '',
-          log.branchName || '',
-          log.companyName || '',
-          log.duration || '',
-          log.notes || '',
-          log.systemIssues?.join('; ') || '',
-          log.recommendations?.join('; ') || '',
-          log.internalNotes || '',
-          log.justification || '',
-          log.suggestedDate || ''
-        ].join(','))
-      ].join('\n');
+    const csvContent = [
+      headers.join(','),
+      ...filteredLogs.map(log => [
+        log.visitId || '',
+        log.action || '',
+        log.completionDate || log.cancelledAt?.split('T')[0] || log.originalDate || '',
+        log.completionTime || '',
+        log.completedBy || log.cancelledBy || '',
+        log.branchName || '',
+        log.companyName || '',
+        log.duration || '',
+        log.notes || '',
+        log.systemIssues?.join('; ') || '',
+        log.recommendations?.join('; ') || '',
+        log.internalNotes || '',
+        log.justification || '',
+        log.suggestedDate || '',
+        log.overallStatus || ''
+      ].join(','))
+    ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -214,6 +233,28 @@ export function VisitLogsViewer() {
 
   const formatTime = (timeString: string) => {
     return timeString;
+  };
+
+  const getActionLabel = (action: string) => {
+    switch (action) {
+      case 'completed': return '✅ مكتملة';
+      case 'cancelled': return '❌ ملغية';
+      case 'scheduled': return '📅 مجدولة';
+      case 'in_progress': return '🔄 قيد التنفيذ';
+      case 'rescheduled': return '🔄 معاد جدولتها';
+      default: return action;
+    }
+  };
+
+  const getActionBadgeVariant = (action: string) => {
+    switch (action) {
+      case 'completed': return 'default';
+      case 'cancelled': return 'destructive';
+      case 'scheduled': return 'secondary';
+      case 'in_progress': return 'outline';
+      case 'rescheduled': return 'outline';
+      default: return 'secondary';
+    }
   };
 
   if (loading) {
@@ -278,6 +319,9 @@ export function VisitLogsViewer() {
                   <SelectItem value="all">جميع الإجراءات</SelectItem>
                   <SelectItem value="completed">مكتملة</SelectItem>
                   <SelectItem value="cancelled">ملغية</SelectItem>
+                  <SelectItem value="scheduled">مجدولة</SelectItem>
+                  <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
+                  <SelectItem value="rescheduled">معاد جدولتها</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -339,13 +383,13 @@ export function VisitLogsViewer() {
             <CardContent className="p-6">
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
-                  <Badge variant={log.action === 'completed' ? 'default' : 'destructive'}>
-                    {log.action === 'completed' ? '✅ مكتملة' : '❌ ملغية'}
+                  <Badge variant={getActionBadgeVariant(log.action)}>
+                    {getActionLabel(log.action)}
                   </Badge>
                   <span className="font-mono text-sm text-gray-600">{log.visitId}</span>
                 </div>
                 <div className="text-sm text-gray-500">
-                  {formatDate(log.completedAt || log.cancelledAt || '')}
+                  {formatDate(log.completedAt || log.cancelledAt || log.originalDate || '')}
                   {log.completionTime && ` - ${formatTime(log.completionTime)}`}
                 </div>
               </div>
@@ -375,7 +419,13 @@ export function VisitLogsViewer() {
 
               {log.duration && (
                 <div className="text-sm text-gray-600 mb-2">
-                  المدة: {log.duration} ساعة
+                  المدة: {log.duration}
+                </div>
+              )}
+
+              {log.overallStatus && (
+                <div className="text-sm text-gray-600 mb-2">
+                  الحالة العامة: {log.overallStatus === 'passed' ? 'نجح' : log.overallStatus === 'failed' ? 'فشل' : 'جزئي'}
                 </div>
               )}
 

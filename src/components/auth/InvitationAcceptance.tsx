@@ -250,7 +250,16 @@ export function InvitationAcceptance() {
         }
       }
 
+      // Wait a moment for the profile to be fully written
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
       setRegistrationSuccess(true);
+      
+      // Redirect to dashboard after a short delay
+      setTimeout(() => {
+        router.push('/');
+      }, 3000);
+      
     } catch (error) {
       console.error('❌ Registration error:', error);
       
@@ -325,19 +334,22 @@ export function InvitationAcceptance() {
           </CardHeader>
           <CardContent className="text-center">
             <p className="text-gray-600 mb-6">
-              تم إنشاء حسابك بنجاح. يمكنك الآن تسجيل الدخول باستخدام البيانات التي أدخلتها.
+              تم إنشاء حسابك بنجاح. سيتم تسجيل دخولك تلقائياً خلال لحظات...
             </p>
+            <div className="flex justify-center mb-6">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
             <Alert className="mb-6">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                <strong>ملاحظة:</strong> هذا نظام تجريبي. في النظام الحقيقي سيتم إنشاء حساب فعلي يمكنك استخدامه لتسجيل الدخول.
+                <strong>ملاحظة:</strong> سيتم توجيهك إلى لوحة التحكم تلقائياً بعد تسجيل الدخول.
               </AlertDescription>
             </Alert>
             <Button
               onClick={() => router.push('/')}
               className="w-full"
             >
-              الذهاب لتسجيل الدخول
+              الذهاب الآن
             </Button>
           </CardContent>
         </Card>

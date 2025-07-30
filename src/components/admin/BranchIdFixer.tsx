@@ -1,227 +1,199 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useAuth } from '@/contexts/AuthContextFirebase';
 import { useBranchesFirebase } from '@/hooks/useBranchesFirebase';
+import { useCompaniesFirebase } from '@/hooks/useCompaniesFirebase';
 import { generateBranchId } from '@/lib/id-generator';
-import { Branch } from '@/types/customer';
-import { AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react';
 
 export function BranchIdFixer() {
-  const { hasPermission } = useAuth();
   const { branches, updateBranch } = useBranchesFirebase();
-  const [isFixing, setIsFixing] = useState(false);
-  const [duplicateGroups, setDuplicateGroups] = useState<Array<{
-    baseId: string;
-    branches: Branch[];
-  }>>([]);
-  const [fixedCount, setFixedCount] = useState(0);
-  const [error, setError] = useState<string | null>(null);
+  const { companies } = useCompaniesFirebase();
+  const [isRunning, setIsRunning] = useState(false);
+  const [results, setResults] = useState<{
+    totalBranches: number;
+    fixedBranches: number;
+    errors: string[];
+  }>({ totalBranches: 0, fixedBranches: 0, errors: [] });
 
-  // Check permissions
-  if (!hasPermission('admin')) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>إصلاح معرفات الفروع المكررة</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Alert>
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              تحتاج إلى صلاحيات المدير للوصول إلى هذه الصفحة
-            </AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Find duplicate branch IDs
-  useEffect(() => {
-    const duplicates = new Map<string, Branch[]>();
+  const findDuplicateBranchIds = () => {
+    const branchIdCounts = new Map<string, string[]>();
     
     branches.forEach(branch => {
-      const existing = duplicates.get(branch.branchId) || [];
-      existing.push(branch);
-      duplicates.set(branch.branchId, existing);
+      if (!branchIdCounts.has(branch.branchId)) {
+        branchIdCounts.set(branch.branchId, []);
+      }
+      branchIdCounts.get(branch.branchId)!.push(branch.id);
     });
 
-    const duplicateGroups = Array.from(duplicates.entries())
-      .filter(([_, branches]) => branches.length > 1)
-      .map(([baseId, branches]) => ({
-        baseId,
-        branches: branches.sort((a, b) => a.branchName.localeCompare(b.branchName))
-      }));
+    const duplicates = Array.from(branchIdCounts.entries())
+      .filter(([_, branchIds]) => branchIds.length > 1)
+      .map(([branchId, branchIds]) => ({ branchId, branchIds }));
 
-    setDuplicateGroups(duplicateGroups);
-  }, [branches]);
+    return duplicates;
+  };
 
-  const fixDuplicateIds = async () => {
-    setIsFixing(true);
-    setError(null);
-    let fixed = 0;
+  const fixDuplicateBranchIds = async () => {
+    setIsRunning(true);
+    setResults({ totalBranches: 0, fixedBranches: 0, errors: [] });
 
     try {
-      for (const group of duplicateGroups) {
-        // Keep the first branch with the original ID, fix the rest
-        const branchesToFix = group.branches.slice(1);
-        
-        for (const branch of branchesToFix) {
-          // Generate a new unique ID for this branch
-          const otherBranches = branches.filter(b => b.branchId !== branch.branchId);
-          const { branchId: newBranchId } = generateBranchId(
-            branch.companyId,
-            branch.city,
-            branch.location,
-            otherBranches
-          );
+      const duplicates = findDuplicateBranchIds();
+      console.log('🔍 Found duplicate branch IDs:', duplicates);
 
-          if (newBranchId && newBranchId !== branch.branchId) {
-            // Update the branch with the new ID
-            const updatedBranch = { ...branch, branchId: newBranchId };
-            const result = await updateBranch(branch.id, updatedBranch);
+      if (duplicates.length === 0) {
+        setResults({ totalBranches: branches.length, fixedBranches: 0, errors: ['لا توجد معرفات فروع مكررة'] });
+        return;
+      }
+
+      let fixedCount = 0;
+      const errors: string[] = [];
+
+      for (const duplicate of duplicates) {
+        const { branchId, branchIds } = duplicate;
+        console.log(`🔧 Fixing duplicate branch ID: ${branchId} (${branchIds.length} branches)`);
+
+        // Get all branches with this ID
+        const branchesToFix = branches.filter(b => b.branchId === branchId);
+        
+        // Group by company to handle each company's branches separately
+        const branchesByCompany = new Map<string, typeof branchesToFix>();
+        branchesToFix.forEach(branch => {
+          if (!branchesByCompany.has(branch.companyId)) {
+            branchesByCompany.set(branch.companyId, []);
+          }
+          branchesByCompany.get(branch.companyId)!.push(branch);
+        });
+
+        for (const [companyId, companyBranches] of branchesByCompany) {
+          // Get existing branches for this company to pass to generateBranchId
+          const existingBranches = branches.filter(b => b.companyId === companyId);
+          
+          for (let i = 0; i < companyBranches.length; i++) {
+            const branch = companyBranches[i];
             
-            if (result.success) {
-              fixed++;
-              console.log(`✅ Fixed branch ${branch.branchName}: ${branch.branchId} → ${newBranchId}`);
-            } else {
-              console.error(`❌ Failed to fix branch ${branch.branchName}:`, result.warnings);
+            try {
+              // Generate new branch ID
+              const { branchId: newBranchId, warnings } = generateBranchId(
+                branch.companyId,
+                branch.city,
+                branch.location,
+                existingBranches
+              );
+
+              if (warnings.length > 0) {
+                errors.push(`تحذير لفرع ${branch.branchName}: ${warnings.join(', ')}`);
+                continue;
+              }
+
+              if (newBranchId && newBranchId !== branch.branchId) {
+                console.log(`🔄 Updating branch ${branch.branchName}: ${branch.branchId} → ${newBranchId}`);
+                
+                // Update the branch with new ID
+                const success = await updateBranch(branch.id, { branchId: newBranchId });
+                
+                if (success) {
+                  fixedCount++;
+                  console.log(`✅ Successfully updated branch ${branch.branchName}`);
+                } else {
+                  errors.push(`فشل في تحديث الفرع ${branch.branchName}`);
+                }
+              }
+            } catch (error) {
+              console.error(`❌ Error fixing branch ${branch.branchName}:`, error);
+              errors.push(`خطأ في إصلاح الفرع ${branch.branchName}: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
             }
           }
         }
       }
 
-      setFixedCount(fixed);
-      
-    } catch (err) {
-      setError(`خطأ أثناء إصلاح المعرفات: ${err}`);
-      console.error('Error fixing branch IDs:', err);
+      setResults({
+        totalBranches: branches.length,
+        fixedBranches: fixedCount,
+        errors
+      });
+
+    } catch (error) {
+      console.error('❌ Error in fixDuplicateBranchIds:', error);
+      setResults({
+        totalBranches: branches.length,
+        fixedBranches: 0,
+        errors: [`خطأ عام: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`]
+      });
     } finally {
-      setIsFixing(false);
+      setIsRunning(false);
     }
   };
+
+  const duplicates = findDuplicateBranchIds();
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <AlertTriangle className="h-5 w-5 text-orange-600" />
-          إصلاح معرفات الفروع المكررة
-        </CardTitle>
+        <CardTitle>إصلاح معرفات الفروع المكررة</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {error && (
-          <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+        <div className="text-sm text-gray-600">
+          هذا الأداة تكتشف وتصلح معرفات الفروع المكررة باستخدام الخوارزمية المحسنة.
+        </div>
 
-        {fixedCount > 0 && (
+        {duplicates.length > 0 && (
           <Alert>
-            <CheckCircle className="h-4 w-4" />
             <AlertDescription>
-              تم إصلاح {fixedCount} معرف فرع مكرر بنجاح
+              تم العثور على {duplicates.length} معرف فرع مكرر:
+              <ul className="mt-2 list-disc list-inside">
+                {duplicates.slice(0, 5).map((duplicate, index) => (
+                  <li key={index}>
+                    {duplicate.branchId} ({duplicate.branchIds.length} فرع)
+                  </li>
+                ))}
+                {duplicates.length > 5 && <li>...و {duplicates.length - 5} آخرين</li>}
+              </ul>
             </AlertDescription>
           </Alert>
         )}
 
-        {/* Diagnostic Section */}
-        <div className="space-y-2">
-          <h4 className="font-medium">🔍 تشخيص معرفات الفروع:</h4>
-          <div className="text-sm text-gray-600">
-            إجمالي الفروع: {branches.length}
-          </div>
-          
-          {/* Show all branch IDs and their counts */}
-          {(() => {
-            const branchIdCounts = new Map<string, { count: number; branches: Branch[] }>();
-            branches.forEach(branch => {
-              const existing = branchIdCounts.get(branch.branchId) || { count: 0, branches: [] };
-              existing.count++;
-              existing.branches.push(branch);
-              branchIdCounts.set(branch.branchId, existing);
-            });
+        {duplicates.length === 0 && branches.length > 0 && (
+          <Alert>
+            <AlertDescription>
+              ✅ لا توجد معرفات فروع مكررة. جميع الفروع {branches.length} لها معرفات فريدة.
+            </AlertDescription>
+          </Alert>
+        )}
 
-            const duplicates = Array.from(branchIdCounts.entries())
-              .filter(([_, data]) => data.count > 1)
-              .sort(([a], [b]) => a.localeCompare(b));
+        <Button
+          onClick={fixDuplicateBranchIds}
+          disabled={isRunning || duplicates.length === 0}
+          className="w-full"
+        >
+          {isRunning ? 'جاري الإصلاح...' : `إصلاح ${duplicates.length} معرف مكرر`}
+        </Button>
 
-            return (
-              <div className="space-y-2">
-                <div className="text-sm">
-                  معرفات مكررة: {duplicates.length}
-                </div>
-                {duplicates.map(([branchId, data]) => (
-                  <div key={branchId} className="p-2 bg-red-50 rounded border text-sm">
-                    <div className="font-medium text-red-800">المعرف: {branchId}</div>
-                    <div className="text-red-700">عدد الفروع: {data.count}</div>
-                    <div className="text-red-600">
-                      الفروع: {data.branches.map(b => `${b.branchName} (${b.city})`).join(', ')}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            );
-          })()}
-        </div>
+        {results.totalBranches > 0 && (
+          <div className="space-y-2">
+            <div className="text-sm">
+              <strong>النتائج:</strong>
+              <ul className="mt-1 list-disc list-inside">
+                <li>إجمالي الفروع: {results.totalBranches}</li>
+                <li>الفروع المصلحة: {results.fixedBranches}</li>
+              </ul>
+            </div>
 
-        <div className="space-y-2">
-          <p className="text-sm text-gray-600">
-            تم العثور على {duplicateGroups.length} مجموعة من الفروع المكررة المعرفات
-          </p>
-          
-          {duplicateGroups.length > 0 && (
-            <div className="space-y-2">
-              <h4 className="font-medium">الفروع المكررة:</h4>
-              {duplicateGroups.map((group, index) => (
-                <div key={index} className="p-3 bg-orange-50 rounded-md border">
-                  <p className="font-medium text-orange-800">المعرف المكرر: {group.baseId}</p>
-                  <ul className="mt-2 space-y-1">
-                    {group.branches.map((branch, branchIndex) => (
-                      <li key={branchIndex} className="text-sm text-orange-700">
-                        • {branch.branchName} ({branch.city}) - {branch.companyId}
-                      </li>
+            {results.errors.length > 0 && (
+              <Alert variant="destructive">
+                <AlertDescription>
+                  <strong>الأخطاء:</strong>
+                  <ul className="mt-1 list-disc list-inside">
+                    {results.errors.map((error, index) => (
+                      <li key={index}>{error}</li>
                     ))}
                   </ul>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {duplicateGroups.length === 0 && (
-            <Alert>
-              <CheckCircle className="h-4 w-4" />
-              <AlertDescription>
-                لا توجد معرفات فروع مكررة في النظام
-              </AlertDescription>
-            </Alert>
-          )}
-        </div>
-
-        {duplicateGroups.length > 0 && (
-          <Button
-            onClick={fixDuplicateIds}
-            disabled={isFixing}
-            className="w-full"
-            variant="destructive"
-          >
-            {isFixing ? (
-              <>
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                جاري الإصلاح...
-              </>
-            ) : (
-              <>
-                <AlertTriangle className="h-4 w-4 mr-2" />
-                إصلاح المعرفات المكررة
-              </>
+                </AlertDescription>
+              </Alert>
             )}
-          </Button>
+          </div>
         )}
       </CardContent>
     </Card>

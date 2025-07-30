@@ -39,16 +39,7 @@ export function Login({ onLoginSuccess, className = '' }: LoginProps) {
     setCredentials(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleQuickLogin = async (email: string, password: string) => {
-    try {
-      const success = await login(email, password);
-      if (success && onLoginSuccess) {
-        onLoginSuccess();
-      }
-    } catch (error) {
-      console.error('Quick login error:', error);
-    }
-  };
+
 
   return (
     <div className={`min-h-screen flex items-center justify-center bg-gray-50 ${className}`}>
@@ -131,28 +122,7 @@ export function Login({ onLoginSuccess, className = '' }: LoginProps) {
           </div>
         </form>
 
-        {/* Quick Login Buttons for Testing */}
-        <div className="mt-6">
-          <h3 className="text-sm font-medium text-gray-700 mb-3 text-center">تسجيل دخول سريع باستخدام Firebase:</h3>
-          <div className="space-y-2">
-            <button
-              onClick={() => handleQuickLogin('admin@salamasaudi.com', 'admin123456')}
-              disabled={authState.isLoading}
-              className="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              🔧 دخول كمدير Firebase (Admin)
-            </button>
-          </div>
-        </div>
 
-        <div className="mt-6 p-4 bg-blue-50 rounded-md">
-          <h3 className="text-sm font-medium text-gray-700 mb-2">بيانات Firebase:</h3>
-          <div className="text-xs text-gray-600 space-y-1">
-            <div>• البريد الإلكتروني: admin@salamasaudi.com</div>
-            <div>• كلمة المرور: admin123456</div>
-            <div>• الصفة: مدير النظام</div>
-          </div>
-        </div>
       </div>
     </div>
   );

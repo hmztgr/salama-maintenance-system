@@ -113,6 +113,7 @@ export function ExportTemplate({ entityType, data, onClose, companies, branches 
       availableFields: [
         { key: 'branchId', label: 'معرف الفرع', required: true },
         { key: 'companyId', label: 'معرف الشركة', required: true },
+        { key: 'companyName', label: 'اسم الشركة', required: false },
         { key: 'contractIds', label: 'معرفات العقود', required: false },
         { key: 'city', label: 'المدينة', required: true },
         { key: 'location', label: 'الموقع', required: true },
@@ -229,6 +230,19 @@ export function ExportTemplate({ entityType, data, onClose, companies, branches 
           return allBranchIds.size.toString();
         }
         return '0';
+      }
+    }
+
+    // Handle computed fields for branches
+    if (entityType === 'branches') {
+      // Handle company name for branches
+      if (fieldKey === 'companyName') {
+        const branch = item as Branch;
+        if (companies) {
+          const company = companies.find(c => c.companyId === branch.companyId);
+          return company?.companyName || '';
+        }
+        return '';
       }
     }
 

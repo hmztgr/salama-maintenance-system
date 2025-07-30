@@ -145,16 +145,16 @@ export function IssueForm({ onSuccess, onCancel, initialData, consoleLogs }: Iss
   return (
     <Card className="w-full border-0 shadow-none">
       <CardContent className="p-0">
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           {/* Basic Information */}
-          <div className="space-y-3">
-            <h3 className="text-base font-semibold border-b pb-2">
+          <div className="space-y-2">
+            <h3 className="text-base font-semibold border-b pb-1">
               {ARABIC_LABELS.basicInfo}
             </h3>
             
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-1">
                   {ARABIC_LABELS.title}
                 </label>
                 <Input
@@ -169,14 +169,14 @@ export function IssueForm({ onSuccess, onCancel, initialData, consoleLogs }: Iss
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-1">
                   {ARABIC_LABELS.description}
                 </label>
                 <Textarea
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                   placeholder={ARABIC_LABELS.descriptionPlaceholder}
-                  rows={6}
+                  rows={4}
                   className={errors.description ? 'border-red-500' : ''}
                 />
                 {errors.description && (
@@ -187,14 +187,14 @@ export function IssueForm({ onSuccess, onCancel, initialData, consoleLogs }: Iss
           </div>
 
           {/* Categorization */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold border-b pb-2">
+          <div className="space-y-3">
+            <h3 className="text-base font-semibold border-b pb-1">
               {ARABIC_LABELS.categorization}
             </h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-1">
                   {ARABIC_LABELS.category}
                 </label>
                 <Select
@@ -220,7 +220,7 @@ export function IssueForm({ onSuccess, onCancel, initialData, consoleLogs }: Iss
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-1">
                   {ARABIC_LABELS.priority}
                 </label>
                 <Select
@@ -245,7 +245,7 @@ export function IssueForm({ onSuccess, onCancel, initialData, consoleLogs }: Iss
 
             {/* Tags */}
             <div>
-              <label className="block text-sm font-medium mb-2">
+              <label className="block text-sm font-medium mb-1">
                 {ARABIC_LABELS.tags}
               </label>
               <div className="flex gap-2 mb-2">
@@ -255,7 +255,7 @@ export function IssueForm({ onSuccess, onCancel, initialData, consoleLogs }: Iss
                   placeholder={ARABIC_LABELS.tagsPlaceholder}
                   onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
                 />
-                <Button type="button" onClick={addTag} variant="outline">
+                <Button type="button" onClick={addTag} variant="outline" size="sm">
                   إضافة
                 </Button>
               </div>
@@ -277,14 +277,14 @@ export function IssueForm({ onSuccess, onCancel, initialData, consoleLogs }: Iss
           </div>
 
           {/* Attachments */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold border-b pb-2">
+          <div className="space-y-3">
+            <h3 className="text-base font-semibold border-b pb-1">
               {ARABIC_LABELS.attachmentsSection}
             </h3>
             
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-              <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-              <p className="text-sm text-gray-600 mb-4">
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+              <Upload className="h-6 w-6 mx-auto mb-2 text-gray-400" />
+              <p className="text-sm text-gray-600 mb-3">
                 {ARABIC_LABELS.attachmentsPlaceholder}
               </p>
               <input
@@ -296,7 +296,7 @@ export function IssueForm({ onSuccess, onCancel, initialData, consoleLogs }: Iss
                 accept="image/*,application/pdf,text/*,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               />
               <label htmlFor="file-upload">
-                <Button type="button" variant="outline" asChild>
+                <Button type="button" variant="outline" size="sm" asChild>
                   <span>اختيار الملفات</span>
                 </Button>
               </label>
@@ -305,7 +305,7 @@ export function IssueForm({ onSuccess, onCancel, initialData, consoleLogs }: Iss
             {/* File list */}
             {formData.attachments.length > 0 && (
               <div className="space-y-2">
-                <h4 className="font-medium">الملفات المرفقة:</h4>
+                <h4 className="font-medium text-sm">الملفات المرفقة:</h4>
                 {formData.attachments.map((file, index) => (
                   <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                     <div className="flex items-center gap-2">
@@ -333,7 +333,7 @@ export function IssueForm({ onSuccess, onCancel, initialData, consoleLogs }: Iss
           </div>
 
           {/* Form Actions */}
-          <div className="flex justify-end space-x-4 space-x-reverse pt-6 border-t">
+          <div className="flex justify-end space-x-4 space-x-reverse pt-4 border-t">
             <Button
               type="button"
               variant="outline"

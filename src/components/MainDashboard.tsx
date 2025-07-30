@@ -305,9 +305,9 @@ export function MainDashboard({ className = '' }: MainDashboardProps) {
                     🔧 إصلاح معرفات الفروع
                   </button>
                   <button
-                    onClick={() => setAdminSubTab('firebase-cleanup')}
+                    onClick={() => setAdminSubTab('data-cleanup')}
                     className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                      adminSubTab === 'firebase-cleanup'
+                      adminSubTab === 'data-cleanup'
                         ? 'border-blue-500 text-blue-600'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     }`}
@@ -362,7 +362,7 @@ export function MainDashboard({ className = '' }: MainDashboardProps) {
                 {adminSubTab === 'branch-fixer' && <BranchIdFixer />}
 
                 {/* Firebase Data Cleanup */}
-                {adminSubTab === 'firebase-cleanup' && <FirebaseDataCleanup />}
+                {adminSubTab === 'data-cleanup' && <FirebaseDataCleanup />}
 
                 {/* System Settings (Placeholder) */}
                 {adminSubTab === 'settings' && (

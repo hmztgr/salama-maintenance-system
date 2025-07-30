@@ -111,7 +111,7 @@ export function GlobalIssueButton({
           )}
         </div>
       </DialogTrigger>
-      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>إبلاغ عن مشكلة جديدة</span>
@@ -126,43 +126,15 @@ export function GlobalIssueButton({
           </DialogTitle>
           <DialogDescription>
             قم بملء النموذج أدناه للإبلاغ عن مشكلة أو اقتراح تحسين
+            {errorCount > 0 && (
+              <span className="block mt-1 text-sm text-orange-600">
+                تم اكتشاف {errorCount} خطأ في وحدة التحكم - سيتم تضمينها تلقائياً في التقرير
+              </span>
+            )}
           </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4">
-          {/* Console Logs Preview */}
-          {consoleLogs.length > 0 && (
-            <div className="bg-gray-50 border rounded-lg p-4">
-              <h4 className="font-medium mb-2 flex items-center gap-2">
-                <span>سجلات وحدة التحكم الأخيرة</span>
-                {errorCount > 0 && (
-                  <Badge variant="destructive" className="text-xs">
-                    {errorCount} أخطاء
-                  </Badge>
-                )}
-              </h4>
-              <div className="flex justify-center">
-                <div className="bg-black text-green-400 p-2 rounded text-xs font-mono max-h-24 w-1/3 overflow-y-auto overflow-x-hidden max-w-full">
-                  <pre className="whitespace-pre-wrap break-words text-xs">{getRecentLogs()}</pre>
-                </div>
-              </div>
-              <p className="text-xs text-gray-600 mt-2">
-                سيتم تضمين هذه السجلات تلقائياً في المشكلة المبلغ عنها
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  console.error('Test error message');
-                  console.warn('Test warning message');
-                  console.log('Test log message');
-                }}
-                className="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
-              >
-                اختبار السجلات
-              </button>
-            </div>
-          )}
-
           {/* Issue Form */}
           <IssueForm 
             onSuccess={handleFormSuccess}

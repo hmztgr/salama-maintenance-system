@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, AlertTriangle, XCircle, FileText, Download, Upload } from 'lucide-react';
+import { CheckCircle, AlertTriangle, XCircle, FileText, Download, Upload, MapPin } from 'lucide-react';
 import { standardizeDate } from '@/lib/date-handler';
 import { useCompaniesFirebase } from '@/hooks/useCompaniesFirebase';
 import { useContractsFirebase } from '@/hooks/useContractsFirebase';
@@ -19,6 +19,8 @@ import {
   generateImportGuide,
   ImportFieldConfig 
 } from '@/lib/import-utils';
+import { validateSaudiCity, addSaudiCity, getSaudiCities } from '@/lib/id-generator';
+import { CityManagementModal } from './CityManagementModal';
 
 interface ImportReviewProps {
   file: File;
@@ -54,27 +56,27 @@ interface ImportResults {
 }
 
 // Enhanced Saudi Arabia cities database with both Arabic and English names
+// Using centralized validation from id-generator.ts
 const SAUDI_CITIES = [
-  // Major Cities (Arabic and English)
   'الرياض', 'Riyadh',
-  'جدة', 'Jeddah', 'Jidda',
-  'مكة المكرمة', 'Mecca', 'Makkah',
+  'جدة', 'Jeddah', 'JED',
+  'مكة المكرمة', 'Makkah', 'Mecca',
   'المدينة المنورة', 'Medina', 'Madinah',
   'الدمام', 'Dammam',
   'الخبر', 'Khobar', 'Al-Khobar',
   'الظهران', 'Dhahran',
-  'الطائف', 'Taif', 'At-Taif',
-  'بريدة', 'Buraydah',
+  'الطائف', 'Taif', 'Ta\'if',
+  'بريدة', 'Buraidah',
   'تبوك', 'Tabuk',
   'خميس مشيط', 'Khamis Mushait',
-  'حائل', 'Hail', 'Ha\'il',
+  'حائل', 'Hail',
   'نجران', 'Najran',
-  'الجبيل', 'Jubail', 'Al-Jubail',
-  'ينبع', 'Yanbu', 'Yenbo',
+  'الجبيل', 'Jubail',
+  'ينبع', 'Yanbu',
   'أبها', 'Abha',
   'عرعر', 'Arar',
   'سكاكا', 'Sakaka',
-  'جيزان', 'Jazan', 'Gizan',
+  'جازان', 'جيزان', 'Jazan', 'Jizan', 'JAZ', // Added جازان to match id-generator.ts
   'القطيف', 'Qatif', 'Al-Qatif',
   'الأحساء', 'Al-Ahsa', 'Hofuf',
   'الباحة', 'Al-Baha',
@@ -82,9 +84,10 @@ const SAUDI_CITIES = [
   'الخرج', 'Al-Kharj',
   'القصيم', 'Qassim', 'Al-Qassim',
   'الهفوف', 'Hofuf', 'Al-Hofuf',
+  'رابغ', 'Rabigh', // Added Rabigh
   // Additional cities (keeping existing Arabic names)
   'المجمعة', 'رفحاء', 'الزلفي', 'وادي الدواسر',
-  'الافلاج', 'صبيا', 'محايل عسير', 'القنفذة', 'الليث', 'رابغ', 'الحوية',
+  'الافلاج', 'صبيا', 'محايل عسير', 'القنفذة', 'الليث', 'الحوية',
   'تيماء', 'العلا', 'بدر', 'المهد', 'خيبر', 'العيص', 'املج', 'الوجه',
   'ضباء', 'حقل', 'البدع', 'الطوال', 'بيشة', 'النماص', 'تنومة', 'ظهران الجنوب',
   'سراة عبيدة', 'المندق', 'العقيق', 'قلوة', 'المخواة', 'بلجرشي',
@@ -92,6 +95,21 @@ const SAUDI_CITIES = [
   'هروب', 'فيفا', 'العيدابي', 'الحرث', 'بيش', 'تربة', 'رنية', 'الخرمة', 
   'الموية', 'ميسان', 'أضم', 'الكامل'
 ];
+
+// City management state
+interface CitySuggestion {
+  originalCity: string;
+  suggestedCity: string;
+  rowNumber: number;
+  fieldName: string;
+}
+
+interface CityManagementModal {
+  isOpen: boolean;
+  suggestions: CitySuggestion[];
+  onConfirm: (suggestions: CitySuggestion[]) => void;
+  onCancel: () => void;
+}
 
 // Enhanced Column mapping for different languages and variations with better Arabic support
 const COLUMN_MAPPINGS = {
@@ -230,6 +248,25 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
   }>({ type: null, field: null });
   const [skippedRowsCount, setSkippedRowsCount] = useState<number>(0);
 
+  // City management state
+  const [cityManagementModal, setCityManagementModal] = useState<CityManagementModal>({
+    isOpen: false,
+    suggestions: [],
+    onConfirm: () => {},
+    onCancel: () => {}
+  });
+  const [availableCities, setAvailableCities] = useState<string[]>(() => {
+    // Use centralized Saudi cities from id-generator.ts
+    const saudiCities = getSaudiCities();
+    return saudiCities.map(city => city.name);
+  });
+
+  // Debug: Log available cities on component mount
+  useEffect(() => {
+    console.log(`🔍 Available cities initialized:`, availableCities);
+    console.log(`🔍 SAUDI_CITIES length:`, SAUDI_CITIES.length);
+  }, [availableCities]);
+
   // Get data for validation
   const { companies } = useCompaniesFirebase();
   const { contracts } = useContractsFirebase();
@@ -238,13 +275,13 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
   // Field validation configurations
   const validationConfigs = useMemo(() => ({
     companies: {
-      required: ['companyName', 'phone', 'address', 'city'],
+      required: ['companyName'],
       validations: {
         companyName: { maxLength: 100, pattern: /^.{1,100}$/ },
         email: { pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
         phone: { pattern: /^[\d\s\-\+\(\)]{7,15}$/ },
         address: { maxLength: 200 },
-        city: { enum: SAUDI_CITIES },
+        city: { enum: availableCities },
         contactPerson: { maxLength: 100 },
         notes: { maxLength: 500 }
       }
@@ -288,14 +325,13 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
       }
     },
     branches: {
-      required: ['city', 'location', 'branchName'],
+      required: ['companyId', 'branchName', 'location', 'city'],
       validations: {
         companyId: { pattern: /^\d{4}$/ },
         companyName: { maxLength: 100 },
-        city: { enum: SAUDI_CITIES },
+        city: { enum: availableCities },
         location: { maxLength: 100 },
         branchName: { maxLength: 100 },
-        address: { maxLength: 200 },
         contactPerson: { maxLength: 100 },
         contactPhone: { pattern: /^[\d\s\-\+\(\)]{7,15}$/ },
         teamMember: { maxLength: 100 },
@@ -305,6 +341,139 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
   }), []);
 
   const currentConfig = useMemo(() => validationConfigs[entityType], [validationConfigs, entityType]);
+
+  // City management functions
+  const findCitySuggestions = useCallback((cityName: string): string[] => {
+    if (!cityName || cityName.trim() === '') return [];
+    
+    const normalizedCity = cityName.trim().toLowerCase();
+    const suggestions: string[] = [];
+    
+    // Exact match
+    const exactMatch = availableCities.find(city => 
+      city.toLowerCase() === normalizedCity
+    );
+    if (exactMatch) return [exactMatch];
+    
+    // Partial matches
+    availableCities.forEach(city => {
+      if (city.toLowerCase().includes(normalizedCity) || 
+          normalizedCity.includes(city.toLowerCase())) {
+        suggestions.push(city);
+      }
+    });
+    
+    // Fuzzy matching for similar names
+    if (suggestions.length === 0) {
+      availableCities.forEach(city => {
+        const similarity = calculateSimilarity(normalizedCity, city.toLowerCase());
+        if (similarity > 0.6) { // 60% similarity threshold
+          suggestions.push(city);
+        }
+      });
+    }
+    
+    return suggestions.slice(0, 5); // Limit to 5 suggestions
+  }, [availableCities]);
+
+  const calculateSimilarity = useCallback((str1: string, str2: string): number => {
+    const longer = str1.length > str2.length ? str1 : str2;
+    const shorter = str1.length > str2.length ? str2 : str1;
+    
+    if (longer.length === 0) return 1.0;
+    
+    const editDistance = levenshteinDistance(longer, shorter);
+    return (longer.length - editDistance) / longer.length;
+  }, []);
+
+  const levenshteinDistance = useCallback((str1: string, str2: string): number => {
+    const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
+    
+    for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
+    for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
+    
+    for (let j = 1; j <= str2.length; j++) {
+      for (let i = 1; i <= str1.length; i++) {
+        const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
+        matrix[j][i] = Math.min(
+          matrix[j][i - 1] + 1,
+          matrix[j - 1][i] + 1,
+          matrix[j - 1][i - 1] + indicator
+        );
+      }
+    }
+    
+    return matrix[str2.length][str1.length];
+  }, []);
+
+            const handleCityValidation = useCallback((cityName: string, rowNumber: number, fieldName: string): ValidationError[] => {
+              const errors: ValidationError[] = [];
+              
+              if (!cityName || cityName.trim() === '') return errors;
+              
+              console.log(`🔍 handleCityValidation called with: "${cityName}"`);
+              console.log(`🔍 Available cities in handleCityValidation:`, availableCities);
+              
+              // Use centralized validation from id-generator.ts
+              const cityValidation = validateSaudiCity(cityName.trim());
+              console.log(`🔍 validateSaudiCity result for "${cityName}":`, cityValidation);
+              
+              if (!cityValidation.isValid) {
+                const suggestionText = cityValidation.suggestions && cityValidation.suggestions.length > 0 
+                  ? `اقتراحات: ${cityValidation.suggestions.join(', ')}`
+                  : 'يمكن إضافة المدينة الجديدة في صفحة المراجعة';
+                
+                const error: ValidationError = {
+                  row: rowNumber,
+                  field: fieldName,
+                  value: cityName,
+                  error: `مدينة غير معترف بها: ${cityName}`,
+                  suggestion: suggestionText,
+                  severity: 'error'
+                };
+                
+                console.log(`🔍 Adding city validation error:`, error);
+                errors.push(error);
+              } else {
+                console.log(`🔍 City "${cityName}" is valid, no errors added`);
+              }
+              
+              return errors;
+            }, [availableCities]);
+
+  const openCityManagementModal = useCallback((suggestions: CitySuggestion[]) => {
+    setCityManagementModal({
+      isOpen: true,
+      suggestions,
+      onConfirm: (updatedSuggestions) => {
+        // Update the available cities with new cities
+        const newCities = updatedSuggestions
+          .map(s => s.suggestedCity)
+          .filter(city => !availableCities.includes(city));
+        
+        if (newCities.length > 0) {
+          setAvailableCities(prev => [...prev, ...newCities]);
+        }
+        
+        // Update the import rows with corrected city names
+        setImportRows(prev => prev.map(row => {
+          const updatedRow = { ...row };
+          updatedSuggestions.forEach(suggestion => {
+            if (suggestion.rowNumber === row.rowNumber && 
+                suggestion.fieldName in updatedRow.data) {
+              updatedRow.data[suggestion.fieldName] = suggestion.suggestedCity;
+            }
+          });
+          return updatedRow;
+        }));
+        
+        setCityManagementModal(prev => ({ ...prev, isOpen: false }));
+      },
+      onCancel: () => {
+        setCityManagementModal(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  }, [availableCities]);
 
   // Parse CSV content
   const parseCSV = (content: string): string[][] => {
@@ -547,8 +716,21 @@ export function ImportReview({ file, entityType, onClose, onImportComplete }: Im
       }
     }
 
+    // Enhanced city validation with suggestions
+    if (fieldName === 'city' && value && value.trim() !== '') {
+      console.log(`🔍 Validating city: "${value}"`);
+      console.log(`🔍 Available cities:`, availableCities);
+      console.log(`🔍 Is city in available cities:`, availableCities.includes(value.trim()));
+      
+      const cityErrors = handleCityValidation(value, rowNumber, fieldName);
+      console.log(`🔍 City validation result:`, cityErrors);
+      errors.push(...cityErrors);
+      
+      console.log(`🔍 Total errors after city validation:`, errors.length);
+    }
+
     return errors;
-  }, [companies, contracts, branches, entityType, fieldConfigs]);
+  }, [companies, contracts, branches, entityType, fieldConfigs, handleCityValidation]);
 
   // Process uploaded file
   const processFile = useCallback(async () => {
@@ -1052,6 +1234,62 @@ ${suggestions}
                 <Button variant="outline" onClick={onClose}>
                   إلغاء
                 </Button>
+                
+                {/* City Management Button */}
+                {(() => {
+                  console.log(`🔍 Checking for city management button visibility...`);
+                  console.log(`🔍 Total import rows:`, importRows.length);
+                  
+                  const cityErrors = importRows.flatMap(row => 
+                    row.errors.filter(error => error.field === 'city')
+                  );
+                  console.log(`🔍 City errors found:`, cityErrors);
+                  console.log(`🔍 Total import rows:`, importRows.length);
+                  console.log(`🔍 Import rows with errors:`, importRows.filter(row => row.errors.length > 0).length);
+                  
+                  // Debug: Log all errors to see what's happening
+                  const allErrors = importRows.flatMap(row => row.errors);
+                  console.log(`🔍 All errors in import rows:`, allErrors);
+                  
+                  if (cityErrors.length > 0) {
+                    // Get unique unrecognized cities
+                    const uniqueCities = [...new Set(cityErrors.map(error => error.value))];
+                    console.log(`🔍 Unique cities with errors:`, uniqueCities);
+                    console.log(`🔍 City management button should be visible with ${uniqueCities.length} cities`);
+                    
+                    return (
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          console.log(`🔍 Opening city management modal for cities:`, uniqueCities);
+                          // Handle one city at a time
+                          const firstCity = uniqueCities[0];
+                          const cityValidation = validateSaudiCity(firstCity);
+                          console.log(`🔍 City validation for ${firstCity}:`, cityValidation);
+                          
+                          const citySuggestions: CitySuggestion[] = cityErrors
+                            .filter(error => error.value === firstCity)
+                            .map(error => ({
+                              originalCity: error.value,
+                              suggestedCity: cityValidation.suggestions?.[0] || '', // Empty if no suggestions
+                              rowNumber: error.row,
+                              fieldName: error.field
+                            }));
+                          
+                          console.log(`🔍 City suggestions created:`, citySuggestions);
+                          openCityManagementModal(citySuggestions);
+                        }}
+                        className="gap-2"
+                      >
+                        <MapPin className="w-4 h-4" />
+                        إدارة المدن ({uniqueCities.length})
+                      </Button>
+                    );
+                  }
+                  console.log(`🔍 No city errors found, city management button not shown`);
+                  return null;
+                })()}
+                
                 <Button
                   onClick={processImport}
                   disabled={stats.approved === 0}
@@ -1065,6 +1303,32 @@ ${suggestions}
           )}
         </CardContent>
       </Card>
+
+      {/* City Management Modal */}
+      <CityManagementModal
+        isOpen={cityManagementModal.isOpen}
+        unrecognizedCity={cityManagementModal.suggestions[0]?.originalCity || ''}
+        suggestions={cityManagementModal.suggestions.map(s => s.suggestedCity)}
+        onCityResolved={(originalCity, resolvedCity) => {
+          // Update the import rows with corrected city names
+          setImportRows(prev => prev.map(row => {
+            const updatedRow = { ...row };
+            cityManagementModal.suggestions.forEach(suggestion => {
+              if (suggestion.originalCity === originalCity && 
+                  suggestion.rowNumber === row.rowNumber && 
+                  suggestion.fieldName in updatedRow.data) {
+                updatedRow.data[suggestion.fieldName] = resolvedCity;
+              }
+            });
+            return updatedRow;
+          }));
+          
+          setCityManagementModal(prev => ({ ...prev, isOpen: false }));
+        }}
+        onCancel={() => {
+          setCityManagementModal(prev => ({ ...prev, isOpen: false }));
+        }}
+      />
     </div>
   );
 }

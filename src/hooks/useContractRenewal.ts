@@ -93,7 +93,7 @@ export function useContractRenewal() {
       } else {
         return { 
           success: false, 
-          error: result.error || 'Failed to create new contract' 
+          error: result.warnings?.join(', ') || 'Failed to create new contract' 
         };
       }
     } catch (error) {

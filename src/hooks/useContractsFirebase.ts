@@ -243,7 +243,7 @@ export function useContractsFirebase() {
         const now = getCurrentDate();
         
         // Create base contract data - filter out undefined values for Firebase
-        const baseContractData = {
+        const baseContractData: any = {
           contractId,
           companyId: contractData.companyId,
           contractStartDate: contractData.contractStartDate,
@@ -258,10 +258,7 @@ export function useContractsFirebase() {
           // NEW: Advanced Contract Management fields
           status: contractData.status || 'active',
           isRenewed: contractData.isRenewed || false,
-          originalContractId: contractData.originalContractId,
-          renewedContractId: contractData.renewedContractId,
           addendums: contractData.addendums || [],
-          archiveReason: contractData.archiveReason,
           contractHistory: contractData.contractHistory || [],
           
           isArchived: false,
@@ -269,6 +266,17 @@ export function useContractsFirebase() {
           updatedAt: now,
           createdBy: userId,
         };
+
+        // Only add optional fields if they have values (to avoid undefined in Firestore)
+        if (contractData.originalContractId) {
+          baseContractData.originalContractId = contractData.originalContractId;
+        }
+        if (contractData.renewedContractId) {
+          baseContractData.renewedContractId = contractData.renewedContractId;
+        }
+        if (contractData.archiveReason) {
+          baseContractData.archiveReason = contractData.archiveReason;
+        }
 
         const newContractData = baseContractData;
 

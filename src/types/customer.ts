@@ -89,8 +89,6 @@ export interface Contract {
   originalContractId?: string; // For renewed contracts
   renewedContractId?: string; // For contracts that were renewed
   addendums: ContractAddendum[];
-  archivedAt?: string; // Format: dd-mmm-yyyy
-  archivedBy?: string;
   archiveReason?: string;
   contractHistory: ContractHistoryEntry[];
   

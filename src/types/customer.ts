@@ -82,11 +82,50 @@ export interface Contract {
   notes?: string;
   // NEW: Service batches per branch instead of global services
   serviceBatches: ContractServiceBatch[];
+  
+  // NEW: Advanced Contract Management System fields
+  status: 'active' | 'archived' | 'expired' | 'cancelled';
+  isRenewed: boolean;
+  originalContractId?: string; // For renewed contracts
+  renewedContractId?: string; // For contracts that were renewed
+  addendums: ContractAddendum[];
+  archivedAt?: string; // Format: dd-mmm-yyyy
+  archivedBy?: string;
+  archiveReason?: string;
+  contractHistory: ContractHistoryEntry[];
+  
   isArchived: boolean;
   archivedBy?: string;
   archivedAt?: string; // Format: dd-mmm-yyyy
   createdAt: string; // Format: dd-mmm-yyyy
   updatedAt: string; // Format: dd-mmm-yyyy
+}
+
+// NEW: Contract Addendum for Advanced Contract Management
+export interface ContractAddendum {
+  addendumId: string;
+  addedAt: string; // Format: dd-mmm-yyyy
+  addedBy: string;
+  services: {
+    fireExtinguisherMaintenance: boolean;
+    alarmSystemMaintenance: boolean;
+    fireSuppressionMaintenance: boolean;
+    gasFireSuppression: boolean;
+    foamFireSuppression: boolean;
+  };
+  description: string;
+  effectiveDate: string; // Format: dd-mmm-yyyy
+  contractValue: number;
+  notes?: string;
+}
+
+// NEW: Contract History Entry for Advanced Contract Management
+export interface ContractHistoryEntry {
+  action: 'created' | 'renewed' | 'modified' | 'addendum_added' | 'archived';
+  timestamp: string; // Format: dd-mmm-yyyy
+  performedBy: string;
+  description: string;
+  details?: any;
 }
 
 export interface Branch {

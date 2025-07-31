@@ -73,24 +73,34 @@ export function useContractsFirebase() {
           const contractsData = snapshot.docs
             .map(doc => {
               const data = doc.data();
-              return {
-                id: doc.id,
-                contractId: data.contractId,
-                companyId: data.companyId,
-                contractStartDate: data.contractStartDate,
-                contractEndDate: data.contractEndDate,
-                contractPeriodMonths: data.contractPeriodMonths,
-                contractDocument: data.contractDocument,
-                contractValue: data.contractValue,
-                notes: data.notes || '',
-                // NEW: Handle service batches (with backward compatibility)
-                serviceBatches: data.serviceBatches || [],
-                isArchived: data.isArchived || false,
-                archivedBy: data.archivedBy,
-                archivedAt: data.archivedAt,
-                createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : data.createdAt,
-                updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate().toISOString() : data.updatedAt,
-              } as Contract;
+                                  return {
+                      id: doc.id,
+                      contractId: data.contractId,
+                      companyId: data.companyId,
+                      contractStartDate: data.contractStartDate,
+                      contractEndDate: data.contractEndDate,
+                      contractPeriodMonths: data.contractPeriodMonths,
+                      contractDocument: data.contractDocument,
+                      contractValue: data.contractValue,
+                      notes: data.notes || '',
+                      // NEW: Handle service batches (with backward compatibility)
+                      serviceBatches: data.serviceBatches || [],
+                      
+                      // NEW: Advanced Contract Management fields
+                      status: data.status || 'active',
+                      isRenewed: data.isRenewed || false,
+                      originalContractId: data.originalContractId,
+                      renewedContractId: data.renewedContractId,
+                      addendums: data.addendums || [],
+                      archiveReason: data.archiveReason,
+                      contractHistory: data.contractHistory || [],
+                      
+                      isArchived: data.isArchived || false,
+                      archivedBy: data.archivedBy,
+                      archivedAt: data.archivedAt,
+                      createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : data.createdAt,
+                      updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate().toISOString() : data.updatedAt,
+                    } as Contract;
             })
             .filter(contract => !contract.isArchived);
 
@@ -132,6 +142,16 @@ export function useContractsFirebase() {
                       notes: data.notes || '',
                       // NEW: Handle service batches (fallback compatibility)
                       serviceBatches: data.serviceBatches || [],
+                      
+                      // NEW: Advanced Contract Management fields
+                      status: data.status || 'active',
+                      isRenewed: data.isRenewed || false,
+                      originalContractId: data.originalContractId,
+                      renewedContractId: data.renewedContractId,
+                      addendums: data.addendums || [],
+                      archiveReason: data.archiveReason,
+                      contractHistory: data.contractHistory || [],
+                      
                       isArchived: data.isArchived || false,
                       archivedBy: data.archivedBy,
                       archivedAt: data.archivedAt,
@@ -234,6 +254,16 @@ export function useContractsFirebase() {
           notes: contractData.notes || '',
           // NEW: Service batches structure instead of individual service flags
           serviceBatches: contractData.serviceBatches || [],
+          
+          // NEW: Advanced Contract Management fields
+          status: contractData.status || 'active',
+          isRenewed: contractData.isRenewed || false,
+          originalContractId: contractData.originalContractId,
+          renewedContractId: contractData.renewedContractId,
+          addendums: contractData.addendums || [],
+          archiveReason: contractData.archiveReason,
+          contractHistory: contractData.contractHistory || [],
+          
           isArchived: false,
           createdAt: now,
           updatedAt: now,

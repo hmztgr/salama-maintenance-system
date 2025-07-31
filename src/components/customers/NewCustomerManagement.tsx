@@ -1289,6 +1289,8 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
                 contract={selectedContract}
                 company={companies.find(c => c.companyId === selectedContract.companyId)}
                 branches={branches.filter(b => b.companyId === selectedContract.companyId)}
+                companies={companies}
+                contracts={contracts}
                 onBack={() => setSelectedContract(null)}
                 onEdit={() => {
                   setEditingContract(selectedContract);

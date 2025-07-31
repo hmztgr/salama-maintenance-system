@@ -1,5 +1,77 @@
 # 🚀 Production Deployment Setup Guide
 
+## 📋 **Development Environment Setup - User Profile Fix**
+
+### **Issue Identified:**
+The development user profile structure doesn't match the production structure, causing authentication failures.
+
+### **Production vs Development User Profile Structure:**
+
+**Production (Working):**
+```json
+{
+  "createdAt": "July 17, 2025 at 12:00:00 AM UTC+3" (timestamp),
+  "displayName": "مدير النظام",
+  "email": "admin@salamasaudi.com", 
+  "isActive": true,
+  "lastLoginAt": "2025-07-28T17:05:19.226Z",
+  "role": "admin",
+  "updatedAt": "2025-07-28T17:05:19.226Z"
+}
+```
+
+**Development (Not Working):**
+```json
+{
+  "uid": "admin-user-id",           // ❌ Extra field
+  "companyId": null,                // ❌ Extra field  
+  "permissions": {...},             // ❌ Extra object
+  "createdAt": "2025-07-31T16:25:15.142Z", // ❌ String instead of timestamp
+  "displayName": "مدير النظام",
+  "email": "admin@salamasaudi.com",
+  "isActive": true,
+  "lastLoginAt": "2025-07-31T16:25:15.142Z",
+  "role": "admin"
+  // ❌ Missing "updatedAt" field
+}
+```
+
+### **Fix Development User Profile:**
+
+1. **Go to Firebase Console**: https://console.firebase.google.com/u/0/project/ssco-planner-dev/firestore
+2. **Navigate to Firestore Database** → `users` collection → `admin-user-id` document
+3. **Delete the current document**
+4. **Create new document with correct structure:**
+
+**Document ID**: `admin-user-id`
+
+**Fields** (exactly like production):
+```json
+{
+  "createdAt": [Create as TIMESTAMP - July 17, 2025 at 12:00:00 AM UTC+3],
+  "displayName": "مدير النظام",
+  "email": "admin@salamasaudi.com",
+  "isActive": true,
+  "lastLoginAt": "2025-07-31T16:25:15.142Z",
+  "role": "admin", 
+  "updatedAt": "2025-07-31T16:25:15.142Z"
+}
+```
+
+**Important Notes:**
+- ❌ **Remove**: `uid`, `companyId`, `permissions` fields
+- ✅ **Add**: `updatedAt` field
+- ✅ **Change**: `createdAt` to TIMESTAMP type (not string)
+- ✅ **Keep**: Only the 7 fields that exist in production
+
+### **After Fix:**
+- Test login with `admin@salamasaudi.com` / `admin123456`
+- The development environment should work exactly like production
+
+---
+
+## 🚀 **Production Deployment Setup Guide**
+
 ## SSCO-planner-prod Branch - Production Version for End Users
 
 ### 📋 Required Environment Variables

@@ -23,20 +23,31 @@ import { Contract, Company, Branch } from '@/types/customer';
 import { formatDateForDisplay } from '@/lib/date-handler';
 import { FileViewer } from '@/components/ui/file-viewer';
 
+// Import Advanced Contract Management components
+import { ContractActionButtons } from '@/components/contracts/ContractActionButtons';
+import { ContractRenewalDialog } from '@/components/contracts/ContractRenewalDialog';
+import { ContractAddendumForm } from '@/components/contracts/ContractAddendumForm';
+import { ArchivedContractsView } from '@/components/contracts/ArchivedContractsView';
+import { useContractRenewal } from '@/hooks/useContractRenewal';
+
 interface ContractDetailViewProps {
   contract: Contract;
   company?: Company;
   branches: Branch[];
+  companies: Company[]; // Add companies for archived contracts view
+  contracts: Contract[]; // Add all contracts for archived contracts view
   onBack: () => void;
   onEdit: () => void;
   onDelete: () => void;
-      hasPermission: (permission: 'admin' | 'operations_manager' | 'supervisor' | 'viewer') => boolean;
+  hasPermission: (permission: 'admin' | 'operations_manager' | 'supervisor' | 'viewer') => boolean;
 }
 
 export function ContractDetailView({ 
   contract, 
   company, 
   branches, 
+  companies,
+  contracts,
   onBack, 
   onEdit, 
   onDelete, 
@@ -45,6 +56,15 @@ export function ContractDetailView({
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
   const [isFileViewerOpen, setIsFileViewerOpen] = useState(false);
   const [currentFile, setCurrentFile] = useState<{ url: string; name: string } | null>(null);
+
+  // Advanced Contract Management state
+  const [showRenewalDialog, setShowRenewalDialog] = useState(false);
+  const [showAddendumForm, setShowAddendumForm] = useState(false);
+  const [showArchivedContracts, setShowArchivedContracts] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Contract renewal hook
+  const { renewContract, addContractAddendum } = useContractRenewal();
 
   const handleDocumentView = (documentUrl: string, fileName: string = 'Document') => {
     setCurrentFile({ url: documentUrl, name: fileName });
@@ -56,6 +76,67 @@ export function ContractDetailView({
     link.href = documentUrl;
     link.download = fileName;
     link.click();
+  };
+
+  // Advanced Contract Management handlers
+  const handleRenewContract = async (withChanges: boolean) => {
+    setIsLoading(true);
+    try {
+      const result = await renewContract(contract, withChanges);
+      if (result.success) {
+        setShowRenewalDialog(false);
+        // Optionally refresh the contract data or navigate to the new contract
+        console.log('Contract renewed successfully:', result.newContract);
+        // You can add a success notification here
+      } else {
+        console.error('Failed to renew contract:', result.error);
+        // You can add an error notification here
+      }
+    } catch (error) {
+      console.error('Error renewing contract:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAddAddendum = async (addendumData: {
+    services: {
+      fireExtinguisherMaintenance: boolean;
+      alarmSystemMaintenance: boolean;
+      fireSuppressionMaintenance: boolean;
+      gasFireSuppression: boolean;
+      foamFireSuppression: boolean;
+    };
+    description: string;
+    effectiveDate: string;
+    contractValue: number;
+    notes?: string;
+  }): Promise<{ success: boolean; error?: string }> => {
+    setIsLoading(true);
+    try {
+      const result = await addContractAddendum(contract.contractId, addendumData);
+      if (result.success) {
+        setShowAddendumForm(false);
+        // Optionally refresh the contract data
+        console.log('Addendum added successfully');
+        // You can add a success notification here
+      } else {
+        console.error('Failed to add addendum:', result.error);
+        // You can add an error notification here
+      }
+      return result;
+    } catch (error) {
+      console.error('Error adding addendum:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error occurred' };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleViewArchivedContract = (archivedContract: Contract) => {
+    // Handle viewing an archived contract
+    console.log('Viewing archived contract:', archivedContract);
+    // You can implement this by opening a read-only view of the archived contract
   };
 
   // Calculate contract statistics - multiply visits per year by number of branches in each batch
@@ -73,8 +154,6 @@ export function ContractDetailView({
   const contractBranches = branches.filter(branch => 
     contract.serviceBatches?.some(batch => batch.branchIds && Array.isArray(batch.branchIds) && batch.branchIds.includes(branch.branchId))
   );
-
-
 
   return (
     <div className="space-y-6">
@@ -263,6 +342,48 @@ export function ContractDetailView({
             </CardContent>
           </Card>
 
+          {/* Addendums Section */}
+          {contract.addendums && contract.addendums.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="w-5 h-5" />
+                  الإضافات المرفقة
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {contract.addendums.map((addendum, index) => (
+                    <div key={addendum.addendumId} className="border rounded-lg p-4 bg-blue-50">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-medium text-blue-900">إضافة {index + 1}</h4>
+                        <Badge variant="outline" className="text-blue-700">
+                          {addendum.effectiveDate}
+                        </Badge>
+                      </div>
+                      <div className="space-y-2">
+                        <div>
+                          <label className="text-sm font-medium text-blue-700">الوصف:</label>
+                          <p className="text-sm text-blue-800">{addendum.description}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-blue-700">القيمة:</label>
+                          <p className="text-sm text-blue-800">{addendum.contractValue.toLocaleString()} ريال</p>
+                        </div>
+                        {addendum.notes && (
+                          <div>
+                            <label className="text-sm font-medium text-blue-700">ملاحظات:</label>
+                            <p className="text-sm text-blue-800">{addendum.notes}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Documents */}
           <Card>
             <CardHeader>
@@ -313,6 +434,23 @@ export function ContractDetailView({
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* Advanced Contract Management Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">إدارة العقد المتقدمة</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ContractActionButtons
+                contract={contract}
+                onRenewContract={() => setShowRenewalDialog(true)}
+                onAddAddendum={() => setShowAddendumForm(true)}
+                onViewArchived={() => setShowArchivedContracts(true)}
+                onEditContract={onEdit}
+                isLoading={isLoading}
+              />
+            </CardContent>
+          </Card>
+
           {/* Quick Stats */}
           <Card>
             <CardHeader>
@@ -443,6 +581,31 @@ export function ContractDetailView({
           onClose={() => setIsFileViewerOpen(false)}
         />
       )}
+
+      {/* Advanced Contract Management Modals */}
+      <ContractRenewalDialog
+        contract={contract}
+        isOpen={showRenewalDialog}
+        onClose={() => setShowRenewalDialog(false)}
+        onConfirm={handleRenewContract}
+        isLoading={isLoading}
+      />
+
+      <ContractAddendumForm
+        contract={contract}
+        isOpen={showAddendumForm}
+        onClose={() => setShowAddendumForm(false)}
+        onSubmit={handleAddAddendum}
+        isLoading={isLoading}
+      />
+
+      <ArchivedContractsView
+        contracts={contracts}
+        companies={companies}
+        isOpen={showArchivedContracts}
+        onClose={() => setShowArchivedContracts(false)}
+        onViewContract={handleViewArchivedContract}
+      />
     </div>
   );
 } 

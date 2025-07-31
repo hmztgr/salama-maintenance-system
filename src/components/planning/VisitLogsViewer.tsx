@@ -42,22 +42,14 @@ export default function VisitLogsViewer() {
   // Add totalVisits state
   const [totalVisits, setTotalVisits] = useState(0);
 
-  // Fetch data with pagination
-  const fetchData = useCallback(async (page: number = 1) => {
+  // Fetch all visits (for now, we'll optimize this later)
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       
-      // Calculate offset for pagination
-      const offset = (page - 1) * itemsPerPage;
-      
-      // Fetch visits with pagination
+      // Fetch all visits
       const visitsRef = collection(db, 'visits');
-      const visitsQuery = query(
-        visitsRef, 
-        orderBy('createdAt', 'desc'),
-        limit(itemsPerPage),
-        startAfter(offset > 0 ? offset : 0)
-      );
+      const visitsQuery = query(visitsRef, orderBy('createdAt', 'desc'));
       const visitsSnapshot = await getDocs(visitsQuery);
       
       const visitsData = visitsSnapshot.docs.map(doc => ({
@@ -67,11 +59,11 @@ export default function VisitLogsViewer() {
       
       setVisits(visitsData);
       
-      // Extract unique branch and company IDs for this page
+      // Extract unique branch and company IDs
       const branchIds = [...new Set(visitsData.map(visit => visit.branchId))];
       const companyIds = [...new Set(visitsData.map(visit => visit.companyId))];
       
-      // Fetch branches for this page
+      // Fetch branches
       const branchesMap: Record<string, string> = {};
       for (const branchId of branchIds) {
         if (branchId && !branches[branchId]) { // Only fetch if not already cached
@@ -91,7 +83,7 @@ export default function VisitLogsViewer() {
       }
       setBranches(prev => ({ ...prev, ...branchesMap }));
       
-      // Fetch companies for this page
+      // Fetch companies
       const companiesMap: Record<string, string> = {};
       for (const companyId of companyIds) {
         if (companyId && !companies[companyId]) { // Only fetch if not already cached
@@ -116,11 +108,11 @@ export default function VisitLogsViewer() {
     } finally {
       setLoading(false);
     }
-  }, [itemsPerPage, branches, companies]);
+  }, [branches, companies]);
 
   // Initial data fetch
   useEffect(() => {
-    fetchData(1);
+    fetchData();
   }, []);
 
   // Fetch total count for pagination
@@ -178,9 +170,11 @@ export default function VisitLogsViewer() {
     return filtered;
   }, [visitLogs, searchTerm, statusFilter]);
 
-  // Pagination (using totalVisits for server-side pagination)
-  const totalPages = Math.ceil(totalVisits / itemsPerPage);
-  const currentLogs = filteredLogs; // Current page data is already filtered
+  // Pagination (client-side pagination)
+  const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentLogs = filteredLogs.slice(startIndex, endIndex);
 
   const getActionLabel = (action: string) => {
     const labels: Record<string, string> = {
@@ -286,7 +280,7 @@ export default function VisitLogsViewer() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calendar className="h-5 w-5" />
-          سجلات الزيارات ({totalVisits})
+          سجلات الزيارات ({visits.length})
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -381,7 +375,7 @@ export default function VisitLogsViewer() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between pt-4 border-t">
             <div className="text-sm text-gray-600">
-              عرض {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, totalVisits)} من {totalVisits} سجل
+              عرض {startIndex + 1}-{Math.min(endIndex, filteredLogs.length)} من {filteredLogs.length} سجل
               </div>
             <div className="flex items-center gap-2">
               <Button
@@ -390,7 +384,6 @@ export default function VisitLogsViewer() {
                 onClick={() => {
                   const newPage = Math.max(1, currentPage - 1);
                   setCurrentPage(newPage);
-                  fetchData(newPage);
                 }}
                 disabled={currentPage === 1}
               >
@@ -417,7 +410,6 @@ export default function VisitLogsViewer() {
                       size="sm"
                       onClick={() => {
                         setCurrentPage(pageNum);
-                        fetchData(pageNum);
                       }}
                       className="w-8 h-8 p-0"
                     >
@@ -432,7 +424,6 @@ export default function VisitLogsViewer() {
                 onClick={() => {
                   const newPage = Math.min(totalPages, currentPage + 1);
                   setCurrentPage(newPage);
-                  fetchData(newPage);
                 }}
                 disabled={currentPage === totalPages}
               >

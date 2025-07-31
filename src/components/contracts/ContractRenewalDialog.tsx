@@ -28,9 +28,9 @@ export function ContractRenewalDialog({
 
   // Calculate new contract dates
   const currentEndDate = parseStandardDate(contract.contractEndDate);
-  const newStartDate = addDays(currentEndDate, 1);
+  const newStartDate = currentEndDate ? addDays(formatDateForDisplay(currentEndDate), 1) : '';
   const contractDuration = contract.contractPeriodMonths || 12;
-  const newEndDate = addMonths(newStartDate, contractDuration);
+  const newEndDate = newStartDate ? addMonths(newStartDate, contractDuration) : '';
 
   const handleConfirm = () => {
     onConfirm(withChanges);
@@ -95,13 +95,13 @@ export function ContractRenewalDialog({
                 <div>
                   <span className="font-medium">تاريخ البداية الجديد:</span>
                   <span className="mr-2 text-green-600 font-semibold">
-                    {formatDateForDisplay(newStartDate)}
+                    {newStartDate || 'غير محدد'}
                   </span>
                 </div>
                 <div>
                   <span className="font-medium">تاريخ الانتهاء الجديد:</span>
                   <span className="mr-2 text-green-600 font-semibold">
-                    {formatDateForDisplay(newEndDate)}
+                    {newEndDate || 'غير محدد'}
                   </span>
                 </div>
                 <div>

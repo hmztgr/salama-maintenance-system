@@ -18,6 +18,12 @@ export function useContractRenewal() {
     
     const startDate = parseStandardDate(contract.contractStartDate);
     const endDate = parseStandardDate(contract.contractEndDate);
+    
+    // Check if both dates are valid
+    if (!startDate || !endDate) {
+      return 12; // Default to 12 months if dates are invalid
+    }
+    
     const diffTime = endDate.getTime() - startDate.getTime();
     const diffMonths = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 30.44)); // Average days per month
     return diffMonths;

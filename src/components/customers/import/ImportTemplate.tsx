@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Download, Upload, FileText, CheckCircle, AlertTriangle, Info } from 'lucide-react';
+import { getCurrentDate } from '@/lib/date-handler';
 import { ImportReview } from './ImportReview';
 
 // Firebase integration for saving imported data
@@ -431,7 +432,17 @@ export function ImportTemplate({ entityType, onClose }: ImportTemplateProps) {
               contractPeriodMonths: 12, // Default value since not in CSV
               contractValue: parseFloat(importedItem.contractValue || '0'),
               serviceBatches,
-              notes: importedItem.notes || ''
+              notes: importedItem.notes || '',
+              // Advanced Contract Management fields
+              status: 'active' as const,
+              isRenewed: false,
+              addendums: [],
+              contractHistory: [{
+                action: 'created' as const,
+                timestamp: getCurrentDate(),
+                performedBy: 'Import Template',
+                description: 'تم إنشاء العقد من خلال الاستيراد'
+              }]
             };
 
             const result = await addContract(contractData);
@@ -482,7 +493,17 @@ export function ImportTemplate({ entityType, onClose }: ImportTemplateProps) {
               contractPeriodMonths: parseInt(importedItem.contractPeriodMonths || '0', 10),
               contractValue: parseFloat(importedItem.contractValue || '0'),
               serviceBatches,
-              notes: importedItem.contractNotes || ''
+              notes: importedItem.contractNotes || '',
+              // Advanced Contract Management fields
+              status: 'active' as const,
+              isRenewed: false,
+              addendums: [],
+              contractHistory: [{
+                action: 'created' as const,
+                timestamp: getCurrentDate(),
+                performedBy: 'Import Template',
+                description: 'تم إنشاء العقد المتقدم من خلال الاستيراد'
+              }]
             };
 
             const result = await addContract(contractData);

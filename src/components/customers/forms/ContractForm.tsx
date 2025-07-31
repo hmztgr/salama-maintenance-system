@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Contract, Company } from '@/types/customer';
-import { formatDateForInput, convertInputDateToStandard, parseStandardDate } from '@/lib/date-handler';
+import { formatDateForInput, convertInputDateToStandard, parseStandardDate, getCurrentDate } from '@/lib/date-handler';
 import { FileUpload } from '@/components/common/FileUpload';
 import { UploadedFile } from '@/hooks/useFirebaseStorage';
 
@@ -183,6 +183,16 @@ export function ContractForm({ contract, companies, onSubmit, onCancel, isLoadin
         notes: formData.notes,
         serviceBatches,
         ...(uploadedFiles.length > 0 && { contractDocument: uploadedFiles[0].url }),
+        // Advanced Contract Management fields
+        status: 'active' as const,
+        isRenewed: false,
+        addendums: [],
+        contractHistory: [{
+          action: 'created' as const,
+          timestamp: getCurrentDate(),
+          performedBy: 'Contract Form',
+          description: isEditing ? 'تم تعديل العقد' : 'تم إنشاء عقد جديد'
+        }]
       };
 
       onSubmit(contractData);

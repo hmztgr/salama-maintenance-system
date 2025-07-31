@@ -41,7 +41,11 @@ export function useContractRenewal() {
 
       // Calculate new contract dates
       const currentEndDate = parseStandardDate(contract.contractEndDate);
-      const newStartDate = addDays(currentEndDate, 1); // Start from next day
+      if (!currentEndDate) {
+        return { success: false, error: 'Invalid contract end date' };
+      }
+      
+      const newStartDate = addDays(formatDateForDisplay(currentEndDate), 1); // Start from next day
       const contractDuration = getContractDuration(contract);
       const newEndDate = addMonths(newStartDate, contractDuration);
 

@@ -148,6 +148,30 @@
 
 ---
 
+### **15. Company View Popup Statistics - FIXED** ✅ **RESOLVED**
+**Status**: 🟢 **CONFIRMED FIXED**
+**Reported**: 2025-01-24
+**Resolved**: 2025-01-24
+**Description**: Company view popup was showing "0" for both contracts and branches count in the "إحصائيات سريعة" section, even though the company had associated contracts and branches.
+
+**Files Modified**:
+- `src/components/customers/CompanyDetailView.tsx` - Added contracts and branches props, implemented statistics calculation logic
+- `src/components/customers/NewCustomerManagement.tsx` - Updated CompanyDetailView call to pass contracts and branches data
+
+**Root Cause**: The CompanyDetailView component was hardcoded to show "0" for statistics instead of calculating the actual counts from the data.
+
+**Solution Applied**:
+1. Added `contracts` and `branches` props to CompanyDetailViewProps interface
+2. Added statistics calculation logic to filter contracts and branches by company ID
+3. Updated the statistics display to show actual counts instead of hardcoded "0"
+4. Updated NewCustomerManagement to pass the required data to CompanyDetailView
+
+**User Feedback**: "i just noticed also that in customer tab > companies tab > company view popup page i can see ... but the "إحصائيات سريعة عدد العقود 0 عدد الفروع 0" are not getting the correct number of branches and contracts for this company"
+
+**Resolution**: Issue completely resolved. Company view popup now correctly displays the actual number of contracts and branches associated with each company.
+
+---
+
 ## ⚠️ **MEDIUM PRIORITY ISSUES**
 
 ### **7. Visit Logs Date Format - NOT CONFIRMED FIXED**
@@ -293,7 +317,7 @@ This created a mismatch where the same date could be in different weeks dependin
 - 🔴 **Critical Issues**: 4
 - 🟡 **Medium Priority**: 4
 - 🔍 **Needs Investigation**: 1
-- 🟢 **Resolved**: 5
+- 🟢 **Resolved**: 6
 - **Total Pending**: 9
 
 ### **By Category**:
@@ -429,6 +453,13 @@ This created a mismatch where the same date could be in different weeks dependin
 - Solution: Fixed visit calculation logic and moved services display to show per batch
 - Status changed to 🟢 CONFIRMED FIXED
 - Updated statistics: 5 resolved issues, 9 total pending
+
+### **2025-01-24 - Issue #15 Added and Resolved**
+- Added Company View Popup Statistics issue
+- Root cause: CompanyDetailView was hardcoded to show "0" for statistics instead of calculating actual counts
+- Solution: Added contracts and branches props, implemented statistics calculation logic
+- Status changed to 🟢 CONFIRMED FIXED
+- Updated statistics: 6 resolved issues, 9 total pending
 
 ---
 

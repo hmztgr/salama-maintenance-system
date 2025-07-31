@@ -39,7 +39,7 @@ FIREBASE_DATABASE_URL=https://your_project.firebaseio.com
 
 **Branch Purpose:**
 - **SSCO-planner-prod** = Production for end users (current Firebase)
-- **main** = Development branch (new Firebase project)
+- **ssco-planner-dev** = Development branch (new Firebase project) ⭐ **NEW**
 - **feature/weekly-planner-drag-drop** = Feature development branch
 
 ### 📝 Setup Steps
@@ -73,7 +73,7 @@ FIREBASE_DATABASE_URL=https://your_project.firebaseio.com
 ### 🔗 URLs
 
 - **Production (SSCO-planner-prod)**: https://ssco-planner.netlify.app/
-- **Development (main)**: [Your main branch Netlify URL - To be created]
+- **Development (ssco-planner-dev)**: [Your dev branch Netlify URL - To be created] ⭐ **NEW**
 - **Feature Development (feature/weekly-planner-drag-drop)**: [Your feature branch Netlify URL - To be created]
 
 ### ⚡ Quick Access to Environment Variables
@@ -92,46 +92,48 @@ Email: admin@salamasaudi.com
 Password: admin123456
 Role: مدير النظام (Admin)
 ```
-**Note**: These credentials are available in development branches (feature/weekly-planner-drag-drop, main) but have been removed from the production branch (SSCO-planner-prod) for security.
+**Note**: These credentials are available in development branches (feature/weekly-planner-drag-drop, ssco-planner-dev) but have been removed from the production branch (SSCO-planner-prod) for security.
 
 ### 🛡️ Security Notes
 
 - **Production (SSCO-planner-prod)**: Uses current Firebase project with real data
-- **Development (main)**: Will use new Firebase project for testing
+- **Development (ssco-planner-dev)**: Will use new Firebase project for testing ⭐ **NEW**
 - **Firebase Admin SDK**: Required for complete user deletion (Auth + Firestore)
 - **Quick Login**: Removed from production for security
 
 ## 🚀 Development Environment Setup
 
-### 📋 Step 1: Create ssco-planner-dev Firebase Project
+### ✅ COMPLETED STEPS
 
-1. **Go to Firebase Console**: https://console.firebase.google.com/
-2. **Create New Project**:
-   - Project name: `ssco-planner-dev`
-   - Project ID: `ssco-planner-dev` (or auto-generated)
-   - Enable Google Analytics: Optional
-   - Click "Create Project"
+1. **✅ Firebase Project Created**: `ssco-planner-dev` project created at https://console.firebase.google.com/u/0/project/ssco-planner-dev/firestore
+2. **✅ Firebase Configuration Updated**: `src/lib/firebase/config.ts` updated to support development environment
+3. **✅ Environment Detection**: Added `isDevEnvironment` logic to detect `ssco-planner-dev` project
 
-### 📋 Step 2: Configure Firebase Services
+### 📋 NEXT STEPS TO COMPLETE
+
+#### Step 1: Configure Firebase Services (Manual - Firebase Console)
 
 1. **Authentication**:
-   - Go to Authentication → Sign-in method
+   - Go to https://console.firebase.google.com/u/0/project/ssco-planner-dev/authentication
+   - Click "Get started"
    - Enable Email/Password authentication
-   - Add test users if needed
+   - Add test user: `admin@salamasaudi.com` / `admin123456`
 
 2. **Firestore Database**:
-   - Go to Firestore Database → Create database
+   - Go to https://console.firebase.google.com/u/0/project/ssco-planner-dev/firestore
+   - Click "Create database"
    - Start in test mode (for development)
-   - Choose a location (same as production)
+   - Choose location: `us-central1` (same as production)
 
 3. **Storage** (if needed):
-   - Go to Storage → Get started
+   - Go to https://console.firebase.google.com/u/0/project/ssco-planner-dev/storage
+   - Click "Get started"
    - Start in test mode
 
-### 📋 Step 3: Get Firebase Configuration
+#### Step 2: Get Firebase Configuration (Manual - Firebase Console)
 
 1. **Project Settings**:
-   - Go to Project Settings → General
+   - Go to https://console.firebase.google.com/u/0/project/ssco-planner-dev/settings/general
    - Scroll to "Your apps" section
    - Click "Add app" → Web app
    - App nickname: `ssco-planner-dev-web`
@@ -139,7 +141,7 @@ Role: مدير النظام (Admin)
 
 2. **Copy Configuration**:
    ```javascript
-   // Development Firebase Config
+   // Development Firebase Config (copy from Firebase Console)
    const firebaseConfig = {
      apiKey: "your_dev_api_key",
      authDomain: "ssco-planner-dev.firebaseapp.com",
@@ -151,46 +153,54 @@ Role: مدير النظام (Admin)
    };
    ```
 
-### 📋 Step 4: Update Main Branch for Development
+#### Step 3: Create GitHub Branch (Manual - Git Commands)
 
-1. **Switch to Main Branch**:
-   ```bash
-   git checkout main
-   ```
+```bash
+# Create and switch to development branch
+git checkout -b ssco-planner-dev
 
-2. **Update Firebase Config**:
-   - Replace `src/lib/firebase/config.ts` with development config
-   - Update environment variables for main branch Netlify site
+# Commit the Firebase configuration changes
+git add src/lib/firebase/config.ts
+git commit -m "Add development environment support for ssco-planner-dev"
 
-3. **Create Netlify Site for Main Branch**:
-   - Go to Netlify Dashboard
-   - New site from Git
-   - Connect to same repo
-   - Select `main` branch
+# Push the new branch to GitHub
+git push -u origin ssco-planner-dev
+```
+
+#### Step 4: Create Netlify Site for Development Branch (Manual - Netlify Dashboard)
+
+1. **Go to Netlify Dashboard**: https://app.netlify.com/
+2. **New site from Git**:
+   - Connect to same GitHub repo
+   - Select `ssco-planner-dev` branch
    - Set build command: `npm run build`
    - Set publish directory: `out`
+   - Site name: `ssco-planner-dev` (or auto-generated)
 
-4. **Configure Environment Variables**:
-   ```bash
-   # Development Firebase Configuration
-   NEXT_PUBLIC_FIREBASE_API_KEY=your_dev_firebase_api_key
-   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=ssco-planner-dev.firebaseapp.com
-   NEXT_PUBLIC_FIREBASE_PROJECT_ID=ssco-planner-dev
-   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=ssco-planner-dev.appspot.com
-   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_dev_messaging_sender_id
-   NEXT_PUBLIC_FIREBASE_APP_ID=your_dev_firebase_app_id
-   NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=your_dev_measurement_id
-   
-   # EmailJS Configuration (same as production)
-   NEXT_PUBLIC_EMAILJS_SERVICE_ID=your_emailjs_service_id
-   NEXT_PUBLIC_EMAILJS_TEMPLATE_ID=your_emailjs_template_id
-   NEXT_PUBLIC_EMAILJS_PUBLIC_KEY=your_emailjs_public_key
-   ```
+#### Step 5: Configure Environment Variables (Manual - Netlify Dashboard)
 
-### 📋 Step 5: Test Development Environment
+Add these environment variables to your **ssco-planner-dev Netlify Site**:
 
-1. **Deploy Main Branch**:
-   - Push changes to main branch
+```bash
+# Development Firebase Configuration
+NEXT_PUBLIC_FIREBASE_API_KEY=your_dev_firebase_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=ssco-planner-dev.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=ssco-planner-dev
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=ssco-planner-dev.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_dev_messaging_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_dev_firebase_app_id
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=your_dev_measurement_id
+
+# EmailJS Configuration (same as production)
+NEXT_PUBLIC_EMAILJS_SERVICE_ID=your_emailjs_service_id
+NEXT_PUBLIC_EMAILJS_TEMPLATE_ID=your_emailjs_template_id
+NEXT_PUBLIC_EMAILJS_PUBLIC_KEY=your_emailjs_public_key
+```
+
+#### Step 6: Test Development Environment
+
+1. **Deploy Development Branch**:
+   - Push changes to ssco-planner-dev branch
    - Verify Netlify deployment
 
 2. **Test Features**:
@@ -203,18 +213,18 @@ Role: مدير النظام (Admin)
    - Development site should have separate data
    - Production site should remain unaffected
 
-### 📋 Step 6: Update Documentation
+### 📋 Step 7: Update Documentation
 
 1. **Update URLs**:
-   - Add main branch Netlify URL to this document
+   - Add ssco-planner-dev branch Netlify URL to this document
    - Update feature branch URLs when created
 
 2. **Environment Summary**:
    - **Production**: https://ssco-planner.netlify.app/ (SSCO-planner-prod branch)
-   - **Development**: [Main branch URL] (main branch)
+   - **Development**: [ssco-planner-dev branch URL] (ssco-planner-dev branch) ⭐ **NEW**
    - **Feature**: [Feature branch URL] (feature/weekly-planner-drag-drop branch)
 
 ---
 
-**Last Updated:** January 19, 2025  
-**Status:** Production deployed, Development setup in progress 
+**Last Updated:** January 24, 2025  
+**Status:** Production deployed, Development setup in progress - Firebase config updated, manual steps remaining 

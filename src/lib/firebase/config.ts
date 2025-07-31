@@ -8,7 +8,8 @@ const isTestEnvironment = process.env.NEXT_PUBLIC_FIREBASE_ENV === 'test' ||
                          process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_TEST_FIREBASE === 'true';
 
 const isDevEnvironment = process.env.NEXT_PUBLIC_FIREBASE_ENV === 'dev' || 
-                        process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID === 'ssco-planner-dev';
+                        process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID === 'ssco-planner-dev' ||
+                        (process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN && process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN.includes('ssco-planner-dev'));
 
 // Firebase configuration - loaded from environment variables or use actual project config
 const firebaseConfig = isTestEnvironment ? {
@@ -22,13 +23,13 @@ const firebaseConfig = isTestEnvironment ? {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_TEST_MEASUREMENT_ID || "G-HB1VBJN9HD",
 } : isDevEnvironment ? {
   // Development environment config (ssco-planner-dev)
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "your_dev_firebase_api_key",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyD0338M0lbA23D_H48Zoq7ecTZ6zy3oMbI",
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "ssco-planner-dev.firebaseapp.com",
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "ssco-planner-dev",
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "ssco-planner-dev.appspot.com",
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "your_dev_messaging_sender_id",
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "your_dev_firebase_app_id",
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "your_dev_measurement_id",
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "ssco-planner-dev.firebasestorage.app",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "804390238850",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:804390238850:web:cc1fb512b1eb839c6c929b",
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-KY66P8CL4L",
 } : {
   // Production environment config
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyBIyQYGTyB0v8ERXDUAB5-9IPlZda9P7Bw",
@@ -39,6 +40,14 @@ const firebaseConfig = isTestEnvironment ? {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:147270460266:web:0f8decd600a927e52d7b13",
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-HB1VBJN9HD",
 };
+
+// Debug environment detection
+console.log('🔍 Environment Detection Debug:');
+console.log('NEXT_PUBLIC_FIREBASE_ENV:', process.env.NEXT_PUBLIC_FIREBASE_ENV);
+console.log('NEXT_PUBLIC_FIREBASE_PROJECT_ID:', process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
+console.log('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN:', process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN);
+console.log('isTestEnvironment:', isTestEnvironment);
+console.log('isDevEnvironment:', isDevEnvironment);
 
 // Validate configuration
 if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY && !isTestEnvironment && !isDevEnvironment) {

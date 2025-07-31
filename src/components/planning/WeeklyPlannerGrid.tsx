@@ -400,7 +400,16 @@ function WeeklyVisitCard({
               {visit.type === 'emergency' ? '🚨 طارئة' : '📅 عادية'}
             </span>
             {visit.status === 'completed' && (
-              <span className="badge badge-completed">✅ مكتملة</span>
+              <button 
+                className="badge badge-completed cursor-pointer hover:bg-green-200 transition-colors" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onVisitAction({ type: 'complete', visit });
+                }}
+                title="عرض تفاصيل الزيارة المكتملة"
+              >
+                ✅ مكتملة
+              </button>
             )}
           </div>
         </div>

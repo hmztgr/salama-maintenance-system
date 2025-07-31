@@ -11,7 +11,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, Plus, FileText, Calendar } from 'lucide-react';
 import { Contract } from '@/types/customer';
-import { formatDateForInput } from '@/lib/date-handler';
+import { formatDateForInput, formatDateForDisplay } from '@/lib/date-handler';
 
 interface ContractAddendumFormProps {
   contract: Contract;
@@ -42,7 +42,7 @@ export function ContractAddendumForm({
 }: ContractAddendumFormProps) {
   const [formData, setFormData] = useState({
     description: '',
-    effectiveDate: formatDateForInput(new Date()),
+    effectiveDate: formatDateForInput(formatDateForDisplay(new Date())),
     contractValue: 0,
     notes: '',
     services: {
@@ -117,7 +117,7 @@ export function ContractAddendumForm({
       // Reset form
       setFormData({
         description: '',
-        effectiveDate: formatDateForInput(new Date()),
+        effectiveDate: formatDateForInput(formatDateForDisplay(new Date())),
         contractValue: 0,
         notes: '',
         services: {
@@ -138,7 +138,7 @@ export function ContractAddendumForm({
   const handleClose = () => {
     setFormData({
       description: '',
-      effectiveDate: formatDateForInput(new Date()),
+      effectiveDate: formatDateForInput(formatDateForDisplay(new Date())),
       contractValue: 0,
       notes: '',
       services: {

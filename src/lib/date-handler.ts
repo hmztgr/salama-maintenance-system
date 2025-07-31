@@ -457,6 +457,48 @@ export function validateAndFixDate(dateString: string): { isValid: boolean; fixe
 }
 
 /**
+ * Add days to a date
+ * @param dateString - Date in dd-mmm-yyyy format
+ * @param days - Number of days to add (can be negative)
+ * @returns New date string in dd-mmm-yyyy format
+ */
+export function addDays(dateString: string, days: number): string {
+  try {
+    const date = parseStandardDate(dateString);
+    if (!date) {
+      throw new Error('Invalid date');
+    }
+
+    date.setDate(date.getDate() + days);
+    return formatDateForDisplay(date);
+  } catch (error) {
+    console.error('Error adding days to date:', error);
+    return dateString;
+  }
+}
+
+/**
+ * Add months to a date
+ * @param dateString - Date in dd-mmm-yyyy format
+ * @param months - Number of months to add (can be negative)
+ * @returns New date string in dd-mmm-yyyy format
+ */
+export function addMonths(dateString: string, months: number): string {
+  try {
+    const date = parseStandardDate(dateString);
+    if (!date) {
+      throw new Error('Invalid date');
+    }
+
+    date.setMonth(date.getMonth() + months);
+    return formatDateForDisplay(date);
+  } catch (error) {
+    console.error('Error adding months to date:', error);
+    return dateString;
+  }
+}
+
+/**
  * Test function to verify week calculations
  * This function can be called to test if week calculations are working correctly
  */

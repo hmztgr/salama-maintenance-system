@@ -9,7 +9,7 @@ import { useContracts } from '@/hooks/useContracts';
 import { useBranches } from '@/hooks/useBranches';
 import { useVisits } from '@/hooks/useVisits';
 import { useAuth } from '@/contexts/AuthContextFirebase';
-import { formatDateForDisplay } from '@/lib/date-handler';
+import { formatDateForDisplay, getCurrentDate } from '@/lib/date-handler';
 import { Database, Trash2, RefreshCw } from 'lucide-react';
 import { Branch } from '@/types/customer';
 
@@ -258,7 +258,17 @@ export function DemoDataGenerator() {
             serviceBatches,
             notes: hasMultipleContracts
               ? `عقد ${contractIndex === 0 ? 'الخدمات الأساسية' : 'الخدمات المتقدمة'}`
-              : 'عقد صيانة شامل'
+              : 'عقد صيانة شامل',
+            // Advanced Contract Management fields
+            status: 'active' as const,
+            isRenewed: false,
+            addendums: [],
+            contractHistory: [{
+              action: 'created' as const,
+              timestamp: getCurrentDate(),
+              performedBy: 'Demo Data Generator',
+              description: 'عقد تم إنشاؤه بواسطة مولد البيانات التجريبية'
+            }]
           };
 
           console.log('🔄 Creating contract with data:', contractData);

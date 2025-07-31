@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { AlertCircle, CheckCircle, Save, X, Plus, Trash2, Building, MapPin } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Contract, Company, Branch, ContractServiceBatch } from '@/types/customer';
-import { convertInputDateToStandard, parseStandardDate } from '@/lib/date-handler';
+import { convertInputDateToStandard, parseStandardDate, getCurrentDate } from '@/lib/date-handler';
 import { FileUpload } from '@/components/common/FileUpload';
 import { UploadedFile } from '@/hooks/useFirebaseStorage';
 
@@ -323,6 +323,16 @@ export function EnhancedContractForm({
       ...formData,
       serviceBatches,
       ...(uploadedFiles.length > 0 && { contractDocument: uploadedFiles[0].url }),
+      // Advanced Contract Management fields
+      status: 'active' as const,
+      isRenewed: false,
+      addendums: [],
+      contractHistory: [{
+        action: 'created' as const,
+        timestamp: getCurrentDate(),
+        performedBy: 'Enhanced Contract Form',
+        description: isEditing ? 'تم تعديل العقد' : 'تم إنشاء عقد جديد'
+      }]
     };
 
     console.log('🚀 EnhancedContractForm - Submitting contract data:', {

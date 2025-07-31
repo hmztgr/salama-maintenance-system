@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Search, Filter, Download, Calendar, User, Building, ChevronLeft, ChevronRight, MapPin, Clock } from 'lucide-react';
 import { Visit } from '@/types/customer';
 import { VisitForm } from './VisitForm';
-import { VisitDetailsView } from './VisitDetailsView';
+import { CompletedVisitViewModal } from './CompletedVisitViewModal';
 
 interface VisitLog {
   id: string;
@@ -65,7 +65,7 @@ export default function VisitLogsViewer() {
         for (const branchId of branchIds) {
           try {
             const branchDoc = await getDoc(doc(db, 'branches', branchId));
-            if (branchDoc.exists()) {
+              if (branchDoc.exists()) {
               branchesMap[branchId] = branchDoc.data().branchName || 'غير محدد';
             } else {
               branchesMap[branchId] = 'غير محدد';
@@ -82,7 +82,7 @@ export default function VisitLogsViewer() {
         for (const companyId of companyIds) {
           try {
             const companyDoc = await getDoc(doc(db, 'companies', companyId));
-            if (companyDoc.exists()) {
+              if (companyDoc.exists()) {
               companiesMap[companyId] = companyDoc.data().companyName || 'غير محدد';
             } else {
               companiesMap[companyId] = 'غير محدد';
@@ -128,7 +128,7 @@ export default function VisitLogsViewer() {
   const filteredLogs = useMemo(() => {
     let filtered = visitLogs;
 
-    if (searchTerm) {
+      if (searchTerm) {
       filtered = filtered.filter(log => 
         log.visitId.toLowerCase().includes(searchTerm.toLowerCase()) ||
         log.branchName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -190,18 +190,18 @@ export default function VisitLogsViewer() {
 
   const exportToCSV = () => {
     const headers = ['Visit ID', 'Action', 'Date', 'Branch', 'Company', 'Contract', 'Status'];
-    const csvContent = [
-      headers.join(','),
-      ...filteredLogs.map(log => [
+          const csvContent = [
+        headers.join(','),
+        ...filteredLogs.map(log => [
         log.visitId,
         getActionLabel(log.action),
         formatDate(log.completedAt || log.cancelledAt || log.originalDate),
-        log.branchName || '',
-        log.companyName || '',
+          log.branchName || '',
+          log.companyName || '',
         log.contractId || '',
         log.overallStatus || ''
-      ].join(','))
-    ].join('\n');
+        ].join(','))
+      ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -262,33 +262,33 @@ export default function VisitLogsViewer() {
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
+                <Input
               placeholder="البحث في السجلات..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full sm:w-48">
               <SelectValue placeholder="تصفية حسب الحالة" />
-            </SelectTrigger>
-            <SelectContent>
+                </SelectTrigger>
+                <SelectContent>
               <SelectItem value="all">جميع الحالات</SelectItem>
-              <SelectItem value="completed">مكتملة</SelectItem>
-              <SelectItem value="cancelled">ملغية</SelectItem>
+                  <SelectItem value="completed">مكتملة</SelectItem>
+                  <SelectItem value="cancelled">ملغية</SelectItem>
               <SelectItem value="scheduled">مجدولة</SelectItem>
               <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
               <SelectItem value="rescheduled">إعادة جدولة</SelectItem>
-            </SelectContent>
-          </Select>
+                </SelectContent>
+              </Select>
           <Button onClick={exportToCSV} variant="outline" className="flex items-center gap-2">
             <Download className="h-4 w-4" />
             تصدير CSV
-          </Button>
-        </div>
+        </Button>
+      </div>
 
-        {/* Logs List */}
+      {/* Logs List */}
         <div className="space-y-2">
           {currentLogs.map((log) => {
             const visit = visits.find(v => v.id === log.id);
@@ -309,8 +309,8 @@ export default function VisitLogsViewer() {
                     </div>
                     <Badge variant={getActionBadgeVariant(log.action)} className="text-xs">
                       {getActionLabel(log.action)}
-                    </Badge>
-                  </div>
+                  </Badge>
+                </div>
 
                   {/* Line 2: Visit ID and Company */}
                   <div className="flex justify-between items-center mb-2">
@@ -318,8 +318,8 @@ export default function VisitLogsViewer() {
                     <div className="flex items-center gap-1">
                       <Building className="h-3 w-3 text-gray-500" />
                       <span className="text-xs text-gray-700">{log.companyName}</span>
-                    </div>
-                  </div>
+                </div>
+              </div>
 
                   {/* Line 3: Branch and Contract */}
                   <div className="flex justify-between items-center mb-2">
@@ -343,14 +343,14 @@ export default function VisitLogsViewer() {
               </Card>
             );
           })}
-        </div>
+                </div>
 
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between pt-4 border-t">
             <div className="text-sm text-gray-600">
               عرض {startIndex + 1}-{Math.min(endIndex, filteredLogs.length)} من {filteredLogs.length} سجل
-            </div>
+              </div>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
@@ -396,17 +396,17 @@ export default function VisitLogsViewer() {
                 التالي
                 <ChevronRight className="h-4 w-4" />
               </Button>
-            </div>
-          </div>
-        )}
+                </div>
+                </div>
+              )}
 
         {currentLogs.length === 0 && (
           <div className="text-center py-8 text-gray-500">
             لا توجد سجلات مطابقة للبحث
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
     {/* Visit Details Modal */}
     {showVisitForm && selectedVisit && (
@@ -417,13 +417,14 @@ export default function VisitLogsViewer() {
       />
     )}
 
-    {/* Visit Details View for completed visits */}
-    {!showVisitForm && selectedVisit && selectedVisit.status === 'completed' && (
-      <VisitDetailsView
-        visit={selectedVisit}
-        onClose={handleVisitFormClose}
-      />
-    )}
+          {/* Completed Visit View Modal for completed visits */}
+      {!showVisitForm && selectedVisit && selectedVisit.status === 'completed' && (
+        <CompletedVisitViewModal
+          visit={selectedVisit}
+          isOpen={!!selectedVisit}
+          onClose={handleVisitFormClose}
+        />
+      )}
   </>
   );
 } 

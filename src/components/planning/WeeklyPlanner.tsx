@@ -8,6 +8,7 @@ import { WeeklyPlannerGrid } from './WeeklyPlannerGrid';
 import { ButtonBasedInterface } from './ButtonBasedInterface';
 import { WeekStatusOverview } from './WeekStatusOverview';
 import { MoveVisitDialog } from './MoveVisitDialog';
+import { CompletedVisitViewModal } from './CompletedVisitViewModal';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Calendar, Download, Printer, Check } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContextFirebase';
@@ -36,6 +37,8 @@ export function WeeklyPlanner({
   });
   const [showMoveDialog, setShowMoveDialog] = useState(false);
   const [selectedVisit, setSelectedVisit] = useState<Visit | null>(null);
+  const [showCompletedVisitModal, setShowCompletedVisitModal] = useState(false);
+  const [completedVisit, setCompletedVisit] = useState<Visit | null>(null);
   const [weekStatus, setWeekStatus] = useState<'draft' | 'approved'>('draft');
 
   // Test week calculations on component mount
@@ -145,8 +148,14 @@ export function WeeklyPlanner({
         setShowMoveDialog(true);
         break;
       case 'complete':
-        // Navigate to visit completion form
-        window.location.href = `/planning/visit-completion?visitId=${action.visit.id}`;
+        // Show completed visit view modal for completed visits
+        if (action.visit.status === 'completed') {
+          setCompletedVisit(action.visit);
+          setShowCompletedVisitModal(true);
+        } else {
+          // Navigate to visit completion form for non-completed visits
+          window.location.href = `/planning/visit-completion?visitId=${action.visit.id}`;
+        }
         break;
       case 'cancel':
         // Navigate to cancellation form
@@ -364,6 +373,18 @@ export function WeeklyPlanner({
             onCancel={() => {
               setShowMoveDialog(false);
               setSelectedVisit(null);
+            }}
+          />
+        )}
+
+        {/* Completed Visit View Modal */}
+        {showCompletedVisitModal && completedVisit && (
+          <CompletedVisitViewModal
+            visit={completedVisit}
+            isOpen={showCompletedVisitModal}
+            onClose={() => {
+              setShowCompletedVisitModal(false);
+              setCompletedVisit(null);
             }}
           />
         )}

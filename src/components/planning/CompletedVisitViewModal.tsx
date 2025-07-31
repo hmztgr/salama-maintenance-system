@@ -36,7 +36,8 @@ export function CompletedVisitViewModal({ visit, isOpen, onClose }: CompletedVis
         if (visit.branchId) {
           const branchDoc = await getDoc(doc(db, 'branches', visit.branchId));
           if (branchDoc.exists()) {
-            setBranchName(branchDoc.data().branchName || 'فرع غير معروف');
+            const branchData = branchDoc.data();
+            setBranchName(branchData.branchName || branchData.name || 'فرع غير معروف');
           } else {
             setBranchName('فرع غير معروف');
           }
@@ -46,7 +47,8 @@ export function CompletedVisitViewModal({ visit, isOpen, onClose }: CompletedVis
         if (visit.companyId) {
           const companyDoc = await getDoc(doc(db, 'companies', visit.companyId));
           if (companyDoc.exists()) {
-            setCompanyName(companyDoc.data().companyName || 'شركة غير معروفة');
+            const companyData = companyDoc.data();
+            setCompanyName(companyData.companyName || companyData.name || 'شركة غير معروفة');
           } else {
             setCompanyName('شركة غير معروفة');
           }

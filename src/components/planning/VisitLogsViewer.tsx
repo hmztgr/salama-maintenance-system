@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { collection, query, orderBy, getDocs, where, doc, getDoc } from 'firebase/firestore';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { collection, query, orderBy, getDocs, where, doc, getDoc, limit, startAfter, getCountFromServer } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -39,34 +39,47 @@ export default function VisitLogsViewer() {
   const [selectedVisit, setSelectedVisit] = useState<Visit | null>(null);
   const [showVisitForm, setShowVisitForm] = useState(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        
-        // Fetch visits
-        const visitsRef = collection(db, 'visits');
-        const visitsQuery = query(visitsRef, orderBy('createdAt', 'desc'));
-        const visitsSnapshot = await getDocs(visitsQuery);
-        
-        const visitsData = visitsSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Visit[];
-        
-        setVisits(visitsData);
-        
-        // Extract unique branch and company IDs
-        const branchIds = [...new Set(visitsData.map(visit => visit.branchId))];
-        const companyIds = [...new Set(visitsData.map(visit => visit.companyId))];
-        
-        // Fetch branches
-        const branchesMap: Record<string, string> = {};
-        for (const branchId of branchIds) {
+  // Add totalVisits state
+  const [totalVisits, setTotalVisits] = useState(0);
+
+  // Fetch data with pagination
+  const fetchData = useCallback(async (page: number = 1) => {
+    try {
+      setLoading(true);
+      
+      // Calculate offset for pagination
+      const offset = (page - 1) * itemsPerPage;
+      
+      // Fetch visits with pagination
+      const visitsRef = collection(db, 'visits');
+      const visitsQuery = query(
+        visitsRef, 
+        orderBy('createdAt', 'desc'),
+        limit(itemsPerPage),
+        startAfter(offset > 0 ? offset : 0)
+      );
+      const visitsSnapshot = await getDocs(visitsQuery);
+      
+      const visitsData = visitsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Visit[];
+      
+      setVisits(visitsData);
+      
+      // Extract unique branch and company IDs for this page
+      const branchIds = [...new Set(visitsData.map(visit => visit.branchId))];
+      const companyIds = [...new Set(visitsData.map(visit => visit.companyId))];
+      
+      // Fetch branches for this page
+      const branchesMap: Record<string, string> = {};
+      for (const branchId of branchIds) {
+        if (branchId && !branches[branchId]) { // Only fetch if not already cached
           try {
             const branchDoc = await getDoc(doc(db, 'branches', branchId));
-              if (branchDoc.exists()) {
-              branchesMap[branchId] = branchDoc.data().branchName || 'غير محدد';
+            if (branchDoc.exists()) {
+              const branchData = branchDoc.data();
+              branchesMap[branchId] = branchData.branchName || branchData.name || 'غير محدد';
             } else {
               branchesMap[branchId] = 'غير محدد';
             }
@@ -75,15 +88,18 @@ export default function VisitLogsViewer() {
             branchesMap[branchId] = 'غير محدد';
           }
         }
-        setBranches(branchesMap);
-        
-        // Fetch companies
-        const companiesMap: Record<string, string> = {};
-        for (const companyId of companyIds) {
+      }
+      setBranches(prev => ({ ...prev, ...branchesMap }));
+      
+      // Fetch companies for this page
+      const companiesMap: Record<string, string> = {};
+      for (const companyId of companyIds) {
+        if (companyId && !companies[companyId]) { // Only fetch if not already cached
           try {
             const companyDoc = await getDoc(doc(db, 'companies', companyId));
-              if (companyDoc.exists()) {
-              companiesMap[companyId] = companyDoc.data().companyName || 'غير محدد';
+            if (companyDoc.exists()) {
+              const companyData = companyDoc.data();
+              companiesMap[companyId] = companyData.companyName || companyData.name || 'غير محدد';
             } else {
               companiesMap[companyId] = 'غير محدد';
             }
@@ -92,16 +108,34 @@ export default function VisitLogsViewer() {
             companiesMap[companyId] = 'غير محدد';
           }
         }
-        setCompanies(companiesMap);
-        
+      }
+      setCompanies(prev => ({ ...prev, ...companiesMap }));
+      
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [itemsPerPage, branches, companies]);
+
+  // Initial data fetch
+  useEffect(() => {
+    fetchData(1);
+  }, []);
+
+  // Fetch total count for pagination
+  useEffect(() => {
+    const fetchTotalCount = async () => {
+      try {
+        const visitsRef = collection(db, 'visits');
+        const snapshot = await getCountFromServer(visitsRef);
+        setTotalVisits(snapshot.data().count);
       } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setLoading(false);
+        console.error('Error fetching total count:', error);
       }
     };
-
-    fetchData();
+    
+    fetchTotalCount();
   }, []);
 
   // Convert visits to logs format
@@ -124,11 +158,11 @@ export default function VisitLogsViewer() {
     });
   }, [visits, branches, companies]);
 
-  // Filter logs based on search and status
+  // Filter logs based on search and status (client-side filtering for current page only)
   const filteredLogs = useMemo(() => {
     let filtered = visitLogs;
 
-      if (searchTerm) {
+    if (searchTerm) {
       filtered = filtered.filter(log => 
         log.visitId.toLowerCase().includes(searchTerm.toLowerCase()) ||
         log.branchName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -144,11 +178,9 @@ export default function VisitLogsViewer() {
     return filtered;
   }, [visitLogs, searchTerm, statusFilter]);
 
-  // Pagination
-  const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentLogs = filteredLogs.slice(startIndex, endIndex);
+  // Pagination (using totalVisits for server-side pagination)
+  const totalPages = Math.ceil(totalVisits / itemsPerPage);
+  const currentLogs = filteredLogs; // Current page data is already filtered
 
   const getActionLabel = (action: string) => {
     const labels: Record<string, string> = {
@@ -254,7 +286,7 @@ export default function VisitLogsViewer() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calendar className="h-5 w-5" />
-          سجلات الزيارات ({filteredLogs.length})
+          سجلات الزيارات ({totalVisits})
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -349,13 +381,17 @@ export default function VisitLogsViewer() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between pt-4 border-t">
             <div className="text-sm text-gray-600">
-              عرض {startIndex + 1}-{Math.min(endIndex, filteredLogs.length)} من {filteredLogs.length} سجل
+              عرض {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, totalVisits)} من {totalVisits} سجل
               </div>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                onClick={() => {
+                  const newPage = Math.max(1, currentPage - 1);
+                  setCurrentPage(newPage);
+                  fetchData(newPage);
+                }}
                 disabled={currentPage === 1}
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -379,7 +415,10 @@ export default function VisitLogsViewer() {
                       key={pageNum}
                       variant={currentPage === pageNum ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setCurrentPage(pageNum)}
+                      onClick={() => {
+                        setCurrentPage(pageNum);
+                        fetchData(pageNum);
+                      }}
                       className="w-8 h-8 p-0"
                     >
                       {pageNum}
@@ -390,7 +429,11 @@ export default function VisitLogsViewer() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                onClick={() => {
+                  const newPage = Math.min(totalPages, currentPage + 1);
+                  setCurrentPage(newPage);
+                  fetchData(newPage);
+                }}
                 disabled={currentPage === totalPages}
               >
                 التالي

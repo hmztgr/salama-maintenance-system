@@ -122,6 +122,32 @@
 
 ---
 
+### **14. Contract View Popup Visit Calculations - FIXED** ✅ **RESOLVED**
+**Status**: 🟢 **CONFIRMED FIXED**
+**Reported**: 2025-01-24
+**Resolved**: 2025-01-24
+**Description**: Contract view popup was showing incorrect total visit calculations. It was summing visits per year from each batch instead of multiplying by the number of branches in each batch. Also, services were displayed globally instead of per batch.
+
+**Example**: Contract with 2 batches - Batch 1: 35 branches × 3 visits/year, Batch 2: 12 branches × 4 visits/year. Should show 153 total visits ((35×3) + (12×4)), but was showing only 7 visits.
+
+**Files Modified**:
+- `src/components/customers/ContractDetailView.tsx` - Fixed visit calculation logic to multiply visits per year by branch count per batch, and moved services display to show per batch instead of globally
+
+**Root Cause**: 
+1. Visit calculation was using `sum + (batch.regularVisitsPerYear || 0)` instead of `sum + ((batch.regularVisitsPerYear || 0) * branchCount)`
+2. Services were displayed globally in a separate section instead of showing per batch
+
+**Solution Applied**:
+1. Updated visit calculation to multiply visits per year by the number of branches in each batch
+2. Removed global services display and added services display per batch in the Service Batches section
+3. Updated services count calculation to sum services across all batches
+
+**User Feedback**: "i just noticed something in customer tab > contracts tab >contract view popup page as an example this contract ... it is not giving proper info its showing 7 visits per year but it should be (batch 1 branches number * visits per year) + (batch 2 branches number * visits per year) + and so on so for this example it should be (35 * 3) + (12 * 4) = 153 vists in total ... same goes for this area "إحصائيات العقد إجمالي الزيارات 7 عدد الفروع 47 عدد الخدمات 3 تاريخ الإنشاء 29-Jul-2025 آخر تحديث 29-Jul-2025" also for the "الخدمات المقدمة 🧯 طفايات ⚠️ إنذار 💧 إطفاء" i think those should be shown for each batch indebendently because each batch could have different services"
+
+**Resolution**: Issue completely resolved. Contract view popup now correctly calculates total visits by multiplying visits per year by branch count per batch, and displays services per batch independently.
+
+---
+
 ## ⚠️ **MEDIUM PRIORITY ISSUES**
 
 ### **7. Visit Logs Date Format - NOT CONFIRMED FIXED**
@@ -267,7 +293,7 @@ This created a mismatch where the same date could be in different weeks dependin
 - 🔴 **Critical Issues**: 4
 - 🟡 **Medium Priority**: 4
 - 🔍 **Needs Investigation**: 1
-- 🟢 **Resolved**: 4
+- 🟢 **Resolved**: 5
 - **Total Pending**: 9
 
 ### **By Category**:
@@ -396,6 +422,13 @@ This created a mismatch where the same date could be in different weeks dependin
 - User confirmed: "perfect it shows 27th as sunday and the 1st of january as wednesday now"
 - Issue completely resolved and confirmed working
 - Status changed to 🟢 CONFIRMED FIXED
+
+### **2025-01-24 - Issue #14 Added and Resolved**
+- Added Contract View Popup Visit Calculations issue
+- Root cause: Visit calculation was summing visits per year instead of multiplying by branch count per batch
+- Solution: Fixed visit calculation logic and moved services display to show per batch
+- Status changed to 🟢 CONFIRMED FIXED
+- Updated statistics: 5 resolved issues, 9 total pending
 
 ---
 

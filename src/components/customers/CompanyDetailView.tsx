@@ -20,11 +20,13 @@ import {
   Users,
   ClipboardList
 } from 'lucide-react';
-import { Company } from '@/types/customer';
+import { Company, Contract, Branch } from '@/types/customer';
 import { formatDateForDisplay } from '@/lib/date-handler';
 
 interface CompanyDetailViewProps {
   company: Company;
+  contracts?: Contract[];
+  branches?: Branch[];
   onBack: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -36,6 +38,8 @@ interface CompanyDetailViewProps {
 
 export function CompanyDetailView({ 
   company, 
+  contracts = [],
+  branches = [],
   onBack, 
   onEdit, 
   onDelete, 
@@ -76,6 +80,10 @@ export function CompanyDetailView({
     link.download = fileName;
     link.click();
   };
+
+  // Calculate company statistics
+  const companyContracts = contracts.filter(contract => contract.companyId === company.companyId);
+  const companyBranches = branches.filter(branch => branch.companyId === company.companyId);
 
   return (
     <div className="space-y-6">
@@ -328,11 +336,11 @@ export function CompanyDetailView({
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">عدد العقود</span>
-                <Badge variant="outline">0</Badge>
+                <Badge variant="outline">{companyContracts.length}</Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">عدد الفروع</span>
-                <Badge variant="outline">0</Badge>
+                <Badge variant="outline">{companyBranches.length}</Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">تاريخ الإنشاء</span>

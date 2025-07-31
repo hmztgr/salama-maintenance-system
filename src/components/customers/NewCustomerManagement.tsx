@@ -1254,6 +1254,8 @@ export function NewCustomerManagement({ className = '' }: NewCustomerManagementP
             <div className="flex-1 overflow-y-auto p-6">
               <CompanyDetailView
                 company={selectedCompany}
+                contracts={contracts}
+                branches={branches}
                 onBack={() => setSelectedCompany(null)}
                 onEdit={() => {
                   setEditingCompany(selectedCompany);

@@ -58,9 +58,15 @@ export function ContractDetailView({
     link.click();
   };
 
-  // Calculate contract statistics
-  const totalRegularVisits = contract.serviceBatches?.reduce((sum, batch) => sum + (batch.regularVisitsPerYear || 0), 0) || 0;
-  const totalEmergencyVisits = contract.serviceBatches?.reduce((sum, batch) => sum + (batch.emergencyVisitsPerYear || 0), 0) || 0;
+  // Calculate contract statistics - multiply visits per year by number of branches in each batch
+  const totalRegularVisits = contract.serviceBatches?.reduce((sum, batch) => {
+    const branchCount = batch.branchIds?.length || 0;
+    return sum + ((batch.regularVisitsPerYear || 0) * branchCount);
+  }, 0) || 0;
+  const totalEmergencyVisits = contract.serviceBatches?.reduce((sum, batch) => {
+    const branchCount = batch.branchIds?.length || 0;
+    return sum + ((batch.emergencyVisitsPerYear || 0) * branchCount);
+  }, 0) || 0;
   const totalValue = contract.contractValue || 0;
 
   // Get contract branches
@@ -68,52 +74,7 @@ export function ContractDetailView({
     contract.serviceBatches?.some(batch => batch.branchIds && Array.isArray(batch.branchIds) && batch.branchIds.includes(branch.branchId))
   );
 
-  // Extract services from all service batches
-  const services: Array<{name: string; icon: string; color: string}> = [];
-  const serviceSet = new Set<string>();
-  
-  contract.serviceBatches?.forEach(batch => {
-    if (batch.services.fireExtinguisherMaintenance && !serviceSet.has('fireExtinguisher')) {
-      services.push({
-        name: 'طفايات',
-        icon: '🧯',
-        color: 'bg-red-100 text-red-800 border-red-200'
-      });
-      serviceSet.add('fireExtinguisher');
-    }
-    if (batch.services.alarmSystemMaintenance && !serviceSet.has('alarm')) {
-      services.push({
-        name: 'إنذار',
-        icon: '⚠️',
-        color: 'bg-yellow-100 text-yellow-800 border-yellow-200'
-      });
-      serviceSet.add('alarm');
-    }
-    if (batch.services.fireSuppressionMaintenance && !serviceSet.has('suppression')) {
-      services.push({
-        name: 'إطفاء',
-        icon: '💧',
-        color: 'bg-blue-100 text-blue-800 border-blue-200'
-      });
-      serviceSet.add('suppression');
-    }
-    if (batch.services.gasFireSuppression && !serviceSet.has('gas')) {
-      services.push({
-        name: 'غاز',
-        icon: '🟦',
-        color: 'bg-indigo-100 text-indigo-800 border-indigo-200'
-      });
-      serviceSet.add('gas');
-    }
-    if (batch.services.foamFireSuppression && !serviceSet.has('foam')) {
-      services.push({
-        name: 'فوم',
-        icon: '🟢',
-        color: 'bg-green-100 text-green-800 border-green-200'
-      });
-      serviceSet.add('foam');
-    }
-  });
+
 
   return (
     <div className="space-y-6">
@@ -201,18 +162,6 @@ export function ContractDetailView({
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex flex-wrap gap-2">
-                  {services.map(service => (
-                    <span
-                      key={service.name}
-                      className={`text-sm px-3 py-1 rounded-full border ${service.color} flex items-center gap-2`}
-                    >
-                      <span>{service.icon}</span>
-                      <span>{service.name}</span>
-                    </span>
-                  ))}
-                </div>
-                <Separator />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-blue-500" />
@@ -266,6 +215,43 @@ export function ContractDetailView({
                         <div>
                           <label className="text-gray-500">الفروع:</label>
                           <p>{batch.branchIds.length} فرع</p>
+                        </div>
+                      </div>
+                      
+                      {/* Services for this batch */}
+                      <div className="mt-3">
+                        <label className="text-gray-500 text-sm">الخدمات المقدمة:</label>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {batch.services.fireExtinguisherMaintenance && (
+                            <span className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-800 border border-red-200 flex items-center gap-1">
+                              <span>🧯</span>
+                              <span>طفايات</span>
+                            </span>
+                          )}
+                          {batch.services.alarmSystemMaintenance && (
+                            <span className="text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 border border-yellow-200 flex items-center gap-1">
+                              <span>⚠️</span>
+                              <span>إنذار</span>
+                            </span>
+                          )}
+                          {batch.services.fireSuppressionMaintenance && (
+                            <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800 border border-blue-200 flex items-center gap-1">
+                              <span>💧</span>
+                              <span>إطفاء</span>
+                            </span>
+                          )}
+                          {batch.services.gasFireSuppression && (
+                            <span className="text-xs px-2 py-1 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200 flex items-center gap-1">
+                              <span>🟦</span>
+                              <span>غاز</span>
+                            </span>
+                          )}
+                          {batch.services.foamFireSuppression && (
+                            <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800 border border-green-200 flex items-center gap-1">
+                              <span>🟢</span>
+                              <span>فوم</span>
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -343,7 +329,17 @@ export function ContractDetailView({
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">عدد الخدمات</span>
-                <Badge variant="outline">{services.length}</Badge>
+                <Badge variant="outline">
+                  {contract.serviceBatches?.reduce((total, batch) => {
+                    let count = 0;
+                    if (batch.services.fireExtinguisherMaintenance) count++;
+                    if (batch.services.alarmSystemMaintenance) count++;
+                    if (batch.services.fireSuppressionMaintenance) count++;
+                    if (batch.services.gasFireSuppression) count++;
+                    if (batch.services.foamFireSuppression) count++;
+                    return total + count;
+                  }, 0) || 0}
+                </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">تاريخ الإنشاء</span>

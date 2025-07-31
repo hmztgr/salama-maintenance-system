@@ -699,18 +699,26 @@ This document extends the original BRD with additional requirements that were id
 - ✅ Issue management with Arabic support
 - ✅ Firebase integration for issue storage
 
-### **Phase 3: Enhanced User Management (High Priority)**
+### **Phase 3: Advanced Contract Management System (High Priority)**
+- Contract renewal functionality with automatic date calculation
+- Contract addendum system for service batch additions
+- Contract archiving and history tracking
+- Multi-point archived contract access
+- Enhanced contract view popup with action buttons
+- Contract lifecycle analytics and reporting
+
+### **Phase 4: Enhanced User Management (Medium Priority)**
 - User invitation system (email and link-based)
 - Forgot password functionality
 - Advanced role management
 - Profile self-management
 
-### **Phase 4: Demo Data System (Medium Priority)**
+### **Phase 5: Demo Data System (Medium Priority)**
 - Demo data generator with realistic scenarios
 - Data management operations
 - System testing and validation tools
 
-### **Phase 5: Advanced Administration (Future)**
+### **Phase 6: Advanced Administration (Future)**
 - User analytics and monitoring
 - Organizational structure management
 - Advanced security features
@@ -745,6 +753,16 @@ This document extends the original BRD with additional requirements that were id
 - ✅ Maintain data integrity across all generated relationships
 - ✅ Provide comprehensive progress feedback during generation
 - ✅ Enable easy cleanup and regeneration for testing scenarios
+
+### **Advanced Contract Management System**
+- ✅ Achieve 90% reduction in contract renewal time through automation
+- ✅ Enable 80% faster addendum creation and processing
+- ✅ Provide 100% visibility into contract lifecycle and history
+- ✅ Eliminate manual contract renewal errors and inconsistencies
+- ✅ Achieve 95% contract renewal rate with automated system
+- ✅ Prevent revenue loss from missed renewals
+- ✅ Improve customer experience with streamlined renewals
+- ✅ Ensure 100% compliance with contract lifecycle requirements
 
 ### **Enhanced User Management**
 - ✅ Reduce user onboarding time by 70% through invitation system
@@ -787,6 +805,18 @@ This document extends the original BRD with additional requirements that were id
 - [ ] Bulk operations complete within acceptable time limits
 - [ ] Data can be selectively cleared and regenerated
 
+### **Advanced Contract Management System**
+- [ ] Contract renewal button creates new contract with automatic date calculation
+- [ ] Renewal confirmation dialog explains process and implications clearly
+- [ ] Renew with changes button opens edit mode before creating new contract
+- [ ] Add addendum button allows adding new service batches to existing contracts
+- [ ] Contract view popup shows current contracts with archived contracts access
+- [ ] Archived contracts accessible from contract, company, and branch view popups
+- [ ] Contract history tracks all lifecycle events with timestamps and user attribution
+- [ ] Addendums display with creation details and effective dates
+- [ ] Contract archiving works automatically upon renewal or expiration
+- [ ] Multi-point access provides consistent archived contract viewing experience
+
 ### **Enhanced User Management**
 - [ ] Admin can send email invitations with role pre-assignment
 - [ ] Users can reset passwords securely via email verification
@@ -805,13 +835,16 @@ This addendum extends the original BRD requirements without modifying existing s
 - **This Addendum**:
   - **Firebase Implementation**: REQ-FIREBASE-001 through REQ-FIREBASE-023
   - **Issue Tracking System**: REQ-ISSUE-001 through REQ-ISSUE-024 ✅ **COMPLETED**
+  - **Advanced Contract Management**: REQ-CONTRACT-001 through REQ-CONTRACT-020
   - **Demo Data System**: REQ-DEMO-001 through REQ-TEST-002
   - **Enhanced User Management**: REQ-USER-006 through REQ-USER-015
 
 ### **Implementation Notes**
 - **Firebase implementation is CRITICAL and should be prioritized** before other addendum features
 - **Issue tracking system is COMPLETED** and fully functional with global submission and console log capture
+- **Advanced Contract Management is HIGH PRIORITY** and should be implemented after Firebase migration
 - Firebase migration will enhance the existing system without changing user-facing functionality
+- Contract management system will significantly improve business efficiency and contract lifecycle management
 - Demo data system can be developed in parallel with Firebase implementation
 - Enhanced user management builds upon Firebase authentication system
 - All new features must maintain Arabic RTL support and responsive design
@@ -2118,8 +2151,351 @@ src/components/
 
 ---
 
+## 🆕 **NEW MODULE: Advanced Contract Management System**
+
+### **Module 24: Comprehensive Contract Lifecycle Management**
+
+#### **24.1 Contract Renewal System**
+- **REQ-CONTRACT-001**: Automated contract renewal functionality
+  - **Renew Contract Button**: One-click contract renewal with automatic date calculation
+  - **Renewal Confirmation**: Popup confirmation explaining renewal process and implications
+  - **Automatic Date Calculation**: New contract starts from next day after previous contract end date
+  - **Contract Archiving**: Automatic archiving of previous contract upon renewal
+  - **Data Preservation**: All contract details, services, and terms copied to new contract
+
+- **REQ-CONTRACT-002**: Renewal with modifications
+  - **Renew with Changes Button**: Renew contract with option to modify before creation
+  - **Edit Mode Integration**: Open new contract in edit mode for modifications
+  - **Validation System**: Ensure modified contract meets business requirements
+  - **Change Tracking**: Track what changes were made during renewal process
+  - **Approval Workflow**: Optional approval workflow for modified renewals
+
+- **REQ-CONTRACT-003**: Contract addendum system
+  - **Add Addendum Button**: Add new service batches to existing contracts
+  - **Addendum Tracking**: Unique addendum ID and timestamp for each addition
+  - **Addendum Display**: Show addendums in contract view with creation details
+  - **Service Integration**: Seamless integration of addendums with existing services
+  - **Addendum History**: Complete audit trail of all contract addendums
+
+#### **24.2 Contract View and Management Interface**
+- **REQ-CONTRACT-004**: Enhanced contract view popup
+  - **Current Contracts Display**: Show only active/current contracts by default
+  - **Archived Contracts Access**: Separate button to access archived contracts
+  - **Contract Status Indicators**: Clear visual indicators for contract status
+  - **Action Button Layout**: Organized action buttons for contract management
+  - **Contract Information Summary**: Comprehensive contract overview with key details
+
+- **REQ-CONTRACT-005**: Contract action buttons
+  - **Renew Contract**: Direct renewal with confirmation dialog
+  - **Renew with Changes**: Renewal with edit mode for modifications
+  - **Add Addendum**: Add new service batches to existing contract
+  - **View Archived**: Access to archived contracts for historical reference
+  - **Export Contract**: Export contract details and addendums
+
+#### **24.3 Contract Archiving and History**
+- **REQ-CONTRACT-006**: Contract archiving system
+  - **Automatic Archiving**: Archive contracts upon renewal or expiration
+  - **Archived Contract Access**: Access archived contracts from multiple entry points
+  - **Contract History**: Complete contract lifecycle history and tracking
+  - **Data Retention**: Maintain archived contract data for compliance and reference
+  - **Search and Filter**: Advanced search and filtering for archived contracts
+
+- **REQ-CONTRACT-007**: Multi-point archived contract access
+  - **Contract View Popup**: Archived contracts button in contract view
+  - **Company View Popup**: Access archived contracts from company view
+  - **Branch View Popup**: Access archived contracts from branch view
+  - **Unified Interface**: Consistent archived contract viewing experience
+  - **Context-Aware Display**: Show relevant archived contracts based on context
+
+#### **24.4 Contract Data Management**
+- **REQ-CONTRACT-008**: Contract data structure enhancements
+  ```typescript
+  // Enhanced contract data structure:
+  interface Contract {
+    // Existing fields...
+    contractId: string;
+    companyId: string;
+    contractStartDate: string;
+    contractEndDate: string;
+    regularVisitsPerYear: number;
+    emergencyVisitsPerYear: number;
+    contractValue: number;
+    services: ContractServices;
+    
+    // New fields for contract management:
+    status: 'active' | 'archived' | 'expired' | 'cancelled';
+    isRenewed: boolean;
+    originalContractId?: string; // For renewed contracts
+    renewedContractId?: string; // For contracts that were renewed
+    addendums: ContractAddendum[];
+    archivedAt?: Timestamp;
+    archivedBy?: string;
+    archiveReason?: string;
+    contractHistory: ContractHistoryEntry[];
+  }
+  
+  interface ContractAddendum {
+    addendumId: string;
+    addedAt: Timestamp;
+    addedBy: string;
+    services: ContractServices;
+    description: string;
+    effectiveDate: string;
+    contractValue: number;
+  }
+  
+  interface ContractHistoryEntry {
+    action: 'created' | 'renewed' | 'modified' | 'addendum_added' | 'archived';
+    timestamp: Timestamp;
+    performedBy: string;
+    description: string;
+    details?: any;
+  }
+  ```
+
+#### **24.5 User Interface Components**
+- **REQ-CONTRACT-009**: Contract management UI components
+  ```typescript
+  // Contract management component structure:
+  src/components/contracts/
+  ├── ContractViewPopup.tsx          // Enhanced contract view popup
+  ├── ContractRenewalDialog.tsx      // Renewal confirmation dialog
+  ├── ContractRenewalForm.tsx        // Renewal with changes form
+  ├── ContractAddendumForm.tsx       // Addendum creation form
+  ├── ArchivedContractsView.tsx      // Archived contracts interface
+  ├── ContractHistoryView.tsx        // Contract history display
+  └── ContractActionButtons.tsx      // Contract action buttons
+  
+  src/hooks/
+  ├── useContractRenewal.ts          // Contract renewal operations
+  ├── useContractAddendum.ts         // Addendum management
+  └── useContractArchiving.ts        // Contract archiving operations
+  ```
+
+#### **24.6 Business Logic Implementation**
+- **REQ-CONTRACT-010**: Contract renewal business logic
+  ```typescript
+  // Contract renewal algorithm:
+  function renewContract(contract: Contract, withChanges: boolean = false): Promise<Contract> {
+    // 1. Calculate new contract dates
+    const newStartDate = addDays(contract.contractEndDate, 1);
+    const newEndDate = addMonths(newStartDate, getContractDuration(contract));
+    
+    // 2. Create new contract with copied data
+    const newContract = {
+      ...contract,
+      contractId: generateNewContractId(),
+      contractStartDate: newStartDate,
+      contractEndDate: newEndDate,
+      isRenewed: true,
+      originalContractId: contract.contractId,
+      status: 'active',
+      createdAt: new Date(),
+      contractHistory: [
+        ...contract.contractHistory,
+        {
+          action: 'renewed',
+          timestamp: new Date(),
+          performedBy: getCurrentUser(),
+          description: 'Contract renewed'
+        }
+      ]
+    };
+    
+    // 3. Archive original contract
+    await archiveContract(contract.contractId);
+    
+    // 4. Save new contract
+    return await saveContract(newContract);
+  }
+  ```
+
+#### **24.7 Addendum Management System**
+- **REQ-CONTRACT-011**: Addendum creation and management
+  ```typescript
+  // Addendum management:
+  function addContractAddendum(contractId: string, addendumData: Partial<ContractAddendum>): Promise<Contract> {
+    const addendum: ContractAddendum = {
+      addendumId: generateAddendumId(),
+      addedAt: new Date(),
+      addedBy: getCurrentUser(),
+      services: addendumData.services,
+      description: addendumData.description,
+      effectiveDate: addendumData.effectiveDate,
+      contractValue: addendumData.contractValue
+    };
+    
+    // Update contract with new addendum
+    return updateContract(contractId, {
+      addendums: [...contract.addendums, addendum],
+      contractHistory: [
+        ...contract.contractHistory,
+        {
+          action: 'addendum_added',
+          timestamp: new Date(),
+          performedBy: getCurrentUser(),
+          description: `Addendum added: ${addendum.description}`
+        }
+      ]
+    });
+  }
+  ```
+
+#### **24.8 Contract Archiving System**
+- **REQ-CONTRACT-012**: Contract archiving implementation
+  ```typescript
+  // Contract archiving:
+  function archiveContract(contractId: string, reason?: string): Promise<void> {
+    const contract = await getContract(contractId);
+    
+    const archivedContract = {
+      ...contract,
+      status: 'archived',
+      archivedAt: new Date(),
+      archivedBy: getCurrentUser(),
+      archiveReason: reason || 'Contract renewed',
+      contractHistory: [
+        ...contract.contractHistory,
+        {
+          action: 'archived',
+          timestamp: new Date(),
+          performedBy: getCurrentUser(),
+          description: `Contract archived: ${reason || 'Contract renewed'}`
+        }
+      ]
+    };
+    
+    return updateContract(contractId, archivedContract);
+  }
+  ```
+
+### **Module 25: Contract Management Implementation**
+
+#### **25.1 User Interface Implementation**
+- **REQ-CONTRACT-013**: Contract view popup enhancements
+  - **Action Button Layout**: Organize action buttons logically in contract view
+  - **Status Display**: Clear visual indicators for contract status
+  - **Addendum Display**: Show addendums with creation details and effective dates
+  - **Contract History**: Display contract lifecycle history
+  - **Responsive Design**: Mobile-optimized contract management interface
+
+- **REQ-CONTRACT-014**: Renewal confirmation dialog
+  ```typescript
+  // Renewal confirmation dialog:
+  interface RenewalConfirmationProps {
+    contract: Contract;
+    onConfirm: () => void;
+    onCancel: () => void;
+    withChanges?: boolean;
+  }
+  
+  // Dialog content:
+  - Explanation of renewal process
+  - New contract dates calculation
+  - Services and terms that will be copied
+  - Confirmation buttons (Yes/No)
+  - Warning about archiving previous contract
+  ```
+
+#### **25.2 Integration Points**
+- **REQ-CONTRACT-015**: Multi-point integration
+  - **Contract View Popup**: Primary contract management interface
+  - **Company View Popup**: Access company's archived contracts
+  - **Branch View Popup**: Access branch's archived contracts
+  - **Contract List**: Enhanced contract listing with status indicators
+  - **Dashboard Integration**: Contract renewal alerts and notifications
+
+#### **25.3 Data Migration and Compatibility**
+- **REQ-CONTRACT-016**: Data structure migration
+  - **Backward Compatibility**: Ensure existing contracts work with new system
+  - **Data Migration**: Migrate existing contracts to new data structure
+  - **Default Values**: Set appropriate default values for new fields
+  - **Validation**: Validate data integrity during migration
+  - **Rollback Plan**: Plan for rollback if migration issues occur
+
+#### **25.4 Testing and Validation**
+- **REQ-CONTRACT-017**: Comprehensive testing strategy
+  - **Renewal Testing**: Test contract renewal with various scenarios
+  - **Addendum Testing**: Test addendum creation and management
+  - **Archiving Testing**: Test contract archiving and retrieval
+  - **Integration Testing**: Test integration with existing systems
+  - **User Acceptance Testing**: Test with real business scenarios
+  - **Performance Testing**: Test with large numbers of contracts
+
+### **Module 26: Advanced Contract Features**
+
+#### **26.1 Contract Analytics and Reporting**
+- **REQ-CONTRACT-018**: Contract lifecycle analytics
+  - **Renewal Rate Tracking**: Track contract renewal rates and patterns
+  - **Addendum Analysis**: Analyze addendum patterns and frequency
+  - **Contract Performance**: Measure contract performance and value
+  - **Expiry Forecasting**: Predict contract expirations and renewal needs
+  - **Revenue Impact**: Calculate revenue impact of renewals and addendums
+
+#### **26.2 Advanced Contract Workflows**
+- **REQ-CONTRACT-019**: Contract approval workflows
+  - **Renewal Approval**: Optional approval workflow for contract renewals
+  - **Addendum Approval**: Approval process for contract addendums
+  - **Change Tracking**: Track all changes and approvals in contract history
+  - **Notification System**: Notify stakeholders of contract changes
+  - **Audit Trail**: Complete audit trail for compliance and reporting
+
+#### **26.3 Contract Templates and Automation**
+- **REQ-CONTRACT-020**: Contract template system
+  - **Renewal Templates**: Pre-defined templates for common renewal scenarios
+  - **Addendum Templates**: Templates for common addendum types
+  - **Automated Renewals**: Automated renewal suggestions based on contract performance
+  - **Bulk Operations**: Bulk renewal and addendum operations
+  - **Contract Optimization**: AI-powered contract optimization suggestions
+
+---
+
+## 🎯 **SUCCESS METRICS FOR CONTRACT MANAGEMENT SYSTEM**
+
+### **Operational Efficiency Metrics**
+- ✅ **Renewal Time Reduction**: 90% reduction in contract renewal time
+- ✅ **Addendum Processing**: 80% faster addendum creation and processing
+- ✅ **Contract Visibility**: 100% visibility into contract lifecycle and history
+- ✅ **Error Reduction**: Eliminate manual contract renewal errors
+
+### **Business Value Metrics**
+- ✅ **Contract Retention**: 95% contract renewal rate with automated system
+- ✅ **Revenue Protection**: Prevent revenue loss from missed renewals
+- ✅ **Customer Satisfaction**: Improved customer experience with streamlined renewals
+- ✅ **Compliance**: 100% compliance with contract lifecycle requirements
+
+### **User Experience Metrics**
+- ✅ **User Adoption**: >90% of users adopt new contract management features
+- ✅ **Task Completion**: 95% successful completion of contract management tasks
+- ✅ **Training Time**: 70% reduction in training time for contract management
+- ✅ **User Satisfaction**: >95% user satisfaction with contract management system
+
+---
+
+## 🔗 **INTEGRATION WITH EXISTING MODULES**
+
+### **Enhanced Customer Management**
+- **Contract Integration**: Seamless integration with company and branch management
+- **Service Integration**: Automatic service assignment from contracts
+- **History Tracking**: Complete contract history integrated with customer profiles
+- **Analytics Integration**: Contract analytics integrated with customer analytics
+
+### **Enhanced Planning and Scheduling**
+- **Visit Integration**: Automatic visit scheduling based on renewed contracts
+- **Service Updates**: Real-time service updates from contract addendums
+- **Schedule Optimization**: Optimize schedules based on contract renewals
+- **Resource Planning**: Plan resources based on contract lifecycle changes
+
+### **Enhanced Reports and Analytics**
+- **Contract Analytics**: Comprehensive contract performance and lifecycle analytics
+- **Renewal Reporting**: Detailed renewal rate and pattern reporting
+- **Revenue Analytics**: Revenue impact analysis from renewals and addendums
+- **Compliance Reporting**: Contract compliance and audit reporting
+
+---
+
 **Document Control:**
-- **Next Review Date**: Upon completion of Dashboard implementation
+- **Next Review Date**: Upon completion of Contract Management implementation
 - **Approval Required**: Project Stakeholders
 - **Integration**: Must be compatible with existing modules and Firebase implementation
-- **Priority**: High priority for user experience improvement and business intelligence
+- **Priority**: High priority for contract lifecycle management and business efficiency
